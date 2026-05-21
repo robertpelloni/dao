@@ -13,8 +13,9 @@
 - [x] Treasury/Escrow: Basic crowdfunding and refund logic.
 
 ## Phase 3: UI & Integration
-- [ ] Develop frontend for Committee browsing and Proposal creation.
-- [ ] Implement QV and Funding dashboards.
+- [x] Develop frontend prototype for Proposal browsing and interaction.
+- [x] Implement QV and Funding dashboards (Initial version).
+ - [x] Implement Proposal creation and Committee browsing.
 - [ ] Real-time updates for voting and funding progress.
 
 ## Phase 4: Refinement & Advanced Features

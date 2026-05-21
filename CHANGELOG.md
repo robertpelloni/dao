@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0] - 2025-05-14
+### Added
+- Multi-step Proposal Creation form with milestone management.
+- Committee and Subject browsing UI.
+- Identity Registry and Endorsement UI (Sybil Resistance interface).
+- Extended REST API for Identity management (`/identity`, `/endorse`).
+- Advanced UI polish with animations and improved layout.
+
+## [0.5.0] - 2025-05-14
+### Added
+- Frontend Prototype using React, Vite, and Tailwind CSS.
+- Interactive Dashboard with Proposal list and detailed views.
+- Governance Action Panel for Voting and Crowdfunding.
+- User Identity Widget and subject-based navigation.
+- API /summary endpoint for dashboard stats.
+
 ## [0.4.0] - 2025-05-14
 ### Added
 - Persistent Storage using SQLite (`better-sqlite3`).

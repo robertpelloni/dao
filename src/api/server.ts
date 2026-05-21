@@ -1,7 +1,7 @@
 import express, { Request, Response } from 'express';
 import cors from 'cors';
 import { globalStore } from '../models/Store';
-import { globalIdentity } from '../core/identity';
+import { globalIdentity, IdentityManager } from '../core/identity';
 import { calculateVoteCost } from '../core/qv';
 import { delegate, calculateEffectivePower } from '../core/delegation';
 import { transitionProposal } from '../core/proposalStateMachine';
@@ -44,6 +44,26 @@ app.get('/users/:id', (req: Request, res: Response) => {
   const user = globalStore.getUser(s(req.params.id));
   if (!user) return res.status(404).json({ error: 'User not found' });
   res.json(user);
+});
+
+app.get('/identity/:id', (req: Request, res: Response) => {
+  const profile = globalIdentity.getProfile(s(req.params.id));
+  if (!profile) {
+    // If not found, create one (lazy init for PoC)
+    const newProfile = globalIdentity.createProfile(s(req.params.id));
+    return res.json(newProfile);
+  }
+  res.json(profile);
+});
+
+app.post('/users/:id/endorse', (req: Request, res: Response) => {
+  const { endorserId } = req.body;
+  try {
+    globalIdentity.endorse(endorserId, s(req.params.id));
+    res.json(globalIdentity.getProfile(s(req.params.id)));
+  } catch (err: any) {
+    res.status(400).json({ error: err.message });
+  }
 });
 
 app.get('/users', (req: Request, res: Response) => {
@@ -183,8 +203,22 @@ app.post('/proposals/:id/score', (req: Request, res: Response) => {
 });
 
 // --- Health Check ---
+app.get('/summary', (req: Request, res: Response) => {
+  const users = globalStore.getUsers();
+  const proposals = globalStore.getProposals();
+  const committees = globalStore.getCommittees();
+
+  res.json({
+    userCount: users.length,
+    proposalCount: proposals.length,
+    committeeCount: committees.length,
+    totalFunding: proposals.reduce((acc, p) => acc + (p.currentFunding || 0), 0)
+  });
+});
+
+// --- Health Check ---
 app.get('/health', (req: Request, res: Response) => {
-  res.json({ status: 'OK', version: '0.3.0' });
+  res.json({ status: 'OK', version: '0.4.0' });
 });
 
 if (require.main === module) {

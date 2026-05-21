@@ -28,4 +28,10 @@
 - [x] Setup API layer (Express/Fastify).
 - [x] Implement Persistent Storage (SQLite).
 - [x] Implement AI Impact Scoring.
-- [ ] Initial Frontend prototype (React/Vue).
+- [x] Initial Frontend prototype (React/Tailwind).
+
+## Implementation - Sprint 3
+ - [x] Implement Committee management UI.
+ - [x] Implement Identity endorsement UI.
+ - [x] Add Form for creating new Proposals.
+- [ ] Integrate real-time updates (WebSockets/Polling).
