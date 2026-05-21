@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2025-05-14
+### Added
+- Persistent Storage using SQLite (`better-sqlite3`).
+- AI Impact Scoring heuristics for proposals.
+- Proposal sorting based on impact.
+- Docker configuration (`Dockerfile`, `docker-compose.yml`).
+- API endpoint for proposal scoring.
+
 ## [0.3.0] - 2025-05-14
 ### Added
 - REST API Layer using Express with endpoints for users, committees, proposals, and delegation.

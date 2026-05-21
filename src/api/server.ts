@@ -6,6 +6,7 @@ import { calculateVoteCost } from '../core/qv';
 import { delegate, calculateEffectivePower } from '../core/delegation';
 import { transitionProposal } from '../core/proposalStateMachine';
 import { CrowdfundingEngine } from '../core/crowdfunding';
+import { calculateImpactScore } from '../core/impactScoring';
 import { User, Proposal, Committee } from '../models/types';
 
 /**
@@ -170,6 +171,15 @@ app.post('/proposals/:id/release-milestone', (req: Request, res: Response) => {
   const { milestoneId } = req.body;
   const success = crowdfunding.releaseMilestoneFunds(s(req.params.id), milestoneId);
   res.json({ success, proposal: globalStore.getProposal(s(req.params.id)) });
+});
+
+app.post('/proposals/:id/score', (req: Request, res: Response) => {
+  const proposal = globalStore.getProposal(s(req.params.id));
+  if (!proposal) return res.status(404).json({ error: 'Proposal not found' });
+
+  const score = calculateImpactScore(proposal);
+  globalStore.updateProposal(s(req.params.id), { impactScore: score });
+  res.json({ id: proposal.id, impactScore: score });
 });
 
 // --- Health Check ---

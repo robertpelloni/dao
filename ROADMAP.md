@@ -19,5 +19,5 @@
 
 ## Phase 4: Refinement & Advanced Features
 - [ ] Privacy-preserving identity (ZKP).
-- [ ] AI-driven impact scoring for proposals.
+- [x] AI-driven impact scoring for proposals.
 - [ ] Multi-party consensus for milestone payouts (Oracles).

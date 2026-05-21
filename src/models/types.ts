@@ -47,5 +47,6 @@ export interface Proposal {
   currentFunding: number;
   votesFor: number;
   votesAgainst: number;
+  impactScore?: number; // Calculated by AI/Heuristics
   executionPayload: string; // JSON or script hash
 }

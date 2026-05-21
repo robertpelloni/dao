@@ -26,4 +26,6 @@
 - [x] Implement Crowdfunding Escrow logic.
 - [x] Setup simulation for the core engine.
 - [x] Setup API layer (Express/Fastify).
+- [x] Implement Persistent Storage (SQLite).
+- [x] Implement AI Impact Scoring.
 - [ ] Initial Frontend prototype (React/Vue).

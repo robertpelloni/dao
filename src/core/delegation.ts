@@ -1,4 +1,4 @@
-import { User } from '../models/types';
+import { User, Committee, Proposal } from '../models/types';
 import { Store } from '../models/Store';
 
 /**
@@ -29,10 +29,6 @@ export function resolveDelegate(
   while (true) {
     if (visited.has(currentId)) {
       // Cycle detected.
-      // In a cycle like A -> B -> A, if we started at A, we end up back at A.
-      // If we detect a cycle, we should probably treat it as if NO ONE in the cycle has delegated power outside it.
-      // For simplicity in this PoC, if a cycle is detected, we return the original starting user
-      // indicating their delegation is effectively broken/invalid.
       return userId;
     }
 
@@ -66,8 +62,8 @@ export function calculateEffectivePower(
   let totalCredits = 0;
 
   // Iterate through all users to see who delegates to targetUserId
-  // Note: In a large scale system, we'd maintain an 'inverse delegation' map for performance.
-  for (const user of store.users.values()) {
+  const allUsers = store.getUsers();
+  for (const user of allUsers) {
     if (resolveDelegate(store, user.id, subject) === targetUserId) {
       totalCredits += user.voiceCredits;
     }
@@ -93,6 +89,7 @@ export function delegate(
   const user = store.getUser(userId);
   if (user) {
     user.delegates[subject] = delegateId;
+    store.addUser(user); // Persist update
   }
 }
 
@@ -111,5 +108,6 @@ export function revokeDelegation(
   const user = store.getUser(userId);
   if (user) {
     delete user.delegates[subject];
+    store.addUser(user); // Persist update
   }
 }

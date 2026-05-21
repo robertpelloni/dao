@@ -15,7 +15,7 @@ import { User, Proposal } from '../models/types';
 
 async function runSimulation() {
   console.log("=== LiquidGov Simulation Start (v0.3.0) ===\n");
-  const store = new Store();
+  const store = new Store(':memory:'); // Use in-memory for simulation script speed and isolation
   const crowdfunding = new CrowdfundingEngine(store);
   const identity = new IdentityManager(store);
 
@@ -39,7 +39,7 @@ async function runSimulation() {
   identity.endorse('alice', 'bob');
   identity.endorse('bob', 'alice');
 
-  console.log(`Registered ${store.users.size} users.`);
+  console.log(`Registered ${store.getUsers().length} users.`);
   console.log(`Verified Status: Dave (${identity.isVerified('dave')}), Charlie (${identity.isVerified('charlie')}), Alice (${identity.isVerified('alice')})\n`);
 
   // 2. Liquid Delegation
@@ -88,6 +88,10 @@ async function runSimulation() {
 
   if (identity.isVerified('dave')) {
     console.log(`Dave casts ${daveVotes} votes FOR (Cost: ${daveCost} credits)`);
+    // Dave's credits must be deducted manually for this simulation's logic
+    const daveUser = store.getUser('dave')!;
+    daveUser.voiceCredits -= daveCost;
+    store.addUser(daveUser);
   } else {
     console.log("Dave is not verified and cannot vote!");
   }
@@ -98,6 +102,9 @@ async function runSimulation() {
 
   if (identity.isVerified('charlie')) {
     console.log(`Charlie casts ${Math.abs(charlieVotes)} votes AGAINST (Cost: ${charlieCost} credits)`);
+    const charlieUser = store.getUser('charlie')!;
+    charlieUser.voiceCredits -= charlieCost;
+    store.addUser(charlieUser);
   }
 
   const totalVotes = aggregateVotes([daveVotes, charlieVotes]);

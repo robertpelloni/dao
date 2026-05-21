@@ -6,6 +6,10 @@
 3. Run simulation: `npx ts-node src/cli/simulate.ts`.
 4. Run API server: `npx ts-node src/api/server.ts`.
 
+## Docker Setup
+1. Build and run: `docker-compose up --build`.
+2. The API will be available at `http://localhost:3000`.
+
 ## API Endpoints
 - `GET /health`: Health check.
 - `GET /users`: List users.
