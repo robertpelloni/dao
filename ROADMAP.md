@@ -8,9 +8,9 @@
 
 ## Phase 2: Core Engine
 - [ ] Identity Layer: Mock/Prototype DID integration.
-- [ ] Committee Layer: Subject tree implementation and basic delegation.
-- [ ] Proposal Layer: State machine for proposal lifecycle.
-- [ ] Treasury/Escrow: Basic crowdfunding and refund logic.
+- [x] Committee Layer: Subject tree implementation and basic delegation.
+- [x] Proposal Layer: State machine for proposal lifecycle.
+- [x] Treasury/Escrow: Basic crowdfunding and refund logic.
 
 ## Phase 3: UI & Integration
 - [ ] Develop frontend for Committee browsing and Proposal creation.

@@ -22,7 +22,8 @@
 - [x] Implement Proposal state machine transitions.
 
 ## Implementation - Sprint 2
-- [ ] Integrate Liquid Delegation logic.
-- [ ] Implement Crowdfunding Escrow logic.
-- [ ] Setup API layer for the core engine.
-- [ ] Initial Frontend prototype.
+- [x] Integrate Liquid Delegation logic.
+- [x] Implement Crowdfunding Escrow logic.
+- [x] Setup simulation for the core engine.
+- [ ] Setup API layer (Express/Fastify).
+- [ ] Initial Frontend prototype (React/Vue).
