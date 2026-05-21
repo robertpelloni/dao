@@ -3,28 +3,44 @@ import { calculateVoteCost, aggregateVotes } from '../core/qv';
 import { delegate, calculateEffectivePower } from '../core/delegation';
 import { transitionProposal } from '../core/proposalStateMachine';
 import { CrowdfundingEngine } from '../core/crowdfunding';
-import { User, Proposal, Committee } from '../models/types';
+import { IdentityManager } from '../core/identity';
+import { User, Proposal } from '../models/types';
 
 /**
- * LiquidGov Full Lifecycle Simulation
+ * LiquidGov Full Lifecycle Simulation (v0.3.0)
  *
- * This script simulates the full process from user registration to proposal completion.
+ * This script simulates the full process from user registration and identity verification
+ * to proposal completion.
  */
 
 async function runSimulation() {
-  console.log("=== LiquidGov Simulation Start ===\n");
+  console.log("=== LiquidGov Simulation Start (v0.3.0) ===\n");
   const store = new Store();
   const crowdfunding = new CrowdfundingEngine(store);
+  const identity = new IdentityManager(store);
 
-  // 1. Setup Users
-  console.log("[1] Registering Users...");
+  // 1. Setup Users & Identity
+  console.log("[1] Registering Users and Verifying Identity...");
   const alice: User = { id: 'alice', name: 'Alice', voiceCredits: 100, reputation: {}, delegates: {} };
   const bob: User = { id: 'bob', name: 'Bob', voiceCredits: 100, reputation: {}, delegates: {} };
-  const charlie: User = { id: 'charlie', name: 'Charlie', voiceCredits: 400, reputation: {}, delegates: {} }; // High net worth / reputation
+  const charlie: User = { id: 'charlie', name: 'Charlie', voiceCredits: 400, reputation: {}, delegates: {} };
   const dave: User = { id: 'dave', name: 'Dave (Expert)', voiceCredits: 100, reputation: { 'Roads': 100 }, delegates: {} };
 
-  [alice, bob, charlie, dave].forEach(u => store.addUser(u));
-  console.log(`Registered ${store.users.size} users.\n`);
+  [alice, bob, charlie, dave].forEach(u => {
+    store.addUser(u);
+    identity.createProfile(u.id);
+  });
+
+  // Verify Dave and Charlie manually (Simulating external DID check)
+  identity.verifyManually('dave');
+  identity.verifyManually('charlie');
+
+  // Alice and Bob endorse each other but remain unverified (need 50 points)
+  identity.endorse('alice', 'bob');
+  identity.endorse('bob', 'alice');
+
+  console.log(`Registered ${store.users.size} users.`);
+  console.log(`Verified Status: Dave (${identity.isVerified('dave')}), Charlie (${identity.isVerified('charlie')}), Alice (${identity.isVerified('alice')})\n`);
 
   // 2. Liquid Delegation
   console.log("[2] Setting up Liquid Delegation for 'Roads'...");
@@ -67,16 +83,22 @@ async function runSimulation() {
   store.updateProposal('prop-solar', active);
 
   // Dave uses his delegated power (300 credits) to cast votes
-  // Cost = votes^2. sqrt(300) is approx 17.3. Let's cast 17 votes.
   const daveVotes = 17;
   const daveCost = calculateVoteCost(daveVotes);
-  console.log(`Dave casts ${daveVotes} votes FOR (Cost: ${daveCost} credits)`);
+
+  if (identity.isVerified('dave')) {
+    console.log(`Dave casts ${daveVotes} votes FOR (Cost: ${daveCost} credits)`);
+  } else {
+    console.log("Dave is not verified and cannot vote!");
+  }
 
   // Charlie is a whale, but QV limits his impact.
-  // Charlie has 400 credits. He can cast 20 votes.
-  const charlieVotes = -20; // Charlie hates solar roads
+  const charlieVotes = -20;
   const charlieCost = calculateVoteCost(charlieVotes);
-  console.log(`Charlie casts ${Math.abs(charlieVotes)} votes AGAINST (Cost: ${charlieCost} credits)`);
+
+  if (identity.isVerified('charlie')) {
+    console.log(`Charlie casts ${Math.abs(charlieVotes)} votes AGAINST (Cost: ${charlieCost} credits)`);
+  }
 
   const totalVotes = aggregateVotes([daveVotes, charlieVotes]);
   console.log(`Total Net Votes: ${totalVotes} (${totalVotes > 0 ? 'Passed' : 'Failed'})\n`);

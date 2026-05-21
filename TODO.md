@@ -25,5 +25,5 @@
 - [x] Integrate Liquid Delegation logic.
 - [x] Implement Crowdfunding Escrow logic.
 - [x] Setup simulation for the core engine.
-- [ ] Setup API layer (Express/Fastify).
+- [x] Setup API layer (Express/Fastify).
 - [ ] Initial Frontend prototype (React/Vue).

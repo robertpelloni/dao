@@ -7,7 +7,7 @@
 - [x] Setup initial testing framework.
 
 ## Phase 2: Core Engine
-- [ ] Identity Layer: Mock/Prototype DID integration.
+- [x] Identity Layer: Mock/Prototype DID integration.
 - [x] Committee Layer: Subject tree implementation and basic delegation.
 - [x] Proposal Layer: State machine for proposal lifecycle.
 - [x] Treasury/Escrow: Basic crowdfunding and refund logic.

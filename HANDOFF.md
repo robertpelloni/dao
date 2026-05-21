@@ -1,18 +1,17 @@
 # HANDOFF
 
-## Current Status - Version 0.2.0
-- Core engines for Quadratic Voting, Proposal State, Liquid Delegation, and Crowdfunding are implemented.
-- A full lifecycle simulation script is available at `src/cli/simulate.ts`.
-- All logic is tested and passing.
+## Current Status - Version 0.3.0
+- Core engines: QV, Proposal States, Liquid Delegation, Crowdfunding, and Identity Mock.
+- REST API layer implemented at `src/api/server.ts`.
+- Full lifecycle simulation updated for identity verification at `src/cli/simulate.ts`.
 
 ## Next Steps for the Next Agent
-1. **API Layer:** Implement an Express or Fastify server to expose the core engine as a REST or GraphQL API.
-2. **Frontend:** Start building the user interface to interact with the API.
-3. **Identity Layer:** Deepen the Sybil resistance layer, perhaps with a mock DID implementation.
-4. **Impact Scoring:** Implement the AI-driven impact scoring for sorting proposals.
+1. **Frontend Development:** Create a React or Vue dashboard to consume the API.
+2. **Persistence Layer:** Transition the in-memory `Store` to a persistent database (SQLite or PostgreSQL).
+3. **AI Integration:** Implement the AI-driven impact scoring and proposal sorting.
+4. **Enhanced Identity:** Integrate a real DID mock or protocol (e.g., Gitcoin Passport mock).
 
 ## Key Files
-- `src/core/qv.ts`: Math for QV.
-- `src/core/delegation.ts`: Liquid delegation logic.
-- `src/core/crowdfunding.ts`: Escrow and milestone logic.
+- `src/api/server.ts`: REST API entry point.
+- `src/core/identity.ts`: Identity and Sybil resistance logic.
 - `src/cli/simulate.ts`: Full system simulation.
