@@ -9,6 +9,8 @@ on:
 jobs:
   validate:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
         with:
@@ -18,20 +20,21 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-node-version: '20'
+          node-version: '20'
           cache: 'npm'
 
       - name: Install Dependencies
         run: npm install
-
-      - name: Run Executive Sync Protocol
-        run: bash scripts/sync-protocol.sh
 
       - name: Verify Documentation Standards
         run: bash scripts/verify-docs.sh
 
       - name: Run Tests
         run: npm test
+
+      - name: Run Executive Sync Protocol
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: bash scripts/sync-protocol.sh
 
       - name: Build Project
         run: npm run build || echo "Build skipped (if no build script)"

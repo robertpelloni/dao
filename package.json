@@ -1,6 +1,6 @@
 {
   "name": "dao",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "description": "Please help me design a distributed voluntary government organization app in which people form committees about subjects and propose actions to be voted on and crowdfunded",
   "main": "index.js",
   "scripts": {
