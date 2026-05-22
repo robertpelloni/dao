@@ -42,7 +42,7 @@ app.use((req, res, next) => {
   if (skipPaths.includes(req.path) && req.method === 'GET') return next();
 
   const headerUserId = req.headers['x-user-id'];
-  const bodyUserId = req.body.userId;
+  const bodyUserId = req.body?.userId;
 
   if (req.method === 'POST' && bodyUserId && headerUserId !== bodyUserId) {
     return res.status(401).json({ error: 'Unauthorized: User ID mismatch' });

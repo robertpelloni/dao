@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.8.0] - 2025-05-22
+### Added
+- **Visual Delegation Graph**: Implemented a force-directed graph in the Identity View to visualize liquid delegation flows between citizens.
+
+### Fixed
+- Fixed backend crash when processing GET requests without a request body in the auth middleware.
+
 ## [0.7.1] - 2025-05-22
 ### Added
 - Automated merge and protocol sync.

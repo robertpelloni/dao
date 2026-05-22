@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { User } from '../../../src/models/types';
 import { IdentityProfile } from '../../../src/core/identity';
-import { ShieldCheck, UserPlus, Fingerprint, Award } from 'lucide-react';
+import { ShieldCheck, UserPlus, Fingerprint, Award, GitGraph } from 'lucide-react';
 import api from '../api/client';
+import { DelegationGraph } from './DelegationGraph';
 
 interface IdentityViewProps {
   currentUser: User | null;
@@ -91,6 +92,15 @@ export const IdentityView: React.FC<IdentityViewProps> = ({ currentUser, allUser
            </div>
         </section>
       )}
+
+      {/* Delegation Graph */}
+      <section>
+        <h3 className="text-xl font-black text-slate-800 mb-6 flex items-center gap-2">
+           <GitGraph className="text-blue-600" />
+           Voting Power Delegation flow
+        </h3>
+        <DelegationGraph users={allUsers} subject="Roads" />
+      </section>
 
       {/* Citizens List */}
       <section>

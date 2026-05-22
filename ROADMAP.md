@@ -23,3 +23,4 @@
 - [x] Multi-party consensus for milestone payouts (Oracles).
 - [x] Real-time updates for voting and funding progress.
 - [x] Integrated Autopilot Protocol into CI for automated repository handling.
+- [x] Visual Delegation Graph for liquid power transparency.
