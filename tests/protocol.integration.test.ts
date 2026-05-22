@@ -56,6 +56,8 @@ describe('Protocol Integration', () => {
     const featDir = path.join(baseDir, 'feat-clone');
     fs.mkdirSync(featDir);
     run(`git clone ${remoteDir} .`, featDir);
+    run('git config user.email "test@test.com"', featDir);
+    run('git config user.name "Tester"', featDir);
     run('git checkout -b jules-feature-1', featDir);
     fs.writeFileSync(path.join(featDir, 'feature.txt'), 'new feature');
     run('git add .', featDir);
