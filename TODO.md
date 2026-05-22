@@ -43,3 +43,6 @@
  - [x] Add Visual Delegation Graph.
  - [ ] JWT Authentication.
  - [ ] Add comprehensive API documentation (Swagger/OpenAPI).
+ - [ ] Implement Committee auto-discovery in UI.
+ - [ ] Add subject-based power breakdown in Identity view.
+ - [ ] Create automated health-check dashboard.

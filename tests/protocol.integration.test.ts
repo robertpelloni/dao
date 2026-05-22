@@ -68,6 +68,13 @@ describe('Protocol Integration', () => {
     const mgr = new RepositoryManager(localDir);
     mgr.syncUpstream();
     mgr.reconcileBranches();
+
+    // Manually create scripts for validation test
+    fs.mkdirSync(path.join(localDir, 'scripts'), { recursive: true });
+    fs.writeFileSync(path.join(localDir, 'scripts/start.sh'), '#!/bin/bash');
+    fs.writeFileSync(path.join(localDir, 'scripts/build.sh'), '#!/bin/bash');
+    fs.writeFileSync(path.join(localDir, 'scripts/sync-protocol.sh'), '#!/bin/bash');
+
     mgr.finalizeWorkspace();
     mgr.verifyStandards();
 

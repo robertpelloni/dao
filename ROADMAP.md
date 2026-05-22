@@ -24,3 +24,9 @@
 - [x] Real-time updates for voting and funding progress.
 - [x] Integrated Autopilot Protocol into CI for automated repository handling.
 - [x] Visual Delegation Graph for liquid power transparency.
+
+## Phase 5: Autonomous Governance & Scaling
+- [ ] Integration of the AI-driven "Executive Protocol" into core DAO operations.
+- [ ] Subject-specific committee auto-provisioning.
+- [ ] Sybil-resistant identity proof-of-humanity integration.
+- [ ] Persistent state machine for multi-year governance cycles.

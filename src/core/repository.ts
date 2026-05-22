@@ -29,6 +29,19 @@ export class RepositoryManager {
   syncUpstream(): void {
     console.log('[1/4] Fetching all remotes and updating submodules recursively...');
     this.run('git fetch --all --tags');
+
+    // Upstream Sync: Identify the upstream parent and merge changes
+    try {
+      const remotes = this.run('git remote').split('\n').map(r => r.trim());
+      if (remotes.includes('upstream')) {
+        console.log('Merging changes from upstream/main...');
+        this.run('git checkout main');
+        this.run('git merge upstream/main --no-edit --allow-unrelated-histories');
+      }
+    } catch (err) {
+      console.warn('Upstream merge skipped (upstream not found or no changes).');
+    }
+
     // Ensure submodules are updated to their latest tracked commits recursively
     this.run('git submodule update --init --recursive --remote');
   }
@@ -147,13 +160,38 @@ export class RepositoryManager {
   }
 
   verifyStandards(): void {
-    console.log('[4/4] Verifying documentation standards...');
+    console.log('[4/4] Verifying documentation and script standards...');
     const mandatory = ['VISION.md', 'MEMORY.md', 'DEPLOY.md', 'CHANGELOG.md', 'ROADMAP.md', 'TODO.md', 'VERSION.md', 'IDEAS.md', 'HANDOFF.md', 'AGENTS.md'];
     for (const file of mandatory) {
       if (!fs.existsSync(path.join(this.rootDir, file))) {
         throw new Error(`Mandatory file missing: ${file}`);
       }
       console.log(`✓ ${file} exists`);
+    }
+    this.validateScripts();
+  }
+
+  /**
+   * Validates and ensures key execution scripts are present and executable.
+   */
+  private validateScripts(): void {
+    const scripts = ['scripts/start.sh', 'scripts/build.sh', 'scripts/sync-protocol.sh'];
+    for (const script of scripts) {
+      const fullPath = path.join(this.rootDir, script);
+      if (!fs.existsSync(fullPath)) {
+        console.warn(`[!] Warning: Execution script missing: ${script}`);
+        continue;
+      }
+      // Ensure executable permissions (Unix)
+      try {
+        const stats = fs.statSync(fullPath);
+        if (!(stats.mode & 0o111)) {
+          console.log(`Fixing permissions for ${script}...`);
+          this.run(`chmod +x ${script}`);
+        }
+      } catch (e) {
+        // Ignore permission errors in restricted environments
+      }
     }
   }
 }
