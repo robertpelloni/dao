@@ -30,6 +30,13 @@ export class RepositoryManager {
     console.log('[1/4] Fetching all remotes and updating submodules recursively...');
     this.run('git fetch --all --tags');
 
+    // Recursive fetch for submodules
+    try {
+      this.run('git submodule foreach --recursive git fetch --all --tags');
+    } catch (e) {
+      console.warn('Submodule fetch failed or no submodules present.');
+    }
+
     // Upstream Sync: Identify the upstream parent and merge changes
     try {
       const remotes = this.run('git remote').split('\n').map(r => r.trim());
@@ -173,15 +180,23 @@ export class RepositoryManager {
 
   /**
    * Validates and ensures key execution scripts are present and executable.
+   * Also checks for Windows .bat equivalents for cross-platform protocol compliance.
    */
   private validateScripts(): void {
-    const scripts = ['scripts/start.sh', 'scripts/build.sh', 'scripts/sync-protocol.sh'];
+    const scripts = [
+      'scripts/start.sh', 'scripts/build.sh', 'scripts/sync-protocol.sh',
+      'start.sh', 'build.sh'
+    ];
     for (const script of scripts) {
       const fullPath = path.join(this.rootDir, script);
       if (!fs.existsSync(fullPath)) {
-        console.warn(`[!] Warning: Execution script missing: ${script}`);
+        // Check if it's a symlink or missing
+        if (script.includes('.sh') && !script.startsWith('scripts/')) {
+           console.warn(`[!] Warning: Root script missing or broken symlink: ${script}`);
+        }
         continue;
       }
+
       // Ensure executable permissions (Unix)
       try {
         const stats = fs.statSync(fullPath);

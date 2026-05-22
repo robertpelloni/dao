@@ -42,6 +42,7 @@ export class Store {
         currentFunding REAL,
         votesFor REAL,
         votesAgainst REAL,
+        impactScore REAL,
         executionPayload TEXT
       );
     `);
@@ -116,13 +117,13 @@ export class Store {
       INSERT OR REPLACE INTO proposals (
         id, title, abstract, detailedSpecs, proposerId, committeeId,
         status, milestones, totalTargetBudget, currentFunding,
-        votesFor, votesAgainst, executionPayload
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        votesFor, votesAgainst, impactScore, executionPayload
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
     stmt.run(
       proposal.id, proposal.title, proposal.abstract, proposal.detailedSpecs, proposal.proposerId, proposal.committeeId,
       proposal.status, JSON.stringify(proposal.milestones), proposal.totalTargetBudget, proposal.currentFunding,
-      proposal.votesFor, proposal.votesAgainst, proposal.executionPayload
+      proposal.votesFor, proposal.votesAgainst, proposal.impactScore || 0, proposal.executionPayload
     );
   }
 
