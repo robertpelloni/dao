@@ -27,9 +27,10 @@ export class RepositoryManager {
    * Step 1: Upstream Tracking & Submodule Sanitization
    */
   syncUpstream(): void {
-    console.log('[1/4] Fetching all remotes and updating submodules...');
+    console.log('[1/4] Fetching all remotes and updating submodules recursively...');
     this.run('git fetch --all --tags');
-    this.run('git submodule update --init --recursive');
+    // Ensure submodules are updated to their latest tracked commits recursively
+    this.run('git submodule update --init --recursive --remote');
   }
 
   /**
@@ -122,6 +123,26 @@ export class RepositoryManager {
     // Commit and push
     this.run('git add VERSION.md package.json CHANGELOG.md ROADMAP.md TODO.md HANDOFF.md');
     this.run(`git commit -m "Bump version to ${newVersion}: Automated Protocol Sync [skip ci]" || echo "Nothing to commit"`);
+
+    // Ensure all remote feature branches are updated with the new version commit
+    const branchesOutput = this.run('git branch -r || echo ""');
+    const branches = branchesOutput
+      ? branchesOutput.split('\n').map(b => b.trim()).filter(b => b.includes('origin/jules-') || b.includes('origin/main-'))
+      : [];
+
+    for (const branch of branches) {
+      const cleanBranch = branch.replace('origin/', '');
+      try {
+        this.run(`git checkout ${cleanBranch}`);
+        this.run('git merge main --no-edit');
+        this.run(`git push origin ${cleanBranch} || echo "Push skipped"`);
+      } catch (err) {
+        console.warn(`Final reverse merge failed for ${cleanBranch}.`);
+        this.run('git merge --abort || true');
+      }
+    }
+
+    this.run('git checkout main');
     this.run('git push origin main || echo "Push failed"');
   }
 
