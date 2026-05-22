@@ -28,6 +28,7 @@ describe('Protocol Integration', () => {
 
     // Setup Local Repo and Initial Commit
     run('git init', localDir);
+    run('git branch -m main', localDir);
     run('git config user.email "test@test.com"', localDir);
     run('git config user.name "Tester"', localDir);
 

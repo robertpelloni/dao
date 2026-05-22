@@ -43,7 +43,7 @@ describe('RepositoryManager', () => {
 
   it('should bump version correctly in VERSION.md and package.json', () => {
     // Mock run method to skip git commands during unit test
-    (mgr as any).run = jest.fn();
+    (mgr as any).run = jest.fn().mockReturnValue('');
 
     mgr.finalizeWorkspace();
 

@@ -44,10 +44,10 @@ export class RepositoryManager {
     this.run('git config user.name "LiquidGov Autopilot"');
     this.run('git config init.defaultBranch main');
 
-    const branches = this.run('git branch -r')
-      .split('\n')
-      .map(b => b.trim())
-      .filter(b => b.includes('origin/jules-') || b.includes('origin/main-'));
+    const branchesOutput = this.run('git branch -r || echo ""');
+    const branches = branchesOutput
+      ? branchesOutput.split('\n').map(b => b.trim()).filter(b => b.includes('origin/jules-') || b.includes('origin/main-'))
+      : [];
 
     if (branches.length === 0) {
       console.log('No feature branches found for reconciliation.');
