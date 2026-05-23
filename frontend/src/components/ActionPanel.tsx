@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { Proposal, User } from '../../../src/models/types';
+import { Proposal, User } from '../../../src/models/types.js';
 import { ThumbsUp, ThumbsDown, DollarSign, CheckCircle2, UserPlus } from 'lucide-react';
-import api from '../api/client';
+import api from '../api/client.js';
 
 interface ActionPanelProps {
   proposal: Proposal;

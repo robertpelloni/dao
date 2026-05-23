@@ -32,6 +32,7 @@ describe('Protocol Integration', () => {
     run('git config user.email "test@test.com"', localDir);
     run('git config user.name "Tester"', localDir);
 
+
     // Create mandatory files
     const mandatory = ['VISION.md', 'MEMORY.md', 'DEPLOY.md', 'CHANGELOG.md', 'ROADMAP.md', 'TODO.md', 'VERSION.md', 'IDEAS.md', 'HANDOFF.md', 'AGENTS.md'];
     mandatory.forEach(f => {
@@ -69,6 +70,7 @@ describe('Protocol Integration', () => {
     mgr.syncUpstream();
     mgr.reconcileBranches();
 
+
     // Manually create scripts for validation test
     fs.mkdirSync(path.join(localDir, 'scripts'), { recursive: true });
     fs.writeFileSync(path.join(localDir, 'scripts/start.sh'), '#!/bin/bash');
@@ -85,6 +87,7 @@ describe('Protocol Integration', () => {
     // Check if feature file exists in main
     run('git checkout main', localDir);
     expect(fs.existsSync(path.join(localDir, 'feature.txt'))).toBe(true);
+
 
     // Check if main merged back into feature
     run('git checkout jules-feature-1', localDir);

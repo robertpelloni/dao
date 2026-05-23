@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import ForceGraph2D from 'react-force-graph-2d';
-import { User } from '../../../src/models/types';
+import { User } from '../../../src/models/types.js';
 
 interface DelegationGraphProps {
   users: User[];
@@ -53,12 +53,13 @@ export const DelegationGraph: React.FC<DelegationGraphProps> = ({ users, subject
           const bckgDimensions = [textWidth, fontSize].map(n => n + fontSize * 0.2);
 
           ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-          ctx.fillRect(node.x - bckgDimensions[0] / 2, node.y - bckgDimensions[1] / 2, bckgDimensions[0], bckgDimensions[1]);
-
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.fillStyle = '#1e293b';
-          ctx.fillText(label, node.x, node.y);
+          if (node.x !== undefined && node.y !== undefined) {
+             ctx.fillRect(node.x - bckgDimensions[0]! / 2, node.y - bckgDimensions[1]! / 2, bckgDimensions[0]!, bckgDimensions[1]!);
+             ctx.textAlign = 'center';
+             ctx.textBaseline = 'middle';
+             ctx.fillStyle = '#1e293b';
+             ctx.fillText(label, node.x, node.y);
+          }
 
           node.__bckgDimensions = bckgDimensions; // to use in nodePointerAreaPaint
         }}

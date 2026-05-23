@@ -86,8 +86,8 @@ describe('Executive Protocol Full Integration', () => {
     // 3. Finalize Workspace (bump version)
     mgr.finalizeWorkspace();
 
-    const version = fs.readFileSync(path.join(localPath, 'VERSION.md'), 'utf8').trim();
-    expect(version).toBe('0.1.1');
+    const ver = fs.readFileSync(path.join(localPath, 'VERSION.md'), 'utf8').trim();
+    expect(ver).toBe('0.1.1');
 
     const pkg = JSON.parse(fs.readFileSync(path.join(localPath, 'package.json'), 'utf8'));
     expect(pkg.version).toBe('0.1.1');

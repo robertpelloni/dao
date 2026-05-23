@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+// @ts-ignore
 import * as d3 from 'd3';
 import axios from 'axios';
 import { TrendingUp } from 'lucide-react';
@@ -36,16 +37,16 @@ export const CycleTrends = () => {
     const margin = { top: 20, right: 20, bottom: 20, left: 40 };
 
     const x = d3.scaleLinear()
-      .domain(d3.extent(data, d => d.number) as [number, number])
+      .domain(d3.extent(data, (d: TrendData) => d.number) as [number, number])
       .range([margin.left, width - margin.right]);
 
     const y = d3.scaleLinear()
-      .domain([0, d3.max(data, d => d.totalVotesCast) as number])
+      .domain([0, d3.max(data, (d: TrendData) => d.totalVotesCast) as number])
       .range([height - margin.bottom, margin.top]);
 
     const line = d3.line<TrendData>()
-      .x(d => x(d.number))
-      .y(d => y(d.totalVotesCast))
+      .x((d: TrendData) => x(d.number))
+      .y((d: TrendData) => y(d.totalVotesCast))
       .curve(d3.curveMonotoneX);
 
     svg.append('path')
@@ -57,7 +58,7 @@ export const CycleTrends = () => {
 
     svg.append('g')
       .attr('transform', `translate(0,${height - margin.bottom})`)
-      .call(d3.axisBottom(x).ticks(data.length).tickFormat(d => `C${d}`));
+      .call(d3.axisBottom(x).ticks(data.length).tickFormat((d: any) => `C${d}`));
 
     svg.append('g')
       .attr('transform', `translate(${margin.left},0)`)

@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { User, Committee } from '../../../src/models/types';
-import { IdentityProfile } from '../../../src/core/identity';
+import { User, Committee } from '../../../src/models/types.js';
+import { IdentityProfile } from '../../../src/core/identity.js';
 import { ShieldCheck, UserPlus, Fingerprint, Award, GitGraph, Users, UserCheck } from 'lucide-react';
-import api from '../api/client';
-import { DelegationGraph } from './DelegationGraph';
+import api from '../api/client.js';
+import { DelegationGraph } from './DelegationGraph.js';
 
 interface IdentityViewProps {
   currentUser: User | null;
@@ -61,13 +61,13 @@ export const IdentityView: React.FC<IdentityViewProps> = ({ currentUser, allUser
                    <p className="text-slate-400 font-bold uppercase text-xs tracking-widest mt-1">Global Citizen ID: {currentUser.id}</p>
                 </div>
                 <div className="flex gap-2">
-                  {profiles[currentUser.id].isHuman && (
+                  {profiles[currentUser.id]!.isHuman && (
                     <div className="bg-indigo-500/20 text-indigo-400 px-4 py-2 rounded-full flex items-center gap-2 border border-indigo-500/30">
                       <UserCheck size={20} />
                       <span className="font-black text-sm uppercase">Human</span>
                     </div>
                   )}
-                  {profiles[currentUser.id].isVerified ? (
+                  {profiles[currentUser.id]!.isVerified ? (
                     <div className="bg-green-500/20 text-green-400 px-4 py-2 rounded-full flex items-center gap-2 border border-green-500/30">
                       <ShieldCheck size={20} />
                       <span className="font-black text-sm uppercase">Citizen</span>
@@ -84,16 +84,16 @@ export const IdentityView: React.FC<IdentityViewProps> = ({ currentUser, allUser
               <div className="grid grid-cols-3 gap-8">
                  <div className="bg-white/5 backdrop-blur-md rounded-2xl p-6 border border-white/10">
                     <p className="text-slate-400 font-black uppercase text-[10px] tracking-[0.2em] mb-2">Trust Score</p>
-                    <p className="text-4xl font-black">{profiles[currentUser.id].verificationScore}%</p>
+                    <p className="text-4xl font-black">{profiles[currentUser.id]!.verificationScore}%</p>
                     <div className="mt-4 h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
-                       <div className="h-full bg-blue-500" style={{ width: `${profiles[currentUser.id].verificationScore}%` }} />
+                       <div className="h-full bg-blue-500" style={{ width: `${profiles[currentUser.id]!.verificationScore}%` }} />
                     </div>
                  </div>
                  <div className="bg-white/5 backdrop-blur-md rounded-2xl p-6 border border-white/10">
                     <p className="text-slate-400 font-black uppercase text-[10px] tracking-[0.2em] mb-2">Endorsements</p>
-                    <p className="text-4xl font-black">{profiles[currentUser.id].endorsedBy.length}</p>
+                    <p className="text-4xl font-black">{profiles[currentUser.id]!.endorsedBy.length}</p>
                     <div className="flex mt-3 -space-x-2">
-                       {profiles[currentUser.id].endorsedBy.map((e, i) => (
+                       {profiles[currentUser.id]!.endorsedBy.map((e: any, i: number) => (
                           <div key={i} className="w-6 h-6 rounded-full border border-slate-900 bg-slate-700 flex items-center justify-center text-[8px] font-black">{e[0]}</div>
                        ))}
                     </div>
@@ -194,7 +194,7 @@ export const IdentityView: React.FC<IdentityViewProps> = ({ currentUser, allUser
                </div>
 
                <button
-                disabled={loading || profiles[u.id]?.endorsedBy.includes(currentUser?.id || '')}
+                disabled={loading || (profiles[u.id]?.endorsedBy.includes(currentUser?.id || '') ?? false)}
                 onClick={() => handleEndorse(u.id)}
                 className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-black text-xs uppercase tracking-widest bg-white border-2 border-slate-100 text-slate-600 hover:border-blue-600 hover:text-blue-600 transition-all disabled:opacity-30 disabled:hover:border-slate-100 disabled:hover:text-slate-600"
                >

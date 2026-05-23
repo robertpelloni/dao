@@ -35,6 +35,7 @@ export class RepositoryManager {
       console.error('[!] Root fetch failed. Continuing with local state if possible.');
     }
 
+
     // Recursive fetch for submodules
     try {
       console.log('Fetching submodules...');
@@ -72,6 +73,7 @@ export class RepositoryManager {
   reconcileBranches(): void {
     console.log('[2/4] Executing Dual-Direction Intelligent Merge Engine...');
 
+
     // Configure git identity for the session
     this.run('git config user.email "autopilot@liquidgov.org"');
     this.run('git config user.name "LiquidGov Autopilot"');
@@ -97,11 +99,13 @@ export class RepositoryManager {
     for (const branch of branches) {
       const cleanBranch = branch.replace('origin/', '');
 
+
       // Security: Validate branch name to prevent command injection
       if (!/^[a-zA-Z0-9.\/_-]+$/.test(cleanBranch)) {
         console.warn(`Skipping potentially unsafe branch name: ${cleanBranch}`);
         continue;
       }
+
 
       console.log(`Interrogating branch: ${cleanBranch}`);
 
@@ -144,6 +148,7 @@ export class RepositoryManager {
    */
   finalizeWorkspace(): void {
     console.log('[3/4] Finalizing workspace and documentation...');
+
 
     const versionFile = path.join(this.rootDir, 'VERSION.md');
     const packageFile = path.join(this.rootDir, 'package.json');

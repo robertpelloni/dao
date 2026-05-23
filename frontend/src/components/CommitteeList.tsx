@@ -1,5 +1,5 @@
 import React from 'react';
-import { Committee } from '../../../src/models/types';
+import { Committee } from '../../../src/models/types.js';
 import { Users, Target, Shield } from 'lucide-react';
 
 interface CommitteeListProps {

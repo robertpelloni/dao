@@ -9,6 +9,7 @@ describe('RepositoryManager', () => {
   beforeAll(() => {
     if (!fs.existsSync(testRoot)) fs.mkdirSync(testRoot);
 
+
     // Create mock mandatory files
     const mandatory = ['VISION.md', 'MEMORY.md', 'DEPLOY.md', 'CHANGELOG.md', 'ROADMAP.md', 'TODO.md', 'VERSION.md', 'IDEAS.md', 'HANDOFF.md', 'AGENTS.md', 'package.json'];
     mandatory.forEach(f => {
@@ -44,6 +45,7 @@ describe('RepositoryManager', () => {
   it('should bump version correctly in VERSION.md and package.json', () => {
     // Mock run method to skip git commands during unit test
     (mgr as any).run = jest.fn().mockReturnValue('');
+
 
     mgr.finalizeWorkspace();
 

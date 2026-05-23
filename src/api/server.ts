@@ -174,6 +174,7 @@ app.post('/committees/auto-provision', (req: Request, res: Response) => {
   const activityThreshold = req.body.threshold || 2;
   const newSubjects = globalStore.getHighActivitySubjects(activityThreshold);
 
+
   const created: Committee[] = [];
   newSubjects.forEach(subject => {
     const committee: Committee = {

@@ -13,12 +13,14 @@ describe('Phase 5 Refinements', () => {
       store.addUser({ id: 'u1', name: 'User 1', voiceCredits: 100, reputation: {}, delegates: { 'Subject A': 'u2' } });
       store.addUser({ id: 'u3', name: 'User 3', voiceCredits: 100, reputation: {}, delegates: { 'Subject A': 'u2' } });
 
+
       const highActivity = store.getHighActivitySubjects(2);
       expect(highActivity).toContain('Subject A');
     });
 
     it('should not identify subjects below threshold', () => {
       store.addUser({ id: 'u1', name: 'User 1', voiceCredits: 100, reputation: {}, delegates: { 'Subject B': 'u2' } });
+
 
       const highActivity = store.getHighActivitySubjects(2);
       expect(highActivity).not.toContain('Subject B');

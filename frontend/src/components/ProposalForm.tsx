@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { Milestone } from '../../../src/models/types';
-import { Plus, Trash2, Send } from 'lucide-react';
-import api from '../api/client';
+import { Proposal, Milestone } from '../../../src/models/types.js';
+import { Send, Plus, X, Award } from 'lucide-react';
+import api from '../api/client.js';
 
 interface ProposalFormProps {
   userId: string;
@@ -10,157 +10,188 @@ interface ProposalFormProps {
 }
 
 export const ProposalForm: React.FC<ProposalFormProps> = ({ userId, onSuccess, onCancel }) => {
-  const [step, setStep] = useState(1);
-  const [formData, setFormData] = useState({
-    id: `prop-${Date.now()}`,
-    title: '',
-    abstract: '',
-    detailedSpecs: '',
-    committeeId: 'comm-infra',
-    totalTargetBudget: 0,
-  });
-
-  const [milestones, setMilestones] = useState<Milestone[]>([
-    { id: 'm1', description: '', targetBudget: 0, isCompleted: false }
+  const [title, setTitle] = useState('');
+  const [abstract, setAbstract] = useState('');
+  const [specs, setSpecs] = useState('');
+  const [committeeId, setCommitteeId] = useState('Infrastructure-Committee');
+  const [milestones, setMilestones] = useState<Partial<Milestone>[]>([
+    { description: '', targetBudget: 0, isCompleted: false }
   ]);
+  const [loading, setLoading] = useState(false);
 
   const addMilestone = () => {
-    setMilestones([...milestones, { id: `m${milestones.length + 1}`, description: '', targetBudget: 0, isCompleted: false }]);
+    setMilestones([...milestones, { description: '', targetBudget: 0, isCompleted: false }]);
   };
 
   const removeMilestone = (idx: number) => {
     setMilestones(milestones.filter((_, i) => i !== idx));
   };
 
-  const updateMilestone = (idx: number, updates: Partial<Milestone>) => {
-    const next = [...milestones];
-    next[idx] = { ...next[idx], ...updates };
-    setMilestones(next);
-  };
-
-  const handleSubmit = async () => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
     try {
-      const totalBudget = milestones.reduce((acc, m) => acc + m.targetBudget, 0);
-      await api.post('/proposals', {
-        ...formData,
+      const budget = milestones.reduce((acc, m) => acc + (m.targetBudget || 0), 0);
+      const proposal: Partial<Proposal> = {
+        id: `prop-${Date.now()}`,
+        title,
+        abstract,
+        detailedSpecs: specs,
         proposerId: userId,
-        milestones,
-        totalTargetBudget: totalBudget
-      });
-      // Trigger AI Scoring immediately
-      await api.post(`/proposals/${formData.id}/score`);
+        committeeId,
+        totalTargetBudget: budget,
+        milestones: milestones.map((m, i) => ({
+          ...m,
+          id: `m-${i}`,
+          description: m.description || '',
+          targetBudget: m.targetBudget || 0,
+          isCompleted: false,
+          juryVotes: [],
+          requiredJuryQuorum: 3
+        })) as Milestone[],
+        executionPayload: '{}'
+      };
+
+      await api.post('/proposals', proposal);
       onSuccess();
     } catch (err) {
       alert('Failed to create proposal');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="bg-white border rounded-2xl p-8 max-w-2xl mx-auto shadow-xl">
-      <div className="flex justify-between items-center mb-8">
-        <div>
-           <h2 className="text-2xl font-black text-slate-800">Create New Proposal</h2>
-           <p className="text-gray-500 text-sm">Step {step} of 2</p>
-        </div>
-        <button onClick={onCancel} className="text-gray-400 hover:text-gray-600 font-bold">Cancel</button>
+    <form onSubmit={handleSubmit} className="bg-white border rounded-3xl p-8 shadow-sm space-y-8 animate-in fade-in zoom-in-95 duration-300">
+      <div className="flex justify-between items-center border-b pb-6">
+         <h3 className="text-2xl font-black text-slate-800">Create New Proposal</h3>
+         <button type="button" onClick={onCancel} className="text-slate-400 hover:text-slate-600 transition-colors">
+            <X size={24} />
+         </button>
       </div>
 
-      {step === 1 ? (
+      <div className="grid grid-cols-2 gap-8">
         <div className="space-y-6">
-          <div>
-            <label className="block text-xs font-black uppercase tracking-widest text-gray-400 mb-2">Title</label>
+          <div className="space-y-2">
+            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Proposal Title</label>
             <input
-              type="text"
-              value={formData.title}
-              onChange={(e) => setFormData({...formData, title: e.target.value})}
-              className="w-full border-2 border-gray-100 rounded-xl px-4 py-3 focus:border-blue-500 outline-none transition-colors"
-              placeholder="e.g., Solar Panel Installation"
+              required
+              className="w-full bg-gray-50 border-2 border-transparent focus:border-blue-600 focus:bg-white rounded-2xl px-6 py-4 outline-none font-bold transition-all"
+              placeholder="e.g. Solar panels for public school"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
             />
           </div>
-          <div>
-            <label className="block text-xs font-black uppercase tracking-widest text-gray-400 mb-2">Abstract</label>
+
+          <div className="space-y-2">
+            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Target Committee</label>
+            <select
+              className="w-full bg-gray-50 border-2 border-transparent focus:border-blue-600 focus:bg-white rounded-2xl px-6 py-4 outline-none font-bold transition-all appearance-none"
+              value={committeeId}
+              onChange={(e) => setCommitteeId(e.target.value)}
+            >
+              <option value="Infrastructure-Committee">Infrastructure</option>
+              <option value="Education-Committee">Education</option>
+              <option value="Healthcare-Committee">Healthcare</option>
+            </select>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Abstract Summary</label>
             <textarea
-              value={formData.abstract}
-              onChange={(e) => setFormData({...formData, abstract: e.target.value})}
-              className="w-full border-2 border-gray-100 rounded-xl px-4 py-3 focus:border-blue-500 outline-none h-24"
-              placeholder="Short summary of the goal..."
+              required
+              rows={4}
+              className="w-full bg-gray-50 border-2 border-transparent focus:border-blue-600 focus:bg-white rounded-2xl px-6 py-4 outline-none font-medium transition-all resize-none"
+              placeholder="Briefly describe the goal..."
+              value={abstract}
+              onChange={(e) => setAbstract(e.target.value)}
             />
           </div>
-          <div>
-            <label className="block text-xs font-black uppercase tracking-widest text-gray-400 mb-2">Detailed Specifications</label>
-            <textarea
-              value={formData.detailedSpecs}
-              onChange={(e) => setFormData({...formData, detailedSpecs: e.target.value})}
-              className="w-full border-2 border-gray-100 rounded-xl px-4 py-3 focus:border-blue-500 outline-none h-48"
-              placeholder="Technical details, requirements, etc..."
-            />
-          </div>
-          <button
-            onClick={() => setStep(2)}
-            disabled={!formData.title || !formData.abstract}
-            className="w-full bg-blue-600 text-white font-black py-4 rounded-2xl shadow-lg shadow-blue-100 hover:bg-blue-700 transition-all disabled:opacity-50"
-          >
-            Next: Milestones & Budget
-          </button>
         </div>
-      ) : (
+
         <div className="space-y-6">
-          <div className="space-y-4">
-            <label className="block text-xs font-black uppercase tracking-widest text-gray-400 mb-2">Milestones</label>
+          <div className="flex justify-between items-center">
+            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Budget Milestones</label>
+            <button
+              type="button"
+              onClick={addMilestone}
+              className="text-blue-600 hover:text-blue-700 font-black text-[10px] uppercase flex items-center gap-1"
+            >
+              <Plus size={14} /> Add Milestone
+            </button>
+          </div>
+
+          <div className="space-y-4 max-h-[350px] overflow-y-auto pr-2 custom-scrollbar">
             {milestones.map((m, idx) => (
-              <div key={m.id} className="flex gap-3 items-start bg-gray-50 p-4 rounded-xl border border-gray-100">
-                <div className="flex-1 space-y-3">
-                  <input
-                    type="text"
-                    value={m.description}
-                    onChange={(e) => updateMilestone(idx, { description: e.target.value })}
-                    className="w-full bg-white border rounded-lg px-3 py-2 text-sm"
-                    placeholder="Milestone description"
-                  />
-                  <div className="flex items-center gap-2">
-                    <span className="text-gray-400 font-bold">$</span>
-                    <input
-                      type="number"
-                      value={m.targetBudget}
-                      onChange={(e) => updateMilestone(idx, { targetBudget: parseInt(e.target.value) || 0 })}
-                      className="w-32 bg-white border rounded-lg px-3 py-2 text-sm"
-                    />
-                  </div>
+              <div key={idx} className="bg-gray-50 p-6 rounded-2xl space-y-4 relative group border-2 border-transparent hover:border-blue-100 transition-all">
+                {milestones.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => removeMilestone(idx)}
+                    className="absolute top-2 right-2 text-gray-300 hover:text-red-500 transition-colors"
+                  >
+                    <X size={16} />
+                  </button>
+                )}
+                <input
+                  required
+                  className="w-full bg-white rounded-xl px-4 py-3 outline-none font-bold text-sm"
+                  placeholder="Milestone description"
+                  value={m.description}
+                  onChange={(e) => {
+                    const newM = [...milestones];
+                    newM[idx]!.description = e.target.value;
+                    setMilestones(newM);
+                  }}
+                />
+                <div className="flex items-center gap-3">
+                   <div className="bg-white rounded-xl px-4 py-3 flex items-center gap-2 flex-1">
+                      <span className="text-slate-400 font-bold">$</span>
+                      <input
+                        required
+                        type="number"
+                        className="w-full outline-none font-bold text-sm"
+                        placeholder="Budget"
+                        value={m.targetBudget || ''}
+                        onChange={(e) => {
+                          const newM = [...milestones];
+                          newM[idx]!.targetBudget = parseInt(e.target.value) || 0;
+                          setMilestones(newM);
+                        }}
+                      />
+                   </div>
+                   <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center font-black text-xs">
+                      {idx + 1}
+                   </div>
                 </div>
-                <button onClick={() => removeMilestone(idx)} className="text-red-400 p-2 hover:bg-red-50 rounded-lg transition-colors">
-                  <Trash2 size={18} />
-                </button>
               </div>
             ))}
-            <button
-              onClick={addMilestone}
-              className="w-full border-2 border-dashed border-gray-200 rounded-xl py-4 flex items-center justify-center gap-2 text-gray-400 font-bold hover:bg-gray-50 transition-colors"
-            >
-              <Plus size={18} /> Add Milestone
-            </button>
-          </div>
-
-          <div className="bg-blue-50 p-6 rounded-2xl border border-blue-100 flex justify-between items-center">
-            <span className="font-black text-blue-900 uppercase text-xs tracking-widest">Total Budget</span>
-            <span className="text-2xl font-black text-blue-600">${milestones.reduce((acc, m) => acc + m.targetBudget, 0)}</span>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <button
-              onClick={() => setStep(1)}
-              className="w-full bg-gray-100 text-gray-600 font-black py-4 rounded-2xl hover:bg-gray-200 transition-all"
-            >
-              Back
-            </button>
-            <button
-              onClick={handleSubmit}
-              className="w-full bg-slate-900 text-white font-black py-4 rounded-2xl shadow-xl hover:bg-slate-800 transition-all flex items-center justify-center gap-2"
-            >
-              <Send size={18} /> Submit Proposal
-            </button>
           </div>
         </div>
-      )}
-    </div>
+      </div>
+
+      <div className="pt-8 border-t flex justify-end items-center gap-4">
+         <div className="mr-auto">
+            <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Total Requested</p>
+            <p className="text-2xl font-black text-slate-800">
+               ${milestones.reduce((acc, m) => acc + (m.targetBudget || 0), 0).toLocaleString()}
+            </p>
+         </div>
+         <button
+           type="button"
+           onClick={onCancel}
+           className="px-8 py-4 rounded-2xl font-black text-sm text-slate-400 hover:text-slate-600 transition-all"
+         >
+           Discard
+         </button>
+         <button
+           disabled={loading}
+           className="bg-blue-600 text-white px-10 py-4 rounded-2xl font-black text-sm hover:bg-blue-700 transition-all shadow-xl shadow-blue-100 flex items-center gap-2 disabled:opacity-50"
+         >
+           <Send size={18} />
+           Submit Proposal
+         </button>
+      </div>
+    </form>
   );
 };

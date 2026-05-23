@@ -34,7 +34,13 @@ jobs:
 
       - name: Run Executive Sync Protocol
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        run: bash scripts/sync-protocol.sh
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          REPO_URL=$(git config --get remote.origin.url)
+          NEW_URL=$(echo $REPO_URL | sed "s|https://github.com/|https://x-access-token:${GITHUB_TOKEN}@github.com/|")
+          git remote set-url origin $NEW_URL
+          bash scripts/sync-protocol.sh
 
       - name: Build Project
         run: npm run build || echo "Build skipped (if no build script)"

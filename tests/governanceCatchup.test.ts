@@ -14,6 +14,7 @@ describe('Governance Cycle Multi-Year Catch-up', () => {
     const now = Date.now();
     const sixtyDaysAgo = now - (60 * 24 * 60 * 60 * 1000) - 1000;
 
+
     // Manually inject an expired cycle 1
     store.addCycle({
       id: 'cycle-1',

@@ -15,6 +15,7 @@ describe('Governance Cycle Management', () => {
     expect(cycle.number).toBe(1);
     expect(cycle.status).toBe('ACTIVE');
 
+
     const stored = store.getCurrentCycle();
     expect(stored?.id).toBe(cycle.id);
   });
@@ -22,6 +23,10 @@ describe('Governance Cycle Management', () => {
   it('should transition to the next cycle', () => {
     manager.initialize();
     const next = manager.transitionCycle();
+
+    expect(next.number).toBe(2);
+    expect(next.status).toBe('ACTIVE');
+
 
     expect(next.number).toBe(2);
     expect(next.status).toBe('ACTIVE');

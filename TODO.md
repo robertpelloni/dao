@@ -1,26 +1,18 @@
 # TODO
 
-## Documentation & Setup
-- [x] Create `VERSION.md`
-- [x] Create `VISION.md`
-- [x] Create `AGENTS.md`
-- [x] Create `ROADMAP.md`
-- [x] Create `CHANGELOG.md`
-- [x] Create `MEMORY.md`
-- [x] Create `DEPLOY.md`
-- [x] Create `HANDOFF.md`
-
-## Phase 4: Refinements (Complete)
-- [x] **Identity:** Implement subject-based power breakdown API & UI.
-- [x] **Security:** Replace PoC auth with JWT foundation.
-- [x] **API:** Implement `GET /committees/suggested/:userId`.
-- [x] **UI:** Enhance IdentityView to display suggested committees.
-- [x] **UI:** Integrate Impact Score recalculation button in ActionPanel.
-- [x] **Testing:** Add auth lifecycle tests.
-
-## Phase 5: Advanced (Current)
+## Phase 5: Governance & Scaling (Current)
 - [x] Committee auto-provisioning logic.
 - [x] Proof-of-humanity integration.
 - [x] Governance Health Dashboard UI.
-- [ ] Persistent state machine for multi-year governance.
-- [ ] ZKP Identity Layer.
+- [x] Multi-year governance catch-up logic.
+- [x] CI/CD Authentication (GITHUB_TOKEN injection).
+- [x] Mobile-first UI (collapsible sidebar).
+- [x] Historical Trend API & Charts.
+- [ ] ZKP Privacy Layer (Semaphore/Circuits).
+- [ ] AI Proposal Triage Agent.
+- [ ] Automated Reputation Decay simulation tests.
+
+## Maintenance
+- [x] Validate cross-platform batch scripts (.bat).
+- [x] Synchronize versioning across package.json, VERSION.md, CHANGELOG.md.
+- [x] Enforce structural documentation checks in verify-docs.sh.

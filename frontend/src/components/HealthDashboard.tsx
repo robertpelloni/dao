@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { Proposal, Committee, User, GovernanceCycle } from '../../../src/models/types';
+import { Proposal, Committee, User, GovernanceCycle } from '../../../src/models/types.js';
 import { Activity, Landmark, TrendingUp, Users, PieChart, AlertCircle, FastForward, Clock } from 'lucide-react';
-import api from '../api/client';
-import { CycleTrends } from './CycleTrends';
+import api from '../api/client.js';
+import { CycleTrends } from './CycleTrends.js';
 
 interface HealthDashboardProps {
   proposals: Proposal[];

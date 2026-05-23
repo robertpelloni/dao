@@ -31,6 +31,9 @@
 - [x] Subject-specific committee auto-provisioning.
 - [x] Sybil-resistant identity proof-of-humanity integration.
 - [x] Committee auto-discovery in UI.
-- [ ] Privacy-preserving identity (ZKP).
-- [ ] Persistent state machine for multi-year governance cycles.
-- [ ] Mobile-first UI refinements.
+- [x] CI/CD Authentication and push stabilization.
+- [x] Multi-year governance cycle catch-up logic.
+- [x] Mobile-first UI refinements.
+- [x] Historical Trend visualization (D3).
+- [ ] ZKP Identity Layer (Privacy implementation).
+- [ ] AI Triage Agent for proposal routing.

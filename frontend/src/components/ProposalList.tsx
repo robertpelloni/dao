@@ -1,5 +1,5 @@
 import React from 'react';
-import { Proposal } from '../../../src/models/types';
+import { Proposal } from '../../../src/models/types.js';
 import { BarChart3, Clock, DollarSign } from 'lucide-react';
 
 interface ProposalListProps {

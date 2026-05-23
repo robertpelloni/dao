@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.8.7] - 2026-05-23
+### Added
+- Automated protocol sync and branch reconciliation.
+
+
+## [0.8.6] - 2026-05-23
+### Fixed
+- CI authentication for autonomous protocol engine.
+- GitHub Actions workflow for push operations.
+
 ## [0.8.5] - 2026-05-23
 ### Added
 - Robust implementation of the "Executive Protocol" for autonomous repository management.

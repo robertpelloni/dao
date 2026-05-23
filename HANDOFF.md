@@ -1,26 +1,26 @@
-# HANDOFF - Version 0.8.0
+# HANDOFF - Version 0.8.7
 
 ## Completed in this Session
-1. **Executive Protocol Engine:** Implemented the `RepositoryManager` for autonomous repository handling, including upstream synchronization, recursive submodule updates, and dual-direction merging.
-2. **CI/CD Integration:** Configured GitHub Actions (`autopilot.yml`) to execute the synchronization protocol autonomously while enforcing testing and documentation standards.
-3. **Visual Delegation Graph:** Added a force-directed graph to the Identity view using `react-force-graph-2d` to visualize liquid voting power flows.
-4. **Utility Infrastructure:** Created root-level utility scripts (`start.sh`, `build.sh`) and implemented automated script validation within the protocol.
-5. **CI Stabilization:** Fixed integration test failures and upgraded the CI runner to Node 22.
+1. **Executive Protocol Stabilization:** Fully implemented and verified the "Executive Protocol" for autonomous repository management, including upstream synchronization, recursive submodule updates, and dual-direction merging.
+2. **CI/CD Authentication Fix:** Resolved a critical CI failure by injecting `GITHUB_TOKEN` into the workflow, enabling authenticated `git push` operations from the autopilot engine.
+3. **Multi-Year Governance Catch-up:** Enhanced `GovernanceManager` to handle elapsed cycles and reputation decay correctly after system downtime.
+4. **Mobile-First UI Refinements:** Implemented a responsive, collapsible sidebar and hamburger menu for the LiquidGov dashboard.
+5. **Historical Trends API:** Added backend and frontend support for visualizing governance trends (participation, funding) using `d3`.
+6. **Infrastructure Security:** Hardened `RepositoryManager` against command injection and validated branch names.
 
 ## Current Status
-- **Autopilot:** The repository is now self-managing under the Executive Protocol.
-- **Backend:** Stabilized middleware and improved version reading from `VERSION.md`.
-- **Frontend:** Includes a visual transparency layer for delegations.
-- **Infrastructure:** All mandatory documents and scripts are verified via CI.
+- **Autopilot:** Fully functional and authenticated in CI.
+- **Governance:** Iterative reputation decay and cycle management are robust.
+- **UI:** Responsive and includes a Health Dashboard with trend analysis.
+- **Version:** v0.8.7
 
 ## Next Steps for the Next Agent
-1. **Committee Auto-Discovery:** Implement logic to automatically discover and list new committees in the UI.
-2. **Subject-based Power Breakdown:** Enhance the Identity view to show a detailed breakdown of voting power per subject area.
-3. **JWT Authentication:** Migrate from header-based user IDs to a secure JWT authentication system.
-4. **Health Dashboard:** Create a dedicated view for monitoring the DAO's financial and governance health metrics.
+1. **ZKP Identity Layer:** Begin implementation of privacy-preserving identity using Semaphore or similar.
+2. **On-Chain Hooks:** Explore EVM integration for trustless action execution.
+3. **AI Triage Agent:** Implement an agent to automatically tag and route new proposals.
 
 ## Key Files
-- `src/core/repository.ts`: The engine behind the Executive Protocol.
-- `PROTOCOL.md`: Specification of the autonomous management rules.
-- `frontend/src/components/DelegationGraph.tsx`: Visual transparency component.
-- `scripts/`: Centralized location for automation and execution scripts.
+- `src/core/repository.ts`: Autopilot engine logic.
+- `src/core/governanceCycle.ts`: Governance lifecycle manager.
+- `frontend/src/components/CycleTrends.tsx`: D3 trend visualization.
+- `.github/workflows/autopilot.yml`: CI/CD automation.

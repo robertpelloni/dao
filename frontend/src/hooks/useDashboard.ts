@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { io } from 'socket.io-client';
-import api from '../api/client';
-import { User, Proposal, Committee, GovernanceCycle } from '../../../src/models/types';
+import api from '../api/client.js';
+import { User, Proposal, Committee, GovernanceCycle } from '../../../src/models/types.js';
 
 const SOCKET_URL = 'http://localhost:3000';
 

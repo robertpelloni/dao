@@ -1,5 +1,5 @@
 import React from 'react';
-import { User } from '../../../src/models/types';
+import { User } from '../../../src/models/types.js';
 import { ShieldCheck, ShieldAlert, Coins } from 'lucide-react';
 
 interface IdentityWidgetProps {

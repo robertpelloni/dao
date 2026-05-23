@@ -1,14 +1,14 @@
 import { useState } from 'react'
 import { Layout, Globe, Users, FileText, Shield, RefreshCw, ChevronLeft, Activity } from 'lucide-react'
-import { IdentityWidget } from './components/IdentityWidget'
-import { ProposalList } from './components/ProposalList'
-import { ActionPanel } from './components/ActionPanel'
-import { ProposalForm } from './components/ProposalForm'
-import { CommitteeList } from './components/CommitteeList'
-import { IdentityView } from './components/IdentityView'
-import { HealthDashboard } from './components/HealthDashboard'
-import { useDashboard } from './hooks/useDashboard'
-import { Milestone } from '../../src/models/types'
+import { IdentityWidget } from './components/IdentityWidget.js'
+import { ProposalList } from './components/ProposalList.js'
+import { ActionPanel } from './components/ActionPanel.js'
+import { ProposalForm } from './components/ProposalForm.js'
+import { CommitteeList } from './components/CommitteeList.js'
+import { IdentityView } from './components/IdentityView.js'
+import { HealthDashboard } from './components/HealthDashboard.js'
+import { useDashboard } from './hooks/useDashboard.js'
+import { Milestone } from '../../src/models/types.js'
 
 function App() {
   const [activeTab, setActiveTab] = useState('proposals')
