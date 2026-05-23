@@ -1,17 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { User } from '../../../src/models/types';
+import { User, Committee } from '../../../src/models/types';
 import { IdentityProfile } from '../../../src/core/identity';
-import { ShieldCheck, UserPlus, Fingerprint, Award, GitGraph } from 'lucide-react';
+import { ShieldCheck, UserPlus, Fingerprint, Award, GitGraph, Users } from 'lucide-react';
 import api from '../api/client';
 import { DelegationGraph } from './DelegationGraph';
 
 interface IdentityViewProps {
   currentUser: User | null;
   allUsers: User[];
+  powerBreakdown: Record<string, number>;
+  suggestedCommittees: Committee[];
   onAction: () => void;
 }
 
-export const IdentityView: React.FC<IdentityViewProps> = ({ currentUser, allUsers, onAction }) => {
+export const IdentityView: React.FC<IdentityViewProps> = ({ currentUser, allUsers, powerBreakdown, suggestedCommittees, onAction }) => {
   const [profiles, setProfiles] = useState<Record<string, IdentityProfile>>({});
   const [loading, setLoading] = useState(false);
 
@@ -71,7 +73,7 @@ export const IdentityView: React.FC<IdentityViewProps> = ({ currentUser, allUser
                 )}
               </div>
 
-              <div className="grid grid-cols-2 gap-8">
+              <div className="grid grid-cols-3 gap-8">
                  <div className="bg-white/5 backdrop-blur-md rounded-2xl p-6 border border-white/10">
                     <p className="text-slate-400 font-black uppercase text-[10px] tracking-[0.2em] mb-2">Trust Score</p>
                     <p className="text-4xl font-black">{profiles[currentUser.id].verificationScore}%</p>
@@ -88,10 +90,65 @@ export const IdentityView: React.FC<IdentityViewProps> = ({ currentUser, allUser
                        ))}
                     </div>
                  </div>
+                 <div className="bg-white/5 backdrop-blur-md rounded-2xl p-6 border border-white/10">
+                    <p className="text-slate-400 font-black uppercase text-[10px] tracking-[0.2em] mb-2">Voting Subjects</p>
+                    <p className="text-4xl font-black">{Object.keys(powerBreakdown).length}</p>
+                    <div className="flex flex-wrap gap-2 mt-3">
+                       {Object.keys(powerBreakdown).slice(0, 3).map((s, i) => (
+                          <span key={i} className="text-[8px] font-black uppercase bg-white/10 px-2 py-1 rounded-md">{s}</span>
+                       ))}
+                    </div>
+                 </div>
               </div>
            </div>
         </section>
       )}
+
+      {/* Suggested Committees */}
+      {suggestedCommittees.length > 0 && (
+        <section className="bg-blue-600 rounded-3xl p-8 shadow-xl text-white relative overflow-hidden">
+           <Users className="absolute -right-8 -bottom-8 text-white/10" size={200} />
+           <div className="relative z-10">
+              <h3 className="text-xl font-black mb-6 flex items-center gap-2">
+                 <Users size={24} />
+                 Suggested Committees
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                 {suggestedCommittees.map(c => (
+                    <div key={c.id} className="bg-white/10 backdrop-blur-md border border-white/20 p-4 rounded-2xl hover:bg-white/20 transition-all cursor-pointer">
+                       <p className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-200 mb-1">{c.subject}</p>
+                       <h4 className="font-bold text-sm">{c.id}</h4>
+                       <div className="flex justify-between items-center mt-3">
+                          <span className="text-[10px] font-black">{c.members.length} Members</span>
+                          <span className="text-[10px] font-black bg-white text-blue-600 px-2 py-0.5 rounded">Join</span>
+                       </div>
+                    </div>
+                 ))}
+              </div>
+           </div>
+        </section>
+      )}
+
+      {/* Power Breakdown Table */}
+      <section className="bg-white border rounded-3xl p-8 shadow-sm">
+        <h3 className="text-xl font-black text-slate-800 mb-6 flex items-center gap-2">
+           <ShieldCheck className="text-blue-600" />
+           Liquid Power Breakdown
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {Object.entries(powerBreakdown).map(([subject, power]) => (
+            <div key={subject} className="p-4 rounded-2xl border bg-gray-50/50 flex justify-between items-center">
+              <div>
+                <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest">{subject}</p>
+                <p className="text-xl font-black text-slate-800">{power}</p>
+              </div>
+              <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600">
+                <GitGraph size={20} />
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
 
       {/* Delegation Graph */}
       <section>

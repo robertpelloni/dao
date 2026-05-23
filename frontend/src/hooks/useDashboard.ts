@@ -10,25 +10,31 @@ export function useDashboard(userId: string) {
   const [isVerified, setIsVerified] = useState(false);
   const [proposals, setProposals] = useState<Proposal[]>([]);
   const [committees, setCommittees] = useState<Committee[]>([]);
+  const [suggestedCommittees, setSuggestedCommittees] = useState<Committee[]>([]);
   const [allUsers, setAllUsers] = useState<User[]>([]);
+  const [powerBreakdown, setPowerBreakdown] = useState<Record<string, number>>({});
   const [selectedProposalId, setSelectedProposalId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   const fetchData = useCallback(async (silent = false) => {
     try {
       if (!silent) setLoading(true);
-      const [uRes, pRes, cRes, usersRes] = await Promise.all([
+      const [uRes, pRes, cRes, usersRes, bRes, sRes] = await Promise.all([
         api.get(`/users/${userId}`),
         api.get('/proposals'),
         api.get('/committees'),
-        api.get('/users')
+        api.get('/users'),
+        api.get(`/identity/${userId}/breakdown`),
+        api.get(`/committees/suggested/${userId}`)
       ]);
       setUser(uRes.data);
       // Mock verification check
       setIsVerified(userId === 'dave' || userId === 'charlie' || userId === 'alice');
       setProposals(pRes.data);
       setCommittees(cRes.data);
+      setSuggestedCommittees(sRes.data);
       setAllUsers(usersRes.data);
+      setPowerBreakdown(bRes.data);
     } catch (err) {
       console.error('Failed to fetch dashboard data', err);
     } finally {
@@ -60,7 +66,9 @@ export function useDashboard(userId: string) {
     isVerified,
     proposals,
     committees,
+    suggestedCommittees,
     allUsers,
+    powerBreakdown,
     selectedProposal,
     setSelectedProposalId,
     loading,

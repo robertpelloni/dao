@@ -16,9 +16,10 @@ export class RepositoryManager {
   private run(command: string, cwd: string = this.rootDir): string {
     try {
       return execSync(command, { cwd, encoding: 'utf8' });
-    } catch (err: any) {
+    } catch (err) {
+      const error = err as { stderr?: string; message?: string };
       console.error(`Command failed: ${command}`);
-      console.error(err.stderr || err.message);
+      console.error(error.stderr || error.message);
       throw err;
     }
   }
@@ -33,7 +34,7 @@ export class RepositoryManager {
     // Recursive fetch for submodules
     try {
       this.run('git submodule foreach --recursive git fetch --all --tags');
-    } catch (e) {
+    } catch {
       console.warn('Submodule fetch failed or no submodules present.');
     }
 
@@ -45,7 +46,7 @@ export class RepositoryManager {
         this.run('git checkout main');
         this.run('git merge upstream/main --no-edit --allow-unrelated-histories');
       }
-    } catch (err) {
+    } catch {
       console.warn('Upstream merge skipped (upstream not found or no changes).');
     }
 
@@ -90,7 +91,7 @@ export class RepositoryManager {
         } else {
           console.log(`Branch ${cleanBranch} is already merged into main.`);
         }
-      } catch (err) {
+      } catch {
         console.warn(`Forward merge failed for ${cleanBranch}. Skipping.`);
         this.run('git merge --abort || true');
       }
@@ -102,7 +103,7 @@ export class RepositoryManager {
         this.run('git merge main --no-edit');
         this.run(`git push origin ${cleanBranch} || echo "Push skipped"`);
         this.run('git checkout main');
-      } catch (err) {
+      } catch {
         console.warn(`Reverse merge failed for ${cleanBranch}. Skipping.`);
         this.run('git merge --abort || true');
         this.run('git checkout main');
@@ -156,7 +157,7 @@ export class RepositoryManager {
         this.run(`git checkout ${cleanBranch}`);
         this.run('git merge main --no-edit');
         this.run(`git push origin ${cleanBranch} || echo "Push skipped"`);
-      } catch (err) {
+      } catch {
         console.warn(`Final reverse merge failed for ${cleanBranch}.`);
         this.run('git merge --abort || true');
       }
@@ -204,7 +205,7 @@ export class RepositoryManager {
           console.log(`Fixing permissions for ${script}...`);
           this.run(`chmod +x ${script}`);
         }
-      } catch (e) {
+      } catch {
         // Ignore permission errors in restricted environments
       }
     }

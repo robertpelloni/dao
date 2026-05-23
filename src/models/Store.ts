@@ -75,9 +75,8 @@ export class Store {
   }
 
   get users() {
-    const self = this;
     return {
-      values: () => self.getUsers()
+      values: () => this.getUsers()
     };
   }
 
@@ -106,9 +105,8 @@ export class Store {
   }
 
   get committees() {
-    const self = this;
     return {
-      values: () => self.getCommittees()
+      values: () => this.getCommittees()
     };
   }
 
@@ -147,9 +145,8 @@ export class Store {
   }
 
   get proposals() {
-    const self = this;
     return {
-      values: () => self.getProposals()
+      values: () => this.getProposals()
     };
   }
 

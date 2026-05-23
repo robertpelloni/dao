@@ -1,4 +1,3 @@
-import { User, Committee, Proposal } from '../models/types';
 import { Store } from '../models/Store';
 
 /**

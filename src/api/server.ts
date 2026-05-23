@@ -5,13 +5,14 @@ import cors from 'cors';
 import fs from 'fs';
 import path from 'path';
 import { globalStore } from '../models/Store';
-import { globalIdentity, IdentityManager } from '../core/identity';
+import { globalIdentity } from '../core/identity';
 import { calculateVoteCost } from '../core/qv';
 import { delegate, calculateEffectivePower } from '../core/delegation';
 import { transitionProposal } from '../core/proposalStateMachine';
 import { CrowdfundingEngine } from '../core/crowdfunding';
 import { calculateImpactScore } from '../core/impactScoring';
 import { User, Proposal, Committee } from '../models/types';
+import { signToken, verifyToken } from '../utils/auth';
 
 /**
  * LiquidGov REST API Server
@@ -33,21 +34,49 @@ app.use(cors());
 app.use(express.json());
 
 /**
- * Basic Authentication Middleware (PoC)
- * In a real system, this would use JWT or session-based auth.
- * For now, it ensures the 'x-user-id' header matches the userId in the request body.
+ * JWT Authentication Middleware
  */
-app.use((req, res, next) => {
-  const skipPaths = ['/health', '/summary', '/proposals', '/committees', '/users'];
+const authenticateToken = (req: Request, res: Response, next: any) => {
+  const skipPaths = ['/health', '/summary', '/proposals', '/committees', '/users', '/auth/login'];
   if (skipPaths.includes(req.path) && req.method === 'GET') return next();
+  if (req.path === '/auth/login' && req.method === 'POST') return next();
 
-  const headerUserId = req.headers['x-user-id'];
-  const bodyUserId = req.body?.userId;
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
 
-  if (req.method === 'POST' && bodyUserId && headerUserId !== bodyUserId) {
-    return res.status(401).json({ error: 'Unauthorized: User ID mismatch' });
+  if (!token) {
+    // Fallback for PoC: check x-user-id for now to avoid breaking current UI
+    const xUserId = req.headers['x-user-id'];
+    if (xUserId) {
+      (req as any).user = { userId: xUserId };
+      return next();
+    }
+    return res.status(401).json({ error: 'Missing token' });
   }
-  next();
+
+  try {
+    const payload = verifyToken(token);
+    (req as any).user = payload;
+    next();
+  } catch {
+    return res.status(403).json({ error: 'Invalid token' });
+  }
+};
+
+app.use(authenticateToken);
+
+/**
+ * Authentication Endpoints
+ */
+app.post('/auth/login', (req: Request, res: Response) => {
+  const { userId } = req.body;
+  if (!userId) return res.status(400).json({ error: 'userId required' });
+
+  const user = globalStore.getUser(userId);
+  if (!user) return res.status(404).json({ error: 'User not found' });
+
+  const token = signToken({ userId });
+  res.json({ token, user });
 });
 
 // --- WebSocket Setup ---
@@ -98,6 +127,11 @@ app.get('/identity/:id', (req: Request, res: Response) => {
   res.json(profile);
 });
 
+app.get('/identity/:id/breakdown', (req: Request, res: Response) => {
+  const breakdown = globalIdentity.getPowerBreakdown(s(req.params.id));
+  res.json(breakdown);
+});
+
 app.post('/users/:id/endorse', (req: Request, res: Response) => {
   const { endorserId } = req.body;
   try {
@@ -123,6 +157,26 @@ app.post('/committees', (req: Request, res: Response) => {
 
 app.get('/committees', (req: Request, res: Response) => {
   res.json(Array.from(globalStore.committees.values()));
+});
+
+app.get('/committees/suggested/:userId', (req: Request, res: Response) => {
+  const userId = s(req.params.userId);
+  const user = globalStore.getUser(userId);
+  if (!user) return res.status(404).json({ error: 'User not found' });
+
+  // Suggest committees based on the user's active delegations or reputation subjects
+  const userSubjects = new Set(Object.keys(user.delegates));
+  Object.keys(user.reputation).forEach(s => userSubjects.add(s));
+
+  const allCommittees = Array.from(globalStore.committees.values());
+  const suggested = allCommittees.filter(c => userSubjects.has(c.subject));
+
+  // If no specific subjects, suggest the most popular committees (mock: just return all if few)
+  if (suggested.length === 0) {
+    res.json(allCommittees.slice(0, 5));
+  } else {
+    res.json(suggested);
+  }
 });
 
 // --- Delegation Endpoints ---

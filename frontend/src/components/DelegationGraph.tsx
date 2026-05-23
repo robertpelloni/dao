@@ -44,7 +44,6 @@ export const DelegationGraph: React.FC<DelegationGraphProps> = ({ users, subject
         width={800}
         height={400}
         backgroundColor="#ffffff"
-        centerAt={[0, 0]}
         d3VelocityDecay={0.1}
         nodeCanvasObject={(node: any, ctx, globalScale) => {
           const label = node.name;

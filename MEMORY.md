@@ -15,6 +15,11 @@
 - **Component Pattern:** Using a centralized `useDashboard` hook simplifies state management across multiple tabs.
 - **Vite Proxy:** Configured proxy to handle CORS issues between frontend (5173) and backend (3000).
 
+## Version 0.8.0-0.8.1: The Protocol & Refinement
+- **Executive Protocol:** The `RepositoryManager` now handles autonomous branch management and submodule synchronization, moving the project towards continuous autopilot.
+- **JWT Authentication:** Replacing PoC header-based auth with a standard JWT foundation to improve security and prepare for real user sessions.
+- **Identity Analytics:** Added subject-based power breakdown to provide citizens with granular insight into where their liquid power originates.
+
 ## Version 0.7.0: The Oracle & Real-time Sync
 - **Milestone Oracle:** Funds are now locked until a jury quorum (majority by default) verifies the work. This addresses the "Oracle Problem" by requiring multi-party consensus.
 - **WebSocket Integration:** Using `socket.io` to trigger silent frontend refreshes. This ensures all users see the latest vote counts and funding status without manual refreshes.

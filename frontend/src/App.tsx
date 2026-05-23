@@ -12,7 +12,7 @@ import { Milestone } from '../../src/models/types'
 function App() {
   const [activeTab, setActiveTab] = useState('proposals')
   const [showForm, setShowForm] = useState(false)
-  const { user, isVerified, proposals, committees, allUsers, selectedProposal, setSelectedProposalId, loading, refresh } = useDashboard('alice')
+  const { user, isVerified, proposals, committees, suggestedCommittees, allUsers, powerBreakdown, selectedProposal, setSelectedProposalId, loading, refresh } = useDashboard('alice')
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -192,7 +192,7 @@ function App() {
                 ) : activeTab === 'committees' ? (
                    <CommitteeList committees={committees} />
                 ) : (
-                   <IdentityView currentUser={user} allUsers={allUsers} onAction={refresh} />
+                   <IdentityView currentUser={user} allUsers={allUsers} powerBreakdown={powerBreakdown} suggestedCommittees={suggestedCommittees} onAction={refresh} />
                 )}
               </div>
             )}

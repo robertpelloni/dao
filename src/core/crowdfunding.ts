@@ -1,4 +1,3 @@
-import { Proposal, Milestone } from '../models/types';
 import { Store } from '../models/Store';
 
 /**

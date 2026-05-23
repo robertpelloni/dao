@@ -120,6 +120,35 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({ proposal, user, onActi
           </div>
         </section>
 
+        {/* AI Impact Scoring */}
+        <section className="border-t pt-6">
+          <div className="flex justify-between items-center mb-4">
+             <h4 className="font-bold flex items-center gap-2 text-slate-800">
+               <CheckCircle2 size={18} className="text-blue-500" />
+               Impact Analysis
+             </h4>
+             <span className="text-[10px] font-black uppercase text-blue-600 bg-blue-50 px-2 py-1 rounded">AI Heuristic</span>
+          </div>
+          <p className="text-xs text-slate-500 mb-4 font-medium italic">Current Impact Score: <span className="font-black text-slate-800">{proposal.impactScore ?? 'Pending'}</span></p>
+          <button
+            disabled={loading}
+            onClick={async () => {
+               setLoading(true);
+               try {
+                 await api.post(`/proposals/${proposal.id}/score`);
+                 onAction();
+               } catch (err) {
+                 alert('Scoring failed');
+               } finally {
+                 setLoading(false);
+               }
+            }}
+            className="w-full bg-slate-100 text-slate-600 font-bold py-2.5 rounded-xl hover:bg-slate-200 transition-colors disabled:opacity-50 text-sm"
+          >
+            Recalculate Impact Score
+          </button>
+        </section>
+
         {/* Crowdfunding Section */}
         <section>
           <div className="flex justify-between items-center mb-4">

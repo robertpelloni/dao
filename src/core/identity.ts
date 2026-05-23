@@ -1,5 +1,5 @@
-import { User } from '../models/types';
 import { Store, globalStore } from '../models/Store';
+import { calculateEffectivePower } from './delegation';
 
 /**
  * Identity Layer (Mock Sybil Resistance)
@@ -32,6 +32,34 @@ export class IdentityManager {
     };
     this.profiles.set(userId, profile);
     return profile;
+  }
+
+  /**
+   * Calculates the voting power breakdown across all subjects for a given user.
+   * This helps identify where a user's liquid power comes from.
+   */
+  getPowerBreakdown(userId: string): Record<string, number> {
+    const user = this.store.getUser(userId);
+    if (!user) return {};
+
+    // In a real system, we would query the subjects table.
+    // For now, we aggregate across the subjects currently present in all users' delegations
+    // and committees.
+    const subjects = new Set<string>(['General']);
+    this.store.getUsers().forEach(u => {
+      Object.keys(u.delegates).forEach(s => subjects.add(s));
+    });
+    this.store.getCommittees().forEach(c => subjects.add(c.subject));
+
+    const breakdown: Record<string, number> = {};
+    subjects.forEach(subject => {
+      const power = calculateEffectivePower(this.store, userId, subject);
+      if (power > 0) {
+        breakdown[subject] = power;
+      }
+    });
+
+    return breakdown;
   }
 
   /**
