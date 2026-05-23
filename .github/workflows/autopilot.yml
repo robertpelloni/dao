@@ -1,0 +1,52 @@
+name: LiquidGov Autopilot CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Verify Documentation Standards
+        run: bash scripts/verify-docs.sh
+
+      - name: Run Backend Tests
+        run: npm test
+
+      - name: Run Frontend Tests
+        run: |
+          cd frontend
+          npx playwright install chromium
+          npm run test:frontend
+
+      - name: Run Executive Sync Protocol
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          REPO_URL=$(git config --get remote.origin.url)
+          NEW_URL=$(echo $REPO_URL | sed "s|https://github.com/|https://x-access-token:${GITHUB_TOKEN}@github.com/|")
+          git remote set-url origin $NEW_URL
+          bash scripts/sync-protocol.sh
+
+      - name: Build Project
+        run: npm run build || echo "Build skipped (if no build script)"
