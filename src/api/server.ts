@@ -12,6 +12,7 @@ import { transitionProposal } from '../core/proposalStateMachine';
 import { CrowdfundingEngine } from '../core/crowdfunding';
 import { calculateImpactScore } from '../core/impactScoring';
 import { globalGovernance } from '../core/governanceCycle';
+import { globalTaskManager } from '../core/tasks';
 import { User, Proposal, Committee } from '../models/types';
 import { signToken, verifyToken } from '../utils/auth';
 
@@ -38,7 +39,7 @@ app.use(express.json());
  * JWT Authentication Middleware
  */
 const authenticateToken = (req: Request, res: Response, next: any) => {
-  const skipPaths = ['/health', '/summary', '/proposals', '/committees', '/users', '/auth/login', '/governance/trends', '/governance/cycles', '/governance/cycle'];
+  const skipPaths = ['/health', '/summary', '/proposals', '/committees', '/users', '/auth/login', '/governance/trends', '/governance/cycles', '/governance/cycle', '/tasks'];
   if (skipPaths.includes(req.path) && req.method === 'GET') return next();
   if (req.path === '/auth/login' && req.method === 'POST') return next();
 
@@ -371,6 +372,29 @@ app.post('/governance/transition-cycle', (req: Request, res: Response) => {
   try {
     const next = globalGovernance.transitionCycle();
     res.json({ message: 'Governance cycle transitioned successfully', next });
+  } catch (err: any) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// --- Task Endpoints ---
+
+app.get('/tasks', (req: Request, res: Response) => {
+  res.json(globalTaskManager.getTasks());
+});
+
+app.post('/tasks', (req: Request, res: Response) => {
+  const { title, description } = req.body;
+  if (!title) return res.status(400).json({ error: 'Title required' });
+  const task = globalTaskManager.createTask(title, description || '');
+  res.status(201).json(task);
+});
+
+app.post('/tasks/:id/execute', async (req: Request, res: Response) => {
+  try {
+    // Run execution in the background
+    globalTaskManager.executeTask(s(req.params.id));
+    res.json({ message: 'Task execution started in background' });
   } catch (err: any) {
     res.status(400).json({ error: err.message });
   }

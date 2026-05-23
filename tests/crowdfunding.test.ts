@@ -59,7 +59,7 @@ describe('Crowdfunding and Escrow Engine', () => {
 
     engine.releaseMilestoneFunds('prop-1', 'm1');
     const prop = store.getProposal('prop-1');
-    expect(prop?.milestones[0].isCompleted).toBe(true);
+    expect(prop?.milestones?.[0]?.isCompleted).toBe(true);
     expect(prop?.status).toBe('IN_PROGRESS');
   });
 

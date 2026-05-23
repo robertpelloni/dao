@@ -64,3 +64,14 @@ export interface GovernanceCycle {
   totalVotesCast?: number;
   totalFundingAllocated?: number;
 }
+
+export type TaskStatus = 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'FAILED';
+
+export interface AutonomousTask {
+  id: string;
+  title: string;
+  description: string;
+  status: TaskStatus;
+  branchName?: string;
+  createdAt: number;
+}

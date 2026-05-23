@@ -1,5 +1,5 @@
 import Database from 'better-sqlite3';
-import { User, Committee, Proposal, GovernanceCycle } from './types';
+import { User, Committee, Proposal, GovernanceCycle, AutonomousTask } from './types';
 
 /**
  * SQLite Store for LiquidGov
@@ -54,6 +54,15 @@ export class Store {
         status TEXT,
         totalVotesCast INTEGER,
         totalFundingAllocated REAL
+      );
+
+      CREATE TABLE IF NOT EXISTS tasks (
+        id TEXT PRIMARY KEY,
+        title TEXT,
+        description TEXT,
+        status TEXT,
+        branchName TEXT,
+        createdAt INTEGER
       );
     `);
   }
@@ -216,8 +225,30 @@ export class Store {
     return cycles;
   }
 
+  addTask(task: AutonomousTask) {
+    const stmt = this.db.prepare('INSERT OR REPLACE INTO tasks (id, title, description, status, branchName, createdAt) VALUES (?, ?, ?, ?, ?, ?)');
+    stmt.run(task.id, task.title, task.description, task.status, task.branchName || null, task.createdAt);
+  }
+
+  getTasks(): AutonomousTask[] {
+    const stmt = this.db.prepare('SELECT * FROM tasks ORDER BY createdAt DESC');
+    return stmt.all() as AutonomousTask[];
+  }
+
+  getTask(id: string): AutonomousTask | undefined {
+    const stmt = this.db.prepare('SELECT * FROM tasks WHERE id = ?');
+    return stmt.get(id) as AutonomousTask | undefined;
+  }
+
+  updateTask(id: string, updates: Partial<AutonomousTask>) {
+    const task = this.getTask(id);
+    if (task) {
+      this.addTask({ ...task, ...updates });
+    }
+  }
+
   clear() {
-    this.db.exec('DELETE FROM users; DELETE FROM committees; DELETE FROM proposals; DELETE FROM governance_cycles;');
+    this.db.exec('DELETE FROM users; DELETE FROM committees; DELETE FROM proposals; DELETE FROM governance_cycles; DELETE FROM tasks;');
   }
 }
 

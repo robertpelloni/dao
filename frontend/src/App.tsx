@@ -7,6 +7,7 @@ import { ProposalForm } from './components/ProposalForm.js'
 import { CommitteeList } from './components/CommitteeList.js'
 import { IdentityView } from './components/IdentityView.js'
 import { HealthDashboard } from './components/HealthDashboard.js'
+import TaskMonitor from './components/TaskMonitor.js'
 import { useDashboard } from './hooks/useDashboard.js'
 import { Milestone } from '../../src/models/types.js'
 
@@ -95,6 +96,13 @@ function App() {
           >
             <Activity size={18} />
             <span>Health Dashboard</span>
+          </button>
+          <button
+            onClick={() => { setActiveTab('autonomous'); setShowForm(false); setIsSidebarOpen(false); }}
+            className={`flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all ${activeTab === 'autonomous' ? 'bg-blue-600 text-white shadow-blue-200 shadow-lg' : 'hover:bg-gray-50 text-gray-500'}`}
+          >
+            <RefreshCw size={18} />
+            <span>Autonomous Tasks</span>
           </button>
         </aside>
 
@@ -229,6 +237,8 @@ function App() {
                    <CommitteeList committees={committees} />
                 ) : activeTab === 'identity' ? (
                    <IdentityView currentUser={user} allUsers={allUsers} powerBreakdown={powerBreakdown} suggestedCommittees={suggestedCommittees} onAction={refresh} />
+                ) : activeTab === 'autonomous' ? (
+                   <TaskMonitor />
                 ) : (
                    <HealthDashboard proposals={proposals} committees={committees} allUsers={allUsers} currentCycle={currentCycle} onAction={refresh} />
                 )}

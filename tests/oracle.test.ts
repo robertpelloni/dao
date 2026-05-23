@@ -40,8 +40,8 @@ describe('Milestone Oracle System (Jury Voting)', () => {
   it('should allow users to vote on a milestone', () => {
     engine.voteOnMilestone('prop-jury-1', 'm1', 'user1');
     const proposal = store.getProposal('prop-jury-1');
-    expect(proposal?.milestones[0].juryVotes).toContain('user1');
-    expect(proposal?.milestones[0].isCompleted).toBe(false);
+    expect(proposal?.milestones?.[0]?.juryVotes).toContain('user1');
+    expect(proposal?.milestones?.[0]?.isCompleted).toBe(false);
   });
 
   it('should not allow duplicate votes from the same user', () => {
@@ -51,17 +51,17 @@ describe('Milestone Oracle System (Jury Voting)', () => {
 
   it('should release funds only after reaching quorum', () => {
     engine.voteOnMilestone('prop-jury-1', 'm1', 'user1');
-    expect(store.getProposal('prop-jury-1')?.milestones[0].isCompleted).toBe(false);
+    expect(store.getProposal('prop-jury-1')?.milestones?.[0]?.isCompleted).toBe(false);
 
     engine.voteOnMilestone('prop-jury-1', 'm1', 'user2');
     const proposal = store.getProposal('prop-jury-1');
-    expect(proposal?.milestones[0].isCompleted).toBe(true);
+    expect(proposal?.milestones?.[0]?.isCompleted).toBe(true);
     expect(proposal?.status).toBe('COMPLETED'); // Since it's the only milestone
   });
 
   it('should not release funds via releaseMilestoneFunds if quorum is not met', () => {
     const success = engine.releaseMilestoneFunds('prop-jury-1', 'm1');
     expect(success).toBe(false);
-    expect(store.getProposal('prop-jury-1')?.milestones[0].isCompleted).toBe(false);
+    expect(store.getProposal('prop-jury-1')?.milestones?.[0]?.isCompleted).toBe(false);
   });
 });

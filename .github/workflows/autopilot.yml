@@ -29,8 +29,14 @@ jobs:
       - name: Verify Documentation Standards
         run: bash scripts/verify-docs.sh
 
-      - name: Run Tests
+      - name: Run Backend Tests
         run: npm test
+
+      - name: Run Frontend Tests
+        run: |
+          cd frontend
+          npx playwright install chromium
+          npm run test:frontend
 
       - name: Run Executive Sync Protocol
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
