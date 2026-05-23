@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.8.5] - 2026-05-23
+### Added
+- Robust implementation of the "Executive Protocol" for autonomous repository management.
+- Comprehensive integration tests for multi-branch merging and versioning.
+- Enhanced documentation standards verification with structural checks.
+- CLI support for protocol execution with --dry-run and --skip-push flags.
+
+## [0.8.3] - 2026-05-23
+### Added
+- Automated protocol sync and branch reconciliation.
+
+
 ## [0.8.2] - 2025-05-23
 ### Added
 - Governance Health Dashboard for DAO-wide metrics.

@@ -29,13 +29,18 @@ export class RepositoryManager {
    */
   syncUpstream(): void {
     console.log('[1/4] Fetching all remotes and updating submodules recursively...');
-    this.run('git fetch --all --tags');
+    try {
+      this.run('git fetch --all --tags');
+    } catch (err) {
+      console.error('[!] Root fetch failed. Continuing with local state if possible.');
+    }
 
     // Recursive fetch for submodules
     try {
+      console.log('Fetching submodules...');
       this.run('git submodule foreach --recursive git fetch --all --tags');
     } catch {
-      console.warn('Submodule fetch failed or no submodules present.');
+      console.warn('[!] Submodule fetch failed or no submodules present.');
     }
 
     // Upstream Sync: Identify the upstream parent and merge changes
@@ -45,13 +50,20 @@ export class RepositoryManager {
         console.log('Merging changes from upstream/main...');
         this.run('git checkout main');
         this.run('git merge upstream/main --no-edit --allow-unrelated-histories');
+      } else {
+        console.log('No upstream remote found. Skipping upstream sync.');
       }
-    } catch {
-      console.warn('Upstream merge skipped (upstream not found or no changes).');
+    } catch (err) {
+      console.warn('[!] Upstream merge skipped (no changes or merge conflict).');
     }
 
     // Ensure submodules are updated to their latest tracked commits recursively
-    this.run('git submodule update --init --recursive --remote');
+    try {
+      console.log('Updating submodules to latest tracked commits...');
+      this.run('git submodule update --init --recursive --remote');
+    } catch (err) {
+      console.error('[!] Recursive submodule update failed. Check submodule configurations.');
+    }
   }
 
   /**
@@ -64,6 +76,13 @@ export class RepositoryManager {
     this.run('git config user.email "autopilot@liquidgov.org"');
     this.run('git config user.name "LiquidGov Autopilot"');
     this.run('git config init.defaultBranch main');
+
+    // Ensure we have the latest info about remote branches
+    try {
+      this.run('git fetch origin');
+    } catch {
+      console.warn('[!] Remote branch fetch failed.');
+    }
 
     const branchesOutput = this.run('git branch -r || echo ""');
     const branches = branchesOutput
@@ -134,7 +153,7 @@ export class RepositoryManager {
 
     const currentVersion = fs.readFileSync(versionFile, 'utf8').trim();
     const parts = currentVersion.split('.').map(Number);
-    parts[2]++;
+    if (parts[2] !== undefined) parts[2]++;
     const newVersion = parts.join('.');
 
     console.log(`Bumping version: ${currentVersion} -> ${newVersion}`);
