@@ -1,5 +1,5 @@
 import Database from 'better-sqlite3';
-import { User, Committee, Proposal } from './types';
+import { User, Committee, Proposal, GovernanceCycle } from './types';
 
 /**
  * SQLite Store for LiquidGov
@@ -44,6 +44,16 @@ export class Store {
         votesAgainst REAL,
         impactScore REAL,
         executionPayload TEXT
+      );
+
+      CREATE TABLE IF NOT EXISTS governance_cycles (
+        id TEXT PRIMARY KEY,
+        number INTEGER,
+        startTime INTEGER,
+        endTime INTEGER,
+        status TEXT,
+        totalVotesCast INTEGER,
+        totalFundingAllocated REAL
       );
     `);
   }
@@ -178,8 +188,26 @@ export class Store {
       .map(([subject]) => subject);
   }
 
+  addCycle(cycle: GovernanceCycle) {
+    const stmt = this.db.prepare(`
+      INSERT OR REPLACE INTO governance_cycles (id, number, startTime, endTime, status, totalVotesCast, totalFundingAllocated)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `);
+    stmt.run(cycle.id, cycle.number, cycle.startTime, cycle.endTime, cycle.status, cycle.totalVotesCast || 0, cycle.totalFundingAllocated || 0);
+  }
+
+  getCurrentCycle(): GovernanceCycle | undefined {
+    const stmt = this.db.prepare("SELECT * FROM governance_cycles WHERE status = 'ACTIVE' LIMIT 1");
+    return stmt.get() as GovernanceCycle | undefined;
+  }
+
+  getCycles(): GovernanceCycle[] {
+    const stmt = this.db.prepare('SELECT * FROM governance_cycles ORDER BY number DESC');
+    return stmt.all() as GovernanceCycle[];
+  }
+
   clear() {
-    this.db.exec('DELETE FROM users; DELETE FROM committees; DELETE FROM proposals;');
+    this.db.exec('DELETE FROM users; DELETE FROM committees; DELETE FROM proposals; DELETE FROM governance_cycles;');
   }
 }
 

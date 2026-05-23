@@ -11,6 +11,7 @@ import { delegate, calculateEffectivePower } from '../core/delegation';
 import { transitionProposal } from '../core/proposalStateMachine';
 import { CrowdfundingEngine } from '../core/crowdfunding';
 import { calculateImpactScore } from '../core/impactScoring';
+import { globalGovernance } from '../core/governanceCycle';
 import { User, Proposal, Committee } from '../models/types';
 import { signToken, verifyToken } from '../utils/auth';
 
@@ -345,6 +346,29 @@ app.post('/proposals/:id/score', (req: Request, res: Response) => {
   const score = calculateImpactScore(proposal);
   globalStore.updateProposal(s(req.params.id), { impactScore: score });
   res.json({ id: proposal.id, impactScore: score });
+});
+
+// --- Governance Cycle Endpoints ---
+
+app.get('/governance/cycle', (req: Request, res: Response) => {
+  let cycle = globalStore.getCurrentCycle();
+  if (!cycle) {
+    cycle = globalGovernance.initialize();
+  }
+  res.json(cycle);
+});
+
+app.get('/governance/cycles', (req: Request, res: Response) => {
+  res.json(globalStore.getCycles());
+});
+
+app.post('/governance/transition-cycle', (req: Request, res: Response) => {
+  try {
+    const next = globalGovernance.transitionCycle();
+    res.json({ message: 'Governance cycle transitioned successfully', next });
+  } catch (err: any) {
+    res.status(400).json({ error: err.message });
+  }
 });
 
 // --- Health Check ---

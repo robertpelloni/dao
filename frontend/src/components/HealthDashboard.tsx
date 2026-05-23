@@ -1,14 +1,18 @@
-import React from 'react';
-import { Proposal, Committee, User } from '../../../src/models/types';
-import { Activity, Landmark, TrendingUp, Users, PieChart, AlertCircle } from 'lucide-react';
+import React, { useState } from 'react';
+import { Proposal, Committee, User, GovernanceCycle } from '../../../src/models/types';
+import { Activity, Landmark, TrendingUp, Users, PieChart, AlertCircle, FastForward, Clock } from 'lucide-react';
+import api from '../api/client';
 
 interface HealthDashboardProps {
   proposals: Proposal[];
   committees: Committee[];
   allUsers: User[];
+  currentCycle: GovernanceCycle | null;
+  onAction: () => void;
 }
 
-export const HealthDashboard: React.FC<HealthDashboardProps> = ({ proposals, committees, allUsers }) => {
+export const HealthDashboard: React.FC<HealthDashboardProps> = ({ proposals, committees, allUsers, currentCycle, onAction }) => {
+  const [loading, setLoading] = useState(false);
   const totalFunding = proposals.reduce((acc, p) => acc + p.currentFunding, 0);
   const activeProposals = proposals.filter(p => p.status !== 'COMPLETED' && p.status !== 'REJECTED' && p.status !== 'DRAFT').length;
   const totalBudgetRequired = proposals.reduce((acc, p) => acc + p.totalTargetBudget, 0);
@@ -16,8 +20,49 @@ export const HealthDashboard: React.FC<HealthDashboardProps> = ({ proposals, com
   const subjects = committees.map(c => c.subject);
   const uniqueSubjects = new Set(subjects).size;
 
+  const handleTransition = async () => {
+    if (!confirm('Are you sure you want to transition to the next governance cycle? This will trigger reputation decay.')) return;
+    try {
+      setLoading(true);
+      await api.post('/governance/transition-cycle');
+      onAction();
+    } catch (err) {
+      alert('Transition failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const timeLeft = currentCycle ? Math.max(0, currentCycle.endTime - Date.now()) : 0;
+  const daysLeft = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
+
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
+      {/* Cycle Control Card */}
+      <section className="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-3xl p-8 shadow-xl text-white relative overflow-hidden">
+         <Clock className="absolute -right-8 -bottom-8 text-white/10" size={240} />
+         <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-8">
+            <div>
+               <div className="flex items-center gap-2 mb-2">
+                  <span className="bg-white/20 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border border-white/10">Active Cycle</span>
+                  <span className="text-blue-200 text-xs font-bold uppercase tracking-widest italic">• Epoch {currentCycle?.number}</span>
+               </div>
+               <h3 className="text-4xl font-black tracking-tight">Phase {currentCycle?.number}: Expansion</h3>
+               <p className="text-blue-100 mt-2 font-medium max-w-xl text-sm leading-relaxed opacity-80">
+                  The current governance epoch is scheduled to conclude in {daysLeft} days. All reputation scores will decay by 10% to ensure active expertise remains current.
+               </p>
+            </div>
+            <button
+              disabled={loading}
+              onClick={handleTransition}
+              className="bg-white text-blue-600 px-8 py-4 rounded-2xl font-black text-sm hover:bg-blue-50 transition-all shadow-xl flex items-center gap-3 shrink-0 group"
+            >
+               <FastForward size={18} className="group-hover:translate-x-1 transition-transform" />
+               End Current Cycle
+            </button>
+         </div>
+      </section>
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
           icon={<Landmark className="text-emerald-500" />}

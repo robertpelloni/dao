@@ -52,3 +52,15 @@ export interface Proposal {
   impactScore?: number; // Calculated by AI/Heuristics
   executionPayload: string; // JSON or script hash
 }
+
+export type CycleStatus = 'ACTIVE' | 'CALIBRATION' | 'ARCHIVED';
+
+export interface GovernanceCycle {
+  id: string;
+  number: number;
+  startTime: number; // Timestamp
+  endTime: number; // Timestamp
+  status: CycleStatus;
+  totalVotesCast?: number;
+  totalFundingAllocated?: number;
+}

@@ -13,7 +13,7 @@ import { Milestone } from '../../src/models/types'
 function App() {
   const [activeTab, setActiveTab] = useState('proposals')
   const [showForm, setShowForm] = useState(false)
-  const { user, isVerified, proposals, committees, suggestedCommittees, allUsers, powerBreakdown, selectedProposal, setSelectedProposalId, loading, refresh } = useDashboard('alice')
+  const { user, isVerified, proposals, committees, suggestedCommittees, allUsers, currentCycle, powerBreakdown, selectedProposal, setSelectedProposalId, loading, refresh } = useDashboard('alice')
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -32,6 +32,10 @@ function App() {
           >
             <RefreshCw size={20} className={loading ? 'animate-spin' : ''} />
           </button>
+          <div className="text-right border-r pr-4 mr-2 hidden md:block">
+            <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Current Era</p>
+            <p className="text-sm font-black text-blue-600">Epoch {currentCycle?.number || 1}</p>
+          </div>
           <div className="text-right">
             <p className="text-sm font-bold text-slate-800">{user?.name || 'Guest User'}</p>
             <p className={`text-[10px] font-black uppercase tracking-widest ${isVerified ? 'text-green-600' : 'text-amber-600'}`}>
@@ -202,7 +206,7 @@ function App() {
                 ) : activeTab === 'identity' ? (
                    <IdentityView currentUser={user} allUsers={allUsers} powerBreakdown={powerBreakdown} suggestedCommittees={suggestedCommittees} onAction={refresh} />
                 ) : (
-                   <HealthDashboard proposals={proposals} committees={committees} allUsers={allUsers} />
+                   <HealthDashboard proposals={proposals} committees={committees} allUsers={allUsers} currentCycle={currentCycle} onAction={refresh} />
                 )}
               </div>
             )}
