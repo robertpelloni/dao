@@ -13,7 +13,13 @@ export class GovernanceManager {
    */
   initialize(): GovernanceCycle {
     const existing = this.store.getCurrentCycle();
-    if (existing) return existing;
+    if (existing) {
+      // Check if the current cycle has already ended while the system was offline
+      if (Date.now() > existing.endTime || existing.status === 'ARCHIVED') {
+        return this.transitionCycle();
+      }
+      return existing;
+    }
 
     const cycle: GovernanceCycle = {
       id: 'cycle-1',
@@ -24,6 +30,7 @@ export class GovernanceManager {
       totalVotesCast: 0,
       totalFundingAllocated: 0
     };
+    console.log("Initialized new cycle 1");
     this.store.addCycle(cycle);
     return cycle;
   }
@@ -33,29 +40,65 @@ export class GovernanceManager {
    * Performs reputation decay and voice credit refresh for all citizens.
    */
   transitionCycle(): GovernanceCycle {
-    const current = this.store.getCurrentCycle();
-    if (!current) throw new Error('No active cycle found');
+    let current = this.store.getCurrentCycle();
 
-    // Archive current cycle
-    current.status = 'ARCHIVED';
-    this.store.addCycle(current);
+    // 1. Create first cycle if none exists
+    if (!current) {
+      const cycle: GovernanceCycle = {
+        id: 'cycle-1',
+        number: 1,
+        startTime: Date.now(),
+        endTime: Date.now() + 30 * 24 * 60 * 60 * 1000,
+        status: 'ACTIVE',
+        totalVotesCast: 0,
+        totalFundingAllocated: 0
+      };
+      this.store.addCycle(cycle);
+      return cycle;
+    }
 
-    // Create next cycle
-    const next: GovernanceCycle = {
-      id: `cycle-${current.number + 1}`,
-      number: current.number + 1,
-      startTime: Date.now(),
-      endTime: Date.now() + 30 * 24 * 60 * 60 * 1000,
-      status: 'ACTIVE',
-      totalVotesCast: 0,
-      totalFundingAllocated: 0
-    };
-    this.store.addCycle(next);
+    // 2. Multi-cycle catch-up
+    let catchupOccurred = false;
+    while (current && Date.now() > current.endTime) {
+      current.status = 'ARCHIVED';
+      this.store.addCycle(current);
 
-    // Perform maintenance on users
-    this.processEndOfCycle();
+      const next: GovernanceCycle = {
+        id: `cycle-${current.number + 1}`,
+        number: current.number + 1,
+        startTime: current.endTime,
+        endTime: current.endTime + 30 * 24 * 60 * 60 * 1000,
+        status: 'ACTIVE',
+        totalVotesCast: 0,
+        totalFundingAllocated: 0
+      };
+      this.store.addCycle(next);
+      this.processEndOfCycle();
+      current = next;
+      catchupOccurred = true;
+    }
 
-    return next;
+    // 3. Manual transition or edge case
+    if (!catchupOccurred && current.status === 'ACTIVE') {
+      current.status = 'ARCHIVED';
+      current.endTime = Math.min(current.endTime, Date.now());
+      this.store.addCycle(current);
+
+      const next: GovernanceCycle = {
+        id: `cycle-${current.number + 1}`,
+        number: current.number + 1,
+        startTime: Date.now(),
+        endTime: Date.now() + 30 * 24 * 60 * 60 * 1000,
+        status: 'ACTIVE',
+        totalVotesCast: 0,
+        totalFundingAllocated: 0
+      };
+      this.store.addCycle(next);
+      this.processEndOfCycle();
+      return next;
+    }
+
+    return current;
   }
 
   private processEndOfCycle() {

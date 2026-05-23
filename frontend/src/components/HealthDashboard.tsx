@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Proposal, Committee, User, GovernanceCycle } from '../../../src/models/types';
 import { Activity, Landmark, TrendingUp, Users, PieChart, AlertCircle, FastForward, Clock } from 'lucide-react';
 import api from '../api/client';
+import { CycleTrends } from './CycleTrends';
 
 interface HealthDashboardProps {
   proposals: Proposal[];
@@ -91,6 +92,8 @@ export const HealthDashboard: React.FC<HealthDashboardProps> = ({ proposals, com
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <CycleTrends />
+
         <section className="bg-white border rounded-3xl p-8 shadow-sm">
           <h3 className="text-xl font-black text-slate-800 mb-6 flex items-center gap-2">
             <TrendingUp className="text-blue-600" />

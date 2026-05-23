@@ -38,7 +38,7 @@ app.use(express.json());
  * JWT Authentication Middleware
  */
 const authenticateToken = (req: Request, res: Response, next: any) => {
-  const skipPaths = ['/health', '/summary', '/proposals', '/committees', '/users', '/auth/login'];
+  const skipPaths = ['/health', '/summary', '/proposals', '/committees', '/users', '/auth/login', '/governance/trends', '/governance/cycles', '/governance/cycle'];
   if (skipPaths.includes(req.path) && req.method === 'GET') return next();
   if (req.path === '/auth/login' && req.method === 'POST') return next();
 
@@ -360,6 +360,10 @@ app.get('/governance/cycle', (req: Request, res: Response) => {
 
 app.get('/governance/cycles', (req: Request, res: Response) => {
   res.json(globalStore.getCycles());
+});
+
+app.get('/governance/trends', (req: Request, res: Response) => {
+  res.json(globalStore.getHistoricalTrends());
 });
 
 app.post('/governance/transition-cycle', (req: Request, res: Response) => {

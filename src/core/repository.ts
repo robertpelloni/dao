@@ -77,6 +77,13 @@ export class RepositoryManager {
 
     for (const branch of branches) {
       const cleanBranch = branch.replace('origin/', '');
+
+      // Security: Validate branch name to prevent command injection
+      if (!/^[a-zA-Z0-9.\/_-]+$/.test(cleanBranch)) {
+        console.warn(`Skipping potentially unsafe branch name: ${cleanBranch}`);
+        continue;
+      }
+
       console.log(`Interrogating branch: ${cleanBranch}`);
 
       // Ensure local main exists
@@ -84,10 +91,12 @@ export class RepositoryManager {
 
       // Forward Merge (Features to Main)
       try {
-        const isMerged = this.run(`git merge-base --is-ancestor ${branch} main || echo "no"`).trim() !== 'no';
+        // Use full remote branch name for comparison
+        const remoteBranch = `origin/${cleanBranch}`;
+        const isMerged = this.run(`git merge-base --is-ancestor ${remoteBranch} main || echo "no"`).trim() !== 'no';
         if (!isMerged) {
           console.log(`Merging ${cleanBranch} into main...`);
-          this.run(`git merge ${branch} --no-edit --allow-unrelated-histories`);
+          this.run(`git merge ${remoteBranch} --no-edit --allow-unrelated-histories`);
         } else {
           console.log(`Branch ${cleanBranch} is already merged into main.`);
         }
@@ -99,7 +108,7 @@ export class RepositoryManager {
       // Reverse Merge (Main back to Features)
       try {
         console.log(`Reverse merging main into ${cleanBranch}...`);
-        this.run(`git checkout ${cleanBranch} || git checkout -b ${cleanBranch} ${branch}`);
+        this.run(`git checkout ${cleanBranch} || git checkout -b ${cleanBranch} origin/${cleanBranch}`);
         this.run('git merge main --no-edit');
         this.run(`git push origin ${cleanBranch} || echo "Push skipped"`);
         this.run('git checkout main');

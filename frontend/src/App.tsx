@@ -13,17 +13,24 @@ import { Milestone } from '../../src/models/types'
 function App() {
   const [activeTab, setActiveTab] = useState('proposals')
   const [showForm, setShowForm] = useState(false)
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const { user, isVerified, proposals, committees, suggestedCommittees, allUsers, currentCycle, powerBreakdown, selectedProposal, setSelectedProposalId, loading, refresh } = useDashboard('alice')
 
   return (
     <div className="min-h-screen flex flex-col">
       {/* Header */}
-      <header className="bg-white border-b px-6 py-4 flex justify-between items-center sticky top-0 z-20 shadow-sm">
+      <header className="bg-white border-b px-4 md:px-6 py-4 flex justify-between items-center sticky top-0 z-20 shadow-sm">
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+            className="p-2 hover:bg-gray-100 rounded-lg md:hidden text-gray-500"
+          >
+            <Layout size={20} />
+          </button>
           <div className="bg-blue-600 p-1.5 rounded-lg text-white shadow-lg shadow-blue-100">
-            <Globe size={24} />
+            <Globe size={20} className="md:w-6 md:h-6" />
           </div>
-          <h1 className="text-xl font-black tracking-tight text-slate-800 uppercase text-shadow-sm">LiquidGov</h1>
+          <h1 className="text-lg md:text-xl font-black tracking-tight text-slate-800 uppercase text-shadow-sm">LiquidGov</h1>
         </div>
         <div className="flex items-center gap-4">
           <button
@@ -48,33 +55,42 @@ function App() {
         </div>
       </header>
 
-      <div className="flex flex-1">
+      <div className="flex flex-1 relative">
         {/* Sidebar */}
-        <aside className="w-64 bg-white border-r p-4 flex flex-col gap-1 sticky top-[73px] h-[calc(100vh-73px)]">
-          <p className="px-4 py-2 text-[10px] font-black uppercase text-gray-400 tracking-[0.2em] mb-2">Navigation</p>
+        <aside className={`
+          fixed inset-y-0 left-0 z-30 w-64 bg-white border-r p-4 flex flex-col gap-1 transition-transform duration-300 transform md:sticky md:top-[73px] md:h-[calc(100vh-73px)] md:translate-x-0
+          ${isSidebarOpen ? 'translate-x-0 shadow-2xl shadow-blue-900/10' : 'translate-x-[-100%] md:translate-x-0'}
+        `}>
+          <div className="flex items-center justify-between md:hidden mb-4 px-4">
+             <p className="text-[10px] font-black uppercase text-gray-400 tracking-[0.2em]">Navigation</p>
+             <button onClick={() => setIsSidebarOpen(false)} className="p-1 hover:bg-gray-100 rounded-lg">
+                <ChevronLeft size={18} />
+             </button>
+          </div>
+          <p className="px-4 py-2 text-[10px] font-black uppercase text-gray-400 tracking-[0.2em] mb-2 hidden md:block">Navigation</p>
           <button
-            onClick={() => { setActiveTab('proposals'); setSelectedProposalId(null); setShowForm(false); }}
+            onClick={() => { setActiveTab('proposals'); setSelectedProposalId(null); setShowForm(false); setIsSidebarOpen(false); }}
             className={`flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all ${activeTab === 'proposals' ? 'bg-blue-600 text-white shadow-blue-200 shadow-lg' : 'hover:bg-gray-50 text-gray-500'}`}
           >
             <FileText size={18} />
             <span>Proposals</span>
           </button>
           <button
-            onClick={() => { setActiveTab('committees'); setShowForm(false); }}
+            onClick={() => { setActiveTab('committees'); setShowForm(false); setIsSidebarOpen(false); }}
             className={`flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all ${activeTab === 'committees' ? 'bg-blue-600 text-white shadow-blue-200 shadow-lg' : 'hover:bg-gray-50 text-gray-500'}`}
           >
             <Users size={18} />
             <span>Committees</span>
           </button>
           <button
-            onClick={() => { setActiveTab('identity'); setShowForm(false); }}
+            onClick={() => { setActiveTab('identity'); setShowForm(false); setIsSidebarOpen(false); }}
             className={`flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all ${activeTab === 'identity' ? 'bg-blue-600 text-white shadow-blue-200 shadow-lg' : 'hover:bg-gray-50 text-gray-500'}`}
           >
             <Shield size={18} />
             <span>My Identity</span>
           </button>
           <button
-            onClick={() => { setActiveTab('health'); setShowForm(false); }}
+            onClick={() => { setActiveTab('health'); setShowForm(false); setIsSidebarOpen(false); }}
             className={`flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all ${activeTab === 'health' ? 'bg-blue-600 text-white shadow-blue-200 shadow-lg' : 'hover:bg-gray-50 text-gray-500'}`}
           >
             <Activity size={18} />
@@ -82,8 +98,16 @@ function App() {
           </button>
         </aside>
 
+        {/* Overlay for mobile sidebar */}
+        {isSidebarOpen && (
+          <div
+            className="fixed inset-0 bg-slate-900/20 backdrop-blur-sm z-20 md:hidden"
+            onClick={() => setIsSidebarOpen(false)}
+          />
+        )}
+
         {/* Main Content */}
-        <main className="flex-1 p-8 overflow-y-auto bg-gray-50/30">
+        <main className="flex-1 p-4 md:p-8 overflow-y-auto bg-gray-50/30">
           <div className="max-w-5xl mx-auto">
             {showForm ? (
               <ProposalForm
@@ -100,17 +124,17 @@ function App() {
                   <ChevronLeft size={16} /> Back to List
                 </button>
 
-                <div className="grid grid-cols-3 gap-8">
-                  <div className="col-span-2 space-y-8">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                  <div className="lg:col-span-2 space-y-8">
                     <header>
                        <span className="text-xs font-black uppercase text-blue-600 bg-blue-50 px-2 py-1 rounded mb-4 inline-block tracking-widest border border-blue-100">
                          {selectedProposal.committeeId}
                        </span>
-                       <h2 className="text-4xl font-black text-slate-800 tracking-tight">{selectedProposal.title}</h2>
-                       <p className="text-xl text-slate-500 mt-4 leading-relaxed font-medium">{selectedProposal.abstract}</p>
+                       <h2 className="text-2xl md:text-4xl font-black text-slate-800 tracking-tight">{selectedProposal.title}</h2>
+                       <p className="text-lg md:text-xl text-slate-500 mt-4 leading-relaxed font-medium">{selectedProposal.abstract}</p>
                     </header>
 
-                    <section className="bg-white border rounded-3xl p-8 shadow-sm">
+                    <section className="bg-white border rounded-3xl p-6 md:p-8 shadow-sm">
                       <h3 className="text-lg font-black text-slate-800 mb-4 border-b pb-4 flex items-center gap-2">
                          <FileText className="text-blue-500" size={20} />
                          Detailed Specifications
@@ -120,8 +144,8 @@ function App() {
                       </div>
                     </section>
 
-                    <section className="bg-white border rounded-3xl p-8 shadow-sm">
-                      <h3 className="text-lg font-black text-slate-800 mb-6 flex justify-between items-center">
+                    <section className="bg-white border rounded-3xl p-6 md:p-8 shadow-sm">
+                      <h3 className="text-lg font-black text-slate-800 mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                         <div className="flex items-center gap-2">
                            <Layout className="text-blue-500" size={20} />
                            Project Milestones
@@ -180,15 +204,15 @@ function App() {
               <div className="animate-in fade-in duration-500">
                 <IdentityWidget user={user} isVerified={isVerified} />
 
-                <div className="flex justify-between items-end mb-8 border-b border-gray-100 pb-8">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 border-b border-gray-100 pb-8 gap-4">
                   <div>
-                    <h2 className="text-4xl font-black text-slate-800 capitalize tracking-tight">{activeTab}</h2>
+                    <h2 className="text-3xl md:text-4xl font-black text-slate-800 capitalize tracking-tight">{activeTab}</h2>
                     <p className="text-slate-500 mt-2 font-medium">Manage and participate in distributed governance.</p>
                   </div>
                   {activeTab === 'proposals' && (
                     <button
                       onClick={() => setShowForm(true)}
-                      className="bg-blue-600 text-white px-8 py-4 rounded-2xl font-black text-sm hover:bg-blue-700 transition-all shadow-xl shadow-blue-100 hover:-translate-y-1 active:translate-y-0"
+                      className="bg-blue-600 text-white px-8 py-4 rounded-2xl font-black text-sm hover:bg-blue-700 transition-all shadow-xl shadow-blue-100 hover:-translate-y-1 active:translate-y-0 w-full md:w-auto"
                     >
                       Create Proposal
                     </button>

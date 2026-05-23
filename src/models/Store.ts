@@ -197,13 +197,23 @@ export class Store {
   }
 
   getCurrentCycle(): GovernanceCycle | undefined {
-    const stmt = this.db.prepare("SELECT * FROM governance_cycles WHERE status = 'ACTIVE' LIMIT 1");
-    return stmt.get() as GovernanceCycle | undefined;
+    // Check for ACTIVE cycle first
+    const active = this.db.prepare("SELECT * FROM governance_cycles WHERE status = 'ACTIVE' LIMIT 1").get();
+    if (active) return active as GovernanceCycle;
+
+    // If no active, get the most recent one (could be expired/offline)
+    const latest = this.db.prepare("SELECT * FROM governance_cycles ORDER BY number DESC LIMIT 1").get();
+    return latest as GovernanceCycle | undefined;
   }
 
   getCycles(): GovernanceCycle[] {
     const stmt = this.db.prepare('SELECT * FROM governance_cycles ORDER BY number DESC');
     return stmt.all() as GovernanceCycle[];
+  }
+
+  getHistoricalTrends() {
+    const cycles = this.db.prepare("SELECT number, totalVotesCast, totalFundingAllocated FROM governance_cycles WHERE status = 'ARCHIVED' ORDER BY number ASC").all();
+    return cycles;
   }
 
   clear() {
