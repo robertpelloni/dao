@@ -10,15 +10,17 @@
 - [x] Create `DEPLOY.md`
 - [x] Create `HANDOFF.md`
 
-## Phase 4: Refinements (Current)
-- [ ] **Identity:** Implement subject-based power breakdown API & UI.
-- [ ] **Security:** Replace PoC auth with JWT foundation.
-- [ ] **API:** Implement `GET /committees/suggested/:userId`.
-- [ ] **UI:** Enhance IdentityView to display suggested committees.
-- [ ] **UI:** Integrate Impact Score recalculation button in ActionPanel.
-- [ ] **Testing:** Add auth lifecycle tests.
+## Phase 4: Refinements (Complete)
+- [x] **Identity:** Implement subject-based power breakdown API & UI.
+- [x] **Security:** Replace PoC auth with JWT foundation.
+- [x] **API:** Implement `GET /committees/suggested/:userId`.
+- [x] **UI:** Enhance IdentityView to display suggested committees.
+- [x] **UI:** Integrate Impact Score recalculation button in ActionPanel.
+- [x] **Testing:** Add auth lifecycle tests.
 
-## Phase 5: Advanced
-- [ ] Committee auto-provisioning logic.
+## Phase 5: Advanced (Current)
+- [x] Committee auto-provisioning logic.
+- [x] Proof-of-humanity integration.
+- [x] Governance Health Dashboard UI.
 - [ ] Persistent state machine for multi-year governance.
-- [ ] Proof-of-humanity integration.
+- [ ] ZKP Identity Layer.

@@ -17,19 +17,20 @@
 - [x] Implement QV and Funding dashboards.
 - [x] Implement Proposal creation and Committee browsing.
 
-## Phase 4: Refinement & Advanced Features (Current)
+## Phase 4: Refinement & Advanced Features (Complete)
 - [x] AI-driven impact scoring for proposals.
 - [x] Multi-party consensus for milestone payouts (Oracles).
 - [x] Real-time updates for voting and funding progress.
 - [x] Integrated Autopilot Protocol into CI for automated repository handling.
 - [x] Visual Delegation Graph for liquid power transparency.
-- [ ] Privacy-preserving identity (ZKP).
-- [ ] Subject-based power breakdown in Identity view.
-- [ ] JWT Authentication foundation.
+- [x] Subject-based power breakdown in Identity view.
+- [x] JWT Authentication foundation.
 
-## Phase 5: Autonomous Governance & Scaling
-- [ ] Integration of the AI-driven "Executive Protocol" into core DAO operations.
-- [ ] Subject-specific committee auto-provisioning.
-- [ ] Sybil-resistant identity proof-of-humanity integration.
+## Phase 5: Autonomous Governance & Scaling (Current)
+- [x] Integration of the AI-driven "Executive Protocol" into core DAO operations.
+- [x] Subject-specific committee auto-provisioning.
+- [x] Sybil-resistant identity proof-of-humanity integration.
+- [x] Committee auto-discovery in UI.
+- [ ] Privacy-preserving identity (ZKP).
 - [ ] Persistent state machine for multi-year governance cycles.
-- [ ] Committee auto-discovery in UI.
+- [ ] Mobile-first UI refinements.

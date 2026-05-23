@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'super-secret-dev-key';
+// In production, this MUST be set via environment variable.
+const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-do-not-use-in-production';
 
 export interface TokenPayload {
   userId: string;
