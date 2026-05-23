@@ -186,7 +186,9 @@ export class RepositoryManager {
   private validateScripts(): void {
     const scripts = [
       'scripts/start.sh', 'scripts/build.sh', 'scripts/sync-protocol.sh',
-      'start.sh', 'build.sh'
+      'scripts/verify-docs.sh', 'start.sh', 'build.sh',
+      'scripts/start.bat', 'scripts/build.bat', 'scripts/sync-protocol.bat',
+      'start.bat', 'build.bat'
     ];
     for (const script of scripts) {
       const fullPath = path.join(this.rootDir, script);

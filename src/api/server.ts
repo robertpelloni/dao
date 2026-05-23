@@ -132,6 +132,16 @@ app.get('/identity/:id/breakdown', (req: Request, res: Response) => {
   res.json(breakdown);
 });
 
+app.post('/identity/:id/verify-human', (req: Request, res: Response) => {
+  const { method } = req.body;
+  try {
+    globalIdentity.verifyHuman(s(req.params.id), method || 'Mock');
+    res.json(globalIdentity.getProfile(s(req.params.id)));
+  } catch (err: any) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
 app.post('/users/:id/endorse', (req: Request, res: Response) => {
   const { endorserId } = req.body;
   try {
@@ -157,6 +167,28 @@ app.post('/committees', (req: Request, res: Response) => {
 
 app.get('/committees', (req: Request, res: Response) => {
   res.json(Array.from(globalStore.committees.values()));
+});
+
+app.post('/committees/auto-provision', (req: Request, res: Response) => {
+  const activityThreshold = req.body.threshold || 2;
+  const newSubjects = globalStore.getHighActivitySubjects(activityThreshold);
+
+  const created: Committee[] = [];
+  newSubjects.forEach(subject => {
+    const committee: Committee = {
+      id: `${subject.replace(/\s+/g, '-')}-Committee`,
+      subject,
+      members: [], // Initially empty, citizens can join
+      thresholdQuorum: 0.05
+    };
+    globalStore.addCommittee(committee);
+    created.push(committee);
+  });
+
+  res.json({
+    message: `Auto-provisioning complete. Created ${created.length} new committees.`,
+    created
+  });
 });
 
 app.get('/committees/suggested/:userId', (req: Request, res: Response) => {

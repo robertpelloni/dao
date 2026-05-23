@@ -1,11 +1,12 @@
 import { useState } from 'react'
-import { Layout, Globe, Users, FileText, Shield, RefreshCw, ChevronLeft } from 'lucide-react'
+import { Layout, Globe, Users, FileText, Shield, RefreshCw, ChevronLeft, Activity } from 'lucide-react'
 import { IdentityWidget } from './components/IdentityWidget'
 import { ProposalList } from './components/ProposalList'
 import { ActionPanel } from './components/ActionPanel'
 import { ProposalForm } from './components/ProposalForm'
 import { CommitteeList } from './components/CommitteeList'
 import { IdentityView } from './components/IdentityView'
+import { HealthDashboard } from './components/HealthDashboard'
 import { useDashboard } from './hooks/useDashboard'
 import { Milestone } from '../../src/models/types'
 
@@ -67,6 +68,13 @@ function App() {
           >
             <Shield size={18} />
             <span>My Identity</span>
+          </button>
+          <button
+            onClick={() => { setActiveTab('health'); setShowForm(false); }}
+            className={`flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all ${activeTab === 'health' ? 'bg-blue-600 text-white shadow-blue-200 shadow-lg' : 'hover:bg-gray-50 text-gray-500'}`}
+          >
+            <Activity size={18} />
+            <span>Health Dashboard</span>
           </button>
         </aside>
 
@@ -191,8 +199,10 @@ function App() {
                   <ProposalList proposals={proposals} onSelect={setSelectedProposalId} />
                 ) : activeTab === 'committees' ? (
                    <CommitteeList committees={committees} />
-                ) : (
+                ) : activeTab === 'identity' ? (
                    <IdentityView currentUser={user} allUsers={allUsers} powerBreakdown={powerBreakdown} suggestedCommittees={suggestedCommittees} onAction={refresh} />
+                ) : (
+                   <HealthDashboard proposals={proposals} committees={committees} allUsers={allUsers} />
                 )}
               </div>
             )}

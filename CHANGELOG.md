@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.8.2] - 2025-05-23
+### Added
+- Governance Health Dashboard for DAO-wide metrics.
+- Subject-specific Committee Auto-Provisioning logic.
+- Sybil-resistant Proof-of-Humanity (PoH) integration.
+
 ## [0.8.1] - 2025-05-23
 ### Added
 - Subject-based power breakdown API and Identity UI.

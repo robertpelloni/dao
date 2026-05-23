@@ -157,6 +157,27 @@ export class Store {
     }
   }
 
+  /**
+   * Identifies subjects with significant delegation activity that lack a committee.
+   */
+  getHighActivitySubjects(threshold: number = 2): string[] {
+    const users = this.getUsers();
+    const subjectCounts: Record<string, number> = {};
+
+    users.forEach(u => {
+      Object.keys(u.delegates).forEach(subject => {
+        subjectCounts[subject] = (subjectCounts[subject] || 0) + 1;
+      });
+    });
+
+    const committees = this.getCommittees();
+    const existingSubjects = new Set(committees.map(c => c.subject));
+
+    return Object.entries(subjectCounts)
+      .filter(([subject, count]) => count >= threshold && !existingSubjects.has(subject))
+      .map(([subject]) => subject);
+  }
+
   clear() {
     this.db.exec('DELETE FROM users; DELETE FROM committees; DELETE FROM proposals;');
   }

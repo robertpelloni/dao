@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { User, Committee } from '../../../src/models/types';
 import { IdentityProfile } from '../../../src/core/identity';
-import { ShieldCheck, UserPlus, Fingerprint, Award, GitGraph, Users } from 'lucide-react';
+import { ShieldCheck, UserPlus, Fingerprint, Award, GitGraph, Users, UserCheck } from 'lucide-react';
 import api from '../api/client';
 import { DelegationGraph } from './DelegationGraph';
 
@@ -60,17 +60,25 @@ export const IdentityView: React.FC<IdentityViewProps> = ({ currentUser, allUser
                    <h3 className="text-3xl font-black tracking-tight">{currentUser.name}</h3>
                    <p className="text-slate-400 font-bold uppercase text-xs tracking-widest mt-1">Global Citizen ID: {currentUser.id}</p>
                 </div>
-                {profiles[currentUser.id].isVerified ? (
-                  <div className="bg-green-500/20 text-green-400 px-4 py-2 rounded-full flex items-center gap-2 border border-green-500/30">
-                    <ShieldCheck size={20} />
-                    <span className="font-black text-sm uppercase">Verified</span>
-                  </div>
-                ) : (
-                  <div className="bg-amber-500/20 text-amber-400 px-4 py-2 rounded-full flex items-center gap-2 border border-amber-500/30">
-                    <Fingerprint size={20} />
-                    <span className="font-black text-sm uppercase">Pending</span>
-                  </div>
-                )}
+                <div className="flex gap-2">
+                  {profiles[currentUser.id].isHuman && (
+                    <div className="bg-indigo-500/20 text-indigo-400 px-4 py-2 rounded-full flex items-center gap-2 border border-indigo-500/30">
+                      <UserCheck size={20} />
+                      <span className="font-black text-sm uppercase">Human</span>
+                    </div>
+                  )}
+                  {profiles[currentUser.id].isVerified ? (
+                    <div className="bg-green-500/20 text-green-400 px-4 py-2 rounded-full flex items-center gap-2 border border-green-500/30">
+                      <ShieldCheck size={20} />
+                      <span className="font-black text-sm uppercase">Citizen</span>
+                    </div>
+                  ) : (
+                    <div className="bg-amber-500/20 text-amber-400 px-4 py-2 rounded-full flex items-center gap-2 border border-amber-500/30">
+                      <Fingerprint size={20} />
+                      <span className="font-black text-sm uppercase">Resident</span>
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className="grid grid-cols-3 gap-8">
@@ -176,8 +184,12 @@ export const IdentityView: React.FC<IdentityViewProps> = ({ currentUser, allUser
                      <div className="flex items-center gap-2">
                         <h4 className="font-black text-slate-800">{u.name}</h4>
                         {profiles[u.id]?.isVerified && <ShieldCheck size={14} className="text-green-500" />}
+                        {profiles[u.id]?.isHuman && <UserCheck size={14} className="text-indigo-500" />}
                      </div>
-                     <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-0.5">Trust Score: {profiles[u.id]?.verificationScore || 0}%</p>
+                     <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-0.5">
+                        Trust Score: {profiles[u.id]?.verificationScore || 0}%
+                        {profiles[u.id]?.isHuman && ` • ${profiles[u.id]?.pohMethod} PoH`}
+                     </p>
                   </div>
                </div>
 

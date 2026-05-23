@@ -13,6 +13,8 @@ export interface IdentityProfile {
   isVerified: boolean;
   verificationScore: number; // 0 to 100
   endorsedBy: string[]; // List of user IDs
+  isHuman: boolean; // Sybil resistance status
+  pohMethod?: 'Mock' | 'Endorsement' | 'External';
 }
 
 export class IdentityManager {
@@ -28,7 +30,8 @@ export class IdentityManager {
       userId,
       isVerified: false,
       verificationScore: 0,
-      endorsedBy: []
+      endorsedBy: [],
+      isHuman: false
     };
     this.profiles.set(userId, profile);
     return profile;
@@ -107,6 +110,17 @@ export class IdentityManager {
     if (profile) {
       profile.isVerified = true;
       profile.verificationScore = 100;
+      profile.isHuman = true;
+      profile.pohMethod = 'External';
+      this.profiles.set(userId, profile);
+    }
+  }
+
+  verifyHuman(userId: string, method: 'Mock' | 'Endorsement' | 'External' = 'Mock'): void {
+    const profile = this.profiles.get(userId);
+    if (profile) {
+      profile.isHuman = true;
+      profile.pohMethod = method;
       this.profiles.set(userId, profile);
     }
   }
