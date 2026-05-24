@@ -92,7 +92,19 @@ describe('Executive Protocol Full Integration', () => {
     const pkg = JSON.parse(fs.readFileSync(path.join(localPath, 'package.json'), 'utf8'));
     expect(pkg.version).toBe('0.1.1');
 
-    // 4. Verify Standards
+    // 4. Execute Build (mock build script)
+    fs.writeFileSync(path.join(localPath, 'build.sh'), '#!/bin/bash\necho "Building..."');
+    fs.chmodSync(path.join(localPath, 'build.sh'), 0o755);
+    mgr.executeBuild();
+
+    // 5. Generate Handoff
+    mgr.generateHandoff();
+    expect(fs.existsSync(path.join(localPath, 'HANDOFF.md'))).toBe(true);
+    const handoff = fs.readFileSync(path.join(localPath, 'HANDOFF.md'), 'utf8');
+    expect(handoff).toContain('Merged feature branch jules-feature-1 into main.');
+    expect(handoff).toContain('Bumped version from 0.1.0 to 0.1.1.');
+
+    // 6. Verify Standards
     expect(() => mgr.verifyStandards()).not.toThrow();
   });
 });

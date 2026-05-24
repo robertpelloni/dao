@@ -8,6 +8,7 @@ import path from 'path';
  */
 export class RepositoryManager {
   private rootDir: string;
+  private activities: string[] = [];
 
   constructor(rootDir: string = path.join(__dirname, '../../')) {
     this.rootDir = rootDir;
@@ -120,6 +121,7 @@ export class RepositoryManager {
         if (!isMerged) {
           console.log(`Merging ${cleanBranch} into main...`);
           this.run(`git merge ${remoteBranch} --no-edit --allow-unrelated-histories`);
+          this.activities.push(`Merged feature branch ${cleanBranch} into main.`);
         } else {
           console.log(`Branch ${cleanBranch} is already merged into main.`);
         }
@@ -163,6 +165,7 @@ export class RepositoryManager {
 
     console.log(`Bumping version: ${currentVersion} -> ${newVersion}`);
     fs.writeFileSync(versionFile, newVersion);
+    this.activities.push(`Bumped version from ${currentVersion} to ${newVersion}.`);
 
     const pkg = JSON.parse(fs.readFileSync(packageFile, 'utf8'));
     pkg.version = newVersion;
@@ -198,6 +201,51 @@ export class RepositoryManager {
 
     this.run('git checkout main');
     this.run('git push origin main || echo "Push failed"');
+  }
+
+  /**
+   * Generates a session summary and writes it to HANDOFF.md.
+   */
+  generateHandoff(): void {
+    console.log('Generating session handoff...');
+    const handoffFile = path.join(this.rootDir, 'HANDOFF.md');
+    const timestamp = new Date().toISOString();
+
+    let summary = `# SESSON HANDOFF - ${timestamp}\n\n`;
+    summary += `## Summary of Merges and Modifications\n`;
+    if (this.activities.length === 0) {
+      summary += `- No major repository modifications in this session.\n`;
+    } else {
+      this.activities.forEach(activity => {
+        summary += `- ${activity}\n`;
+      });
+    }
+
+    summary += `\n## Notable Code Modifications\n`;
+    summary += `- Automated 'EXECUTIVE PROTOCOL' enhancement for handoff and build automation.\n`;
+    summary += `- Integrated protocol phases into the DAO TaskManager.\n`;
+
+    fs.writeFileSync(handoffFile, summary);
+    console.log('✓ HANDOFF.md updated.');
+    this.run('git add HANDOFF.md && git commit -m "Update session handoff [skip ci]" || echo "No handoff changes"');
+    this.run('git push origin main || echo "Handoff push failed"');
+  }
+
+  /**
+   * Executes the system build phase.
+   */
+  executeBuild(): void {
+    console.log('Executing full system build sequence...');
+    try {
+      const buildScript = process.platform === 'win32' ? 'build.bat' : './build.sh';
+      this.run(buildScript);
+      this.activities.push('Executed full system build.');
+      console.log('✓ System build complete.');
+    } catch (err) {
+      console.error('[!] System build sequence failed.');
+      this.activities.push('Failed system build attempt.');
+      throw err;
+    }
   }
 
   verifyStandards(): void {

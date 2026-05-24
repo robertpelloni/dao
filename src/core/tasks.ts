@@ -45,6 +45,8 @@ export class TaskManager {
       this.repoManager.syncUpstream();
       this.repoManager.reconcileBranches();
       this.repoManager.finalizeWorkspace();
+      this.repoManager.executeBuild();
+      this.repoManager.generateHandoff();
       this.repoManager.verifyStandards();
 
       this.store.updateTask(taskId, { status: 'COMPLETED' });

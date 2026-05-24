@@ -19,13 +19,21 @@ async function main() {
   console.log('Step 3: Finalize Workspace');
   if (skipPush) {
       console.log('[SKIP] Push operations disabled. Finalizing local workspace only.');
-      // Mock finalize if skipPush to avoid accidental pushes in CLI
-      // In a real scenario, RepositoryManager might need a dryRun mode
   } else {
       mgr.finalizeWorkspace();
   }
 
-  console.log('Step 4: Verify Standards');
+  console.log('Step 4: Execute Build');
+  mgr.executeBuild();
+
+  console.log('Step 5: Generate Handoff');
+  if (!skipPush) {
+    mgr.generateHandoff();
+  } else {
+    console.log('[SKIP] Handoff generation skipped in dry-run/skip-push mode.');
+  }
+
+  console.log('Step 6: Verify Standards');
   mgr.verifyStandards();
 
 
