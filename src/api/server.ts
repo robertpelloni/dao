@@ -13,6 +13,7 @@ import { CrowdfundingEngine } from '../core/crowdfunding';
 import { calculateImpactScore } from '../core/impactScoring';
 import { globalGovernance } from '../core/governanceCycle';
 import { globalTaskManager } from '../core/tasks';
+import { globalTriage } from '../core/triage';
 import { User, Proposal, Committee } from '../models/types';
 import { signToken, verifyToken } from '../utils/auth';
 
@@ -39,8 +40,8 @@ app.use(express.json());
  * JWT Authentication Middleware
  */
 const authenticateToken = (req: Request, res: Response, next: any) => {
-  const skipPaths = ['/health', '/summary', '/proposals', '/committees', '/users', '/auth/login', '/governance/trends', '/governance/cycles', '/governance/cycle', '/tasks'];
-  if (skipPaths.includes(req.path) && req.method === 'GET') return next();
+  const skipPaths = ['/health', '/summary', '/proposals', '/committees', '/users', '/auth/login', '/governance/trends', '/governance/cycles', '/governance/cycle', '/tasks', '/proposals/triage'];
+  if (skipPaths.includes(req.path) && (req.method === 'GET' || req.path === '/proposals/triage')) return next();
   if (req.path === '/auth/login' && req.method === 'POST') return next();
 
   const authHeader = req.headers['authorization'];
@@ -348,6 +349,17 @@ app.post('/proposals/:id/score', (req: Request, res: Response) => {
   const score = calculateImpactScore(proposal);
   globalStore.updateProposal(s(req.params.id), { impactScore: score });
   res.json({ id: proposal.id, impactScore: score });
+});
+
+app.post('/proposals/triage', (req: Request, res: Response) => {
+  const { title, abstract } = req.body;
+  const committees = globalStore.getCommittees();
+  const suggested = globalTriage.suggestCommittee(title || '', abstract || '', committees);
+
+  const existingProposals = globalStore.getProposals();
+  const isRedundant = globalTriage.detectRedundancy(title || '', existingProposals.map(p => p.title));
+
+  res.json({ suggested, isRedundant });
 });
 
 // --- Governance Cycle Endpoints ---

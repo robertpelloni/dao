@@ -14,10 +14,31 @@ export const ProposalForm: React.FC<ProposalFormProps> = ({ userId, onSuccess, o
   const [abstract, setAbstract] = useState('');
   const [specs, setSpecs] = useState('');
   const [committeeId, setCommitteeId] = useState('Infrastructure-Committee');
+  const [suggestedCommittee, setSuggestedCommittee] = useState<string | null>(null);
+  const [isRedundant, setIsRedundant] = useState(false);
   const [milestones, setMilestones] = useState<Partial<Milestone>[]>([
     { description: '', targetBudget: 0, isCompleted: false }
   ]);
   const [loading, setLoading] = useState(false);
+
+  const handleTriage = async (val: string, type: 'title' | 'abstract') => {
+    const payload = {
+      title: type === 'title' ? val : title,
+      abstract: type === 'abstract' ? val : abstract
+    };
+
+    if (payload.title.length > 5 || payload.abstract.length > 10) {
+      try {
+        const res = await api.post('/proposals/triage', payload);
+        if (res.data.suggested) {
+          setSuggestedCommittee(res.data.suggested.id);
+        }
+        setIsRedundant(res.data.isRedundant);
+      } catch (err) {
+        console.error('Triage failed', err);
+      }
+    }
+  };
 
   const addMilestone = () => {
     setMilestones([...milestones, { description: '', targetBudget: 0, isCompleted: false }]);
@@ -76,15 +97,27 @@ export const ProposalForm: React.FC<ProposalFormProps> = ({ userId, onSuccess, o
             <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Proposal Title</label>
             <input
               required
-              className="w-full bg-gray-50 border-2 border-transparent focus:border-blue-600 focus:bg-white rounded-2xl px-6 py-4 outline-none font-bold transition-all"
+              className={`w-full bg-gray-50 border-2 focus:bg-white rounded-2xl px-6 py-4 outline-none font-bold transition-all ${isRedundant ? 'border-red-500' : 'border-transparent focus:border-blue-600'}`}
               placeholder="e.g. Solar panels for public school"
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={(e) => { setTitle(e.target.value); handleTriage(e.target.value, 'title'); }}
             />
+            {isRedundant && <p className="text-[10px] font-black text-red-500 uppercase tracking-tighter mt-1">Warning: Redundant proposal title detected</p>}
           </div>
 
           <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Target Committee</label>
+            <div className="flex justify-between items-center">
+              <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Target Committee</label>
+              {suggestedCommittee && suggestedCommittee !== committeeId && (
+                <button
+                  type="button"
+                  onClick={() => setCommitteeId(suggestedCommittee)}
+                  className="text-[10px] font-black text-blue-600 uppercase hover:underline"
+                >
+                  Apply Suggestion?
+                </button>
+              )}
+            </div>
             <select
               className="w-full bg-gray-50 border-2 border-transparent focus:border-blue-600 focus:bg-white rounded-2xl px-6 py-4 outline-none font-bold transition-all appearance-none"
               value={committeeId}
@@ -93,6 +126,9 @@ export const ProposalForm: React.FC<ProposalFormProps> = ({ userId, onSuccess, o
               <option value="Infrastructure-Committee">Infrastructure</option>
               <option value="Education-Committee">Education</option>
               <option value="Healthcare-Committee">Healthcare</option>
+              {suggestedCommittee && !['Infrastructure-Committee', 'Education-Committee', 'Healthcare-Committee'].includes(suggestedCommittee) && (
+                <option value={suggestedCommittee}>{suggestedCommittee.replace('-Committee', '')}</option>
+              )}
             </select>
           </div>
 
@@ -104,7 +140,7 @@ export const ProposalForm: React.FC<ProposalFormProps> = ({ userId, onSuccess, o
               className="w-full bg-gray-50 border-2 border-transparent focus:border-blue-600 focus:bg-white rounded-2xl px-6 py-4 outline-none font-medium transition-all resize-none"
               placeholder="Briefly describe the goal..."
               value={abstract}
-              onChange={(e) => setAbstract(e.target.value)}
+              onChange={(e) => { setAbstract(e.target.value); handleTriage(e.target.value, 'abstract'); }}
             />
           </div>
         </div>
