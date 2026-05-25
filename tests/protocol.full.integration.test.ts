@@ -34,7 +34,11 @@ describe('Executive Protocol Full Integration', () => {
     execSync('git branch -m main', { cwd: initPath });
 
     fs.writeFileSync(path.join(initPath, 'VERSION.md'), '0.1.0');
-    fs.writeFileSync(path.join(initPath, 'package.json'), JSON.stringify({ name: 'test', version: '0.1.0' }, null, 2));
+    fs.writeFileSync(path.join(initPath, 'package.json'), JSON.stringify({
+      name: 'test',
+      version: '0.1.0',
+      scripts: { test: 'echo "Success"' }
+    }, null, 2));
     fs.writeFileSync(path.join(initPath, 'CHANGELOG.md'), '## [Unreleased]\n');
 
     // Create mandatory files
