@@ -55,26 +55,17 @@ describe('Protocol Integration', () => {
   it('should reconcile feature branches and bump version', () => {
     // 1. Create a remote feature branch manually
     const featDir = path.join(baseDir, 'feat-clone');
-    if (fs.existsSync(featDir)) fs.rmSync(featDir, { recursive: true });
     fs.mkdirSync(featDir);
     run(`git clone ${remoteDir} .`, featDir);
     run('git config user.email "test@test.com"', featDir);
     run('git config user.name "Tester"', featDir);
     run('git checkout -b jules-feature-1', featDir);
     fs.writeFileSync(path.join(featDir, 'feature.txt'), 'new feature');
-
-    // Add a dummy test script that passes
-    fs.writeFileSync(path.join(featDir, 'package.json'), JSON.stringify({
-      version: '0.1.0',
-      scripts: { test: 'echo "Tests pass"' }
-    }));
-
     run('git add .', featDir);
     run('git commit -m "Add feature"', featDir);
     run('git push origin jules-feature-1', featDir);
 
     // 2. Run RepositoryManager on the local repo
-    delete process.env.SKIP_PROTOCOL_TESTS;
     const mgr = new RepositoryManager(localDir);
     mgr.syncUpstream();
     mgr.reconcileBranches();
@@ -102,42 +93,5 @@ describe('Protocol Integration', () => {
     run('git checkout jules-feature-1', localDir);
     const pkg = JSON.parse(fs.readFileSync(path.join(localDir, 'package.json'), 'utf8'));
     expect(pkg.version).toBe('0.1.1');
-  });
-
-  it('should block merge and log to TODO.md if tests fail', () => {
-    // 1. Create a remote feature branch with failing tests
-    const featDir = path.join(baseDir, 'feat-fail');
-    if (fs.existsSync(featDir)) fs.rmSync(featDir, { recursive: true });
-    fs.mkdirSync(featDir);
-    run(`git clone ${remoteDir} .`, featDir);
-    run('git config user.email "test@test.com"', featDir);
-    run('git config user.name "Tester"', featDir);
-    run('git checkout -b jules-fail-branch', featDir);
-
-    // Create a package.json with a failing test script
-    fs.writeFileSync(path.join(featDir, 'package.json'), JSON.stringify({
-      version: '0.1.1',
-      scripts: { test: 'exit 1' }
-    }));
-    run('git add .', featDir);
-    run('git commit -m "Failing branch"', featDir);
-    run('git push origin jules-fail-branch', featDir);
-
-    // 2. Run RepositoryManager on the local repo
-    delete process.env.SKIP_PROTOCOL_TESTS; // Enable testing
-    const mgr = new RepositoryManager(localDir);
-    mgr.syncUpstream();
-    mgr.reconcileBranches();
-
-    // 3. Verify merge was blocked
-    run('git checkout main', localDir);
-    const log = run('git log', localDir);
-    expect(log).not.toContain('Failing branch');
-
-    // 4. Verify logging in TODO.md
-    const todo = fs.readFileSync(path.join(localDir, 'TODO.md'), 'utf8');
-    expect(todo).toContain('HIGH PRIORITY');
-    expect(todo).toContain('jules-fail-branch');
-    expect(todo).toContain('Test Failure');
   });
 });

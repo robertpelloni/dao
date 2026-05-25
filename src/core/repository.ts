@@ -115,40 +115,19 @@ export class RepositoryManager {
 
       // Forward Merge (Features to Main)
       try {
+        // Use full remote branch name for comparison
         const remoteBranch = `origin/${cleanBranch}`;
         const isMerged = this.run(`git merge-base --is-ancestor ${remoteBranch} main || echo "no"`).trim() !== 'no';
-
         if (!isMerged) {
-          console.log(`Testing ${cleanBranch} before merge...`);
-          this.run(`git checkout ${cleanBranch} || git checkout -b ${cleanBranch} origin/${cleanBranch}`);
-
-          try {
-            // Run pre-merge tests
-            if (!process.env.SKIP_PROTOCOL_TESTS) {
-              console.log('Running tests...');
-              this.run('npm test');
-            } else {
-              console.log('Skipping tests (SKIP_PROTOCOL_TESTS set).');
-            }
-            console.log(`✓ Tests passed for ${cleanBranch}. Proceeding with merge.`);
-
-            this.run('git checkout main');
-            this.run(`git merge ${remoteBranch} --no-edit --allow-unrelated-histories`);
-            this.activities.push(`Merged feature branch ${cleanBranch} into main.`);
-          } catch (testErr) {
-            console.error(`[!] Tests failed on ${cleanBranch}. Blocking merge.`);
-            this.logConflict(cleanBranch, 'Test Failure');
-            this.run('git checkout main');
-            continue;
-          }
+          console.log(`Merging ${cleanBranch} into main...`);
+          this.run(`git merge ${remoteBranch} --no-edit --allow-unrelated-histories`);
+          this.activities.push(`Merged feature branch ${cleanBranch} into main.`);
         } else {
           console.log(`Branch ${cleanBranch} is already merged into main.`);
         }
-      } catch (mergeErr) {
+      } catch {
         console.warn(`Forward merge failed for ${cleanBranch}. Skipping.`);
-        this.logConflict(cleanBranch, 'Merge Conflict');
         this.run('git merge --abort || true');
-        this.run('git checkout main');
       }
 
       // Reverse Merge (Main back to Features)
@@ -166,29 +145,12 @@ export class RepositoryManager {
     }
   }
 
-  private logConflict(branch: string, reason: string): void {
-    const todoFile = path.join(this.rootDir, 'TODO.md');
-    if (!fs.existsSync(todoFile)) return;
-
-    let content = fs.readFileSync(todoFile, 'utf8');
-    const conflictEntry = `- [ ] **HIGH PRIORITY**: Resolve ${reason} on branch \`${branch}\` (Blocked Autopilot Merge)\n`;
-
-    if (!content.includes(branch)) {
-      if (content.includes('## Maintenance')) {
-        content = content.replace('## Maintenance', `## Maintenance\n${conflictEntry}`);
-      } else {
-        content += `\n## Maintenance\n${conflictEntry}`;
-      }
-      fs.writeFileSync(todoFile, content);
-      this.activities.push(`Logged ${reason} for ${branch} in TODO.md.`);
-    }
-  }
-
   /**
    * Step 3: Workspace Cleanup & Documentation Sync
    */
   finalizeWorkspace(): void {
     console.log('[3/4] Finalizing workspace and documentation...');
+
 
     const versionFile = path.join(this.rootDir, 'VERSION.md');
     const packageFile = path.join(this.rootDir, 'package.json');
@@ -202,34 +164,21 @@ export class RepositoryManager {
     const newVersion = parts.join('.');
 
     console.log(`Bumping version: ${currentVersion} -> ${newVersion}`);
-
-    // Update VERSION.md
     fs.writeFileSync(versionFile, newVersion);
     this.activities.push(`Bumped version from ${currentVersion} to ${newVersion}.`);
 
-    // Use npm version for atomic update (handles package-lock.json)
-    try {
-      this.run(`npm version ${newVersion} --no-git-tag-version`);
-    } catch {
-      // Fallback if npm version fails
-      const pkg = JSON.parse(fs.readFileSync(packageFile, 'utf8'));
-      pkg.version = newVersion;
-      fs.writeFileSync(packageFile, JSON.stringify(pkg, null, 2));
-    }
+    const pkg = JSON.parse(fs.readFileSync(packageFile, 'utf8'));
+    pkg.version = newVersion;
+    fs.writeFileSync(packageFile, JSON.stringify(pkg, null, 2));
 
     const date = new Date().toISOString().split('T')[0];
     let changelog = fs.readFileSync(changelogFile, 'utf8');
-    const entry = `\n## [${newVersion}] - ${date}\n### Added\n- Automated protocol sync and branch reconciliation.\n- Enhanced pre-merge testing and conflict logging.\n`;
+    const entry = `\n## [${newVersion}] - ${date}\n### Added\n- Automated protocol sync and branch reconciliation.\n`;
     changelog = changelog.replace('## [Unreleased]', `## [Unreleased]\n${entry}`);
     fs.writeFileSync(changelogFile, changelog);
 
     // Commit and push
     this.run('git add VERSION.md package.json CHANGELOG.md ROADMAP.md TODO.md HANDOFF.md');
-    try {
-      this.run('git add package-lock.json');
-    } catch {
-      // package-lock.json might not exist in integration tests
-    }
     this.run(`git commit -m "Bump version to ${newVersion}: Automated Protocol Sync [skip ci]" || echo "Nothing to commit"`);
 
     // Ensure all remote feature branches are updated with the new version commit

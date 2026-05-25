@@ -4,16 +4,6 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
-## [0.9.0] - 2026-05-24
-### Added
-- Finalized Autonomous Development and Repository Management Protocol (Executive Protocol).
-- Enhanced Pre-Merge Testing: Automatic test execution before merging feature branches to main.
-- High-Priority Conflict Logging: Blocked merges are automatically logged to TODO.md.
-- Atomic Versioning: Integrated `npm version` for synchronized package-lock updates.
-- Standardized cross-platform execution scripts (.sh and .bat).
-- AI Proposal Triage Agent: Implemented automated committee suggestions and redundancy detection.
-- Integrated CI deployment pipeline: Enhanced GitHub Actions for comprehensive validation and deployment.
-
 ## [0.8.8] - 2026-05-23
 ### Added
 - Automated protocol sync and branch reconciliation.
