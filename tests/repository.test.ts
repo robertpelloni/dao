@@ -44,8 +44,13 @@ describe('RepositoryManager', () => {
 
   it('should bump version correctly in VERSION.md and package.json', () => {
     // Mock run method to skip git commands during unit test
-    (mgr as any).run = jest.fn().mockReturnValue('');
-
+    (mgr as any).run = jest.fn((cmd) => {
+      if (cmd.includes('npm version')) {
+        // Mock the side effect of npm version
+        fs.writeFileSync(path.join(testRoot, 'package.json'), JSON.stringify({ version: '1.0.1' }));
+      }
+      return '';
+    });
 
     mgr.finalizeWorkspace();
 

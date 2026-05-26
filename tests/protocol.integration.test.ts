@@ -49,18 +49,26 @@ describe('Protocol Integration', () => {
   });
 
   afterAll(() => {
-    fs.rmSync(baseDir, { recursive: true, force: true });
+    if (fs.existsSync(baseDir)) fs.rmSync(baseDir, { recursive: true, force: true });
   });
 
   it('should reconcile feature branches and bump version', () => {
     // 1. Create a remote feature branch manually
     const featDir = path.join(baseDir, 'feat-clone');
+    if (fs.existsSync(featDir)) fs.rmSync(featDir, { recursive: true });
     fs.mkdirSync(featDir);
     run(`git clone ${remoteDir} .`, featDir);
     run('git config user.email "test@test.com"', featDir);
     run('git config user.name "Tester"', featDir);
     run('git checkout -b jules-feature-1', featDir);
     fs.writeFileSync(path.join(featDir, 'feature.txt'), 'new feature');
+
+    // Add a dummy test script that passes
+    fs.writeFileSync(path.join(featDir, 'package.json'), JSON.stringify({
+      version: '0.1.0',
+      scripts: { test: 'echo "Tests pass"' }
+    }));
+
     run('git add .', featDir);
     run('git commit -m "Add feature"', featDir);
     run('git push origin jules-feature-1', featDir);
@@ -76,6 +84,9 @@ describe('Protocol Integration', () => {
     fs.writeFileSync(path.join(localDir, 'scripts/start.sh'), '#!/bin/bash');
     fs.writeFileSync(path.join(localDir, 'scripts/build.sh'), '#!/bin/bash');
     fs.writeFileSync(path.join(localDir, 'scripts/sync-protocol.sh'), '#!/bin/bash');
+    // Root scripts
+    fs.writeFileSync(path.join(localDir, 'start.sh'), '#!/bin/bash');
+    fs.writeFileSync(path.join(localDir, 'build.sh'), '#!/bin/bash');
 
     mgr.finalizeWorkspace();
     mgr.verifyStandards();

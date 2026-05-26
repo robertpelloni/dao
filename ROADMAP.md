@@ -27,7 +27,7 @@
 - [x] JWT Authentication foundation.
 
 ## Phase 5: Autonomous Governance & Scaling (Current)
-- [x] Integration of the AI-driven "Executive Protocol" into core DAO operations.
+- [x] Integration of the AI-driven "Executive Protocol" into core DAO operations (v0.9.0).
 - [x] Subject-specific committee auto-provisioning.
 - [x] Sybil-resistant identity proof-of-humanity integration.
 - [x] Committee auto-discovery in UI.
@@ -35,5 +35,5 @@
 - [x] Multi-year governance cycle catch-up logic.
 - [x] Mobile-first UI refinements.
 - [x] Historical Trend visualization (D3).
-- [ ] ZKP Identity Layer (Privacy implementation).
-- [ ] AI Triage Agent for proposal routing.
+- [ ] ZKP Identity Layer (Privacy implementation) - Foundation started in v0.9.0.
+- [x] AI Triage Agent for proposal routing (v0.9.0).

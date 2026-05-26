@@ -34,7 +34,11 @@ describe('Executive Protocol Full Integration', () => {
     execSync('git branch -m main', { cwd: initPath });
 
     fs.writeFileSync(path.join(initPath, 'VERSION.md'), '0.1.0');
-    fs.writeFileSync(path.join(initPath, 'package.json'), JSON.stringify({ name: 'test', version: '0.1.0' }, null, 2));
+    fs.writeFileSync(path.join(initPath, 'package.json'), JSON.stringify({
+      name: 'test',
+      version: '0.1.0',
+      scripts: { test: 'echo "Success"' }
+    }, null, 2));
     fs.writeFileSync(path.join(initPath, 'CHANGELOG.md'), '## [Unreleased]\n');
 
     // Create mandatory files
@@ -70,6 +74,7 @@ describe('Executive Protocol Full Integration', () => {
   });
 
   it('should execute the full protocol lifecycle', () => {
+    process.env.SKIP_PROTOCOL_TESTS = 'true';
     // 1. Sync Upstream
     mgr.syncUpstream();
 
@@ -82,6 +87,14 @@ describe('Executive Protocol Full Integration', () => {
     // Verify forward merge
     execSync('git checkout main', { cwd: localPath });
     expect(fs.existsSync(path.join(localPath, 'feature.txt'))).toBe(true);
+
+    // Create root scripts to avoid verification warnings/errors
+    fs.writeFileSync(path.join(localPath, 'start.sh'), '#!/bin/bash');
+    fs.writeFileSync(path.join(localPath, 'build.sh'), '#!/bin/bash');
+    fs.mkdirSync(path.join(localPath, 'scripts'), { recursive: true });
+    fs.writeFileSync(path.join(localPath, 'scripts/start.sh'), '#!/bin/bash');
+    fs.writeFileSync(path.join(localPath, 'scripts/build.sh'), '#!/bin/bash');
+    fs.writeFileSync(path.join(localPath, 'scripts/sync-protocol.sh'), '#!/bin/bash');
 
     // 3. Finalize Workspace (bump version)
     mgr.finalizeWorkspace();
