@@ -10,6 +10,9 @@ async function main() {
   console.log('=== LiquidGov EXECUTIVE PROTOCOL: TypeScript Engine Start ===');
   if (isDryRun) console.log('[DRY RUN] No changes will be pushed.');
 
+  console.log('Step 0: Initialize');
+  mgr.initialize();
+
   console.log('Step 1: Upstream Sync');
   mgr.syncUpstream();
 

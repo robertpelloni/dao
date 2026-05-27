@@ -50,3 +50,7 @@ jobs:
 
       - name: Build Project
         run: npm run build || echo "Build skipped (if no build script)"
+
+      - name: Automated Deployment
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: bash scripts/deploy.sh

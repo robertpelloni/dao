@@ -52,6 +52,17 @@ describe('Protocol Integration', () => {
     if (fs.existsSync(baseDir)) fs.rmSync(baseDir, { recursive: true, force: true });
   });
 
+  it('should initialize the repository correctly', () => {
+    const mgr = new RepositoryManager(localDir);
+    // Mandatory files are already created in beforeAll
+    expect(() => mgr.initialize()).not.toThrow();
+
+    const email = run('git config user.email', localDir).trim();
+    const name = run('git config user.name', localDir).trim();
+    expect(email).toBe('autopilot@liquidgov.org');
+    expect(name).toBe('LiquidGov Autopilot');
+  });
+
   it('should reconcile feature branches and bump version', () => {
     // 1. Create a remote feature branch manually
     const featDir = path.join(baseDir, 'feat-clone');

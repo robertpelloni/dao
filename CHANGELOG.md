@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.4] - 2026-05-26
+### Added
+- Implemented formal repository initialization in RepositoryManager.
+- Integrated Step 0: Initialize into the autonomous protocol lifecycle.
+- Created automated deployment scripts (scripts/deploy.sh) and staging docker-compose.
+
 ## [0.9.3] - 2026-05-26
 ### Added
 - Implemented Autonomous Watchdog for periodic repository synchronization.

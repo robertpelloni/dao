@@ -26,6 +26,29 @@ export class RepositoryManager {
   }
 
   /**
+   * Step 0: Initialize Environment
+   * Sets up git configuration and verifies mandatory project files.
+   */
+  initialize(): void {
+    console.log('[0/5] Initializing autonomous repository environment...');
+
+    // Configure git identity for the session
+    this.run('git config user.email "autopilot@liquidgov.org"');
+    this.run('git config user.name "LiquidGov Autopilot"');
+    this.run('git config init.defaultBranch main');
+
+    // Verify mandatory files
+    const criticalFiles = ['AGENTS.md', 'VISION.md', 'VERSION.md', 'PROTOCOL.md'];
+    for (const file of criticalFiles) {
+      if (!fs.existsSync(path.join(this.rootDir, file))) {
+        throw new Error(`Critical file missing: ${file}. Environment not ready.`);
+      }
+    }
+
+    console.log('✓ Repository environment initialized.');
+  }
+
+  /**
    * Step 1: Upstream Tracking & Submodule Sanitization
    */
   syncUpstream(): void {
@@ -73,11 +96,6 @@ export class RepositoryManager {
    */
   reconcileBranches(): void {
     console.log('[2/4] Executing Dual-Direction Intelligent Merge Engine...');
-
-    // Configure git identity for the session
-    this.run('git config user.email "autopilot@liquidgov.org"');
-    this.run('git config user.name "LiquidGov Autopilot"');
-    this.run('git config init.defaultBranch main');
 
     // Ensure we have the latest info about remote branches
     try {
