@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.3] - 2026-05-26
+### Added
+- Implemented Autonomous Watchdog for periodic repository synchronization.
+- Integrated background protocol execution into the API server lifecycle.
+
 ## [0.9.2] - 2026-05-26
 ### Added
 - Refined Executive Protocol with Section 2 (Intelligent Merge) and Section 3 (Roadmap Extraction).
