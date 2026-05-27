@@ -197,3 +197,16 @@ Build a proof-of-concept for the LiquidGov specification in the README.
 3. Ensure the state transitions for the Proposal Lifecycle are deterministic and robust.
 4. Keep the initial stack lightweight, modular, and dependency-minimal to prevent dependency hell during automated compilation.
 Drop this into your repo, fire up your script, and let me know what kind of boilerplate architecture it spits out!
+
+## 5. Autonomous Development & CI Integration
+The 'EXECUTIVE PROTOCOL' for repository synchronization is now fully integrated into the CI pipeline.
+
+### Core Components:
+- **.github/workflows/autopilot.yml**: The GitHub Actions workflow that orchestrates the protocol.
+- **scripts/sync-protocol.sh**: Implements the Dual-Direction Intelligent Merge Engine (Forward-merge feature branches to main, Reverse-merge main back to features).
+- **scripts/verify-docs.sh**: Enforces documentation standards and ensures mandatory files are present.
+
+### Developer Usage:
+1. **Automated Merging**: Push a feature branch named `main-*` or `jules-*`. The protocol will automatically attempt to merge it into `main` if tests pass.
+2. **Drift Prevention**: Every push to `main` triggers a reverse-sync, updating all active remote feature branches with the latest changes from `main`.
+3. **Manual Sync**: Run `bash scripts/sync-protocol.sh` locally to execute the reconciliation logic manually.
