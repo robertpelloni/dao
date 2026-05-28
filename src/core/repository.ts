@@ -135,7 +135,7 @@ export class RepositoryManager {
 
         if (!isMerged) {
           console.log(`Testing ${cleanBranch} before merge...`);
-          this.run(`git checkout ${cleanBranch} || git checkout -b ${cleanBranch} origin/${cleanBranch}`);
+          this.run(`git checkout "${cleanBranch}" || git checkout -b "${cleanBranch}" "origin/${cleanBranch}"`);
 
           try {
             // Run pre-merge tests
@@ -148,7 +148,7 @@ export class RepositoryManager {
             console.log(`✓ Tests passed for ${cleanBranch}. Proceeding with merge.`);
 
             this.run('git checkout main');
-            this.run(`git merge ${remoteBranch} --no-edit --allow-unrelated-histories`);
+            this.run(`git merge "${remoteBranch}" --no-edit --allow-unrelated-histories`);
             this.activities.push(`Merged feature branch ${cleanBranch} into main.`);
           } catch (testErr) {
             console.error(`[!] Tests failed on ${cleanBranch}. Blocking merge.`);
@@ -169,9 +169,9 @@ export class RepositoryManager {
       // Reverse Merge (Main back to Features)
       try {
         console.log(`Reverse merging main into ${cleanBranch}...`);
-        this.run(`git checkout ${cleanBranch} || git checkout -b ${cleanBranch} origin/${cleanBranch}`);
+        this.run(`git checkout "${cleanBranch}" || git checkout -b "${cleanBranch}" "origin/${cleanBranch}"`);
         this.run('git merge main --no-edit');
-        this.run(`git push origin ${cleanBranch} || echo "Push skipped"`);
+        this.run(`git push origin "${cleanBranch}" || echo "Push skipped"`);
         this.run('git checkout main');
       } catch {
         console.warn(`Reverse merge failed for ${cleanBranch}. Skipping.`);
@@ -256,9 +256,9 @@ export class RepositoryManager {
     for (const branch of branches) {
       const cleanBranch = branch.replace('origin/', '');
       try {
-        this.run(`git checkout ${cleanBranch}`);
+        this.run(`git checkout "${cleanBranch}"`);
         this.run('git merge main --no-edit');
-        this.run(`git push origin ${cleanBranch} || echo "Push skipped"`);
+        this.run(`git push origin "${cleanBranch}" || echo "Push skipped"`);
       } catch {
         console.warn(`Final reverse merge failed for ${cleanBranch}.`);
         this.run('git merge --abort || true');

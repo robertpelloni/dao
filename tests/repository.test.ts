@@ -11,7 +11,7 @@ describe('RepositoryManager', () => {
 
 
     // Create mock mandatory files
-    const mandatory = ['VISION.md', 'MEMORY.md', 'DEPLOY.md', 'CHANGELOG.md', 'ROADMAP.md', 'TODO.md', 'VERSION.md', 'IDEAS.md', 'HANDOFF.md', 'AGENTS.md', 'package.json'];
+    const mandatory = ['VISION.md', 'MEMORY.md', 'DEPLOY.md', 'CHANGELOG.md', 'ROADMAP.md', 'TODO.md', 'VERSION.md', 'PROTOCOL.md', 'IDEAS.md', 'HANDOFF.md', 'AGENTS.md', 'package.json'];
     mandatory.forEach(f => {
       if (f === 'package.json') {
         fs.writeFileSync(path.join(testRoot, f), JSON.stringify({ version: '1.0.0' }));

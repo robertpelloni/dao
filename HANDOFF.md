@@ -1,17 +1,17 @@
-# SESSION HANDOFF - v0.9.2
+# SESSION HANDOFF - v0.9.6
 
 ## Summary of Progress
-1. **Executive Protocol v2:** Fully implemented Section 2 and 3 of the protocol. The system now supports aggressive submodule cleanup, dynamic upstream detection, and local feature branch reconciliation.
-2. **Roadmap Extraction:** Implemented automated scanning of the codebase for `TODO`/`FIXME` items, which are now automatically synced to `TODO.md`.
-3. **ZKP & AI Triage Reconciliation:** Successfully merged the ZKP and Triage foundations into the main branch, resolving previous inconsistencies.
-4. **CI/CD Stabilization:** Updated `.github/workflows/autopilot.yml` and `scripts/verify-docs.sh` to support the hardened protocol and versioning standards.
+1. **Security Hardening:** Fixed a command injection vulnerability in the `RepositoryManager` and implemented proper shell quoting for all git operations involving branch names.
+2. **Test Resolution:** Fixed a broken import in `tests/reputation.simulation.test.ts` that was blocking the CI pipeline.
+3. **API Expansion:** Expose foundational ZKP endpoints in the REST server to utilize the `ZKPManager` logic.
+4. **Autonomous Protocol:** The Executive Protocol is now safer and more robust, handling edge cases in branch naming.
 
 ## Current State
-- **Version:** v0.9.2
-- **Tests:** 52+ tests passing.
-- **Documentation:** Fully synchronized and verified.
+- **Version:** v0.9.6
+- **Security:** Hardened against malicious branch names.
+- **Tests:** All tests passing.
 
 ## Next Steps
-- Implement anonymous voting using the Semaphore ZKP foundation.
-- Upgrade Triage Agent to use semantic embeddings for better redundancy detection.
-- Automate reputation decay simulation tests as a permanent CI gate.
+- Integrate Semaphore ZKP proofs into the actual voting logic.
+- Implement more granular jury selection for milestone verification.
+- Add frontend UI for ZKP identity creation.

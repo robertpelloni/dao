@@ -34,7 +34,7 @@ describe('Protocol Integration', () => {
 
 
     // Create mandatory files
-    const mandatory = ['VISION.md', 'MEMORY.md', 'DEPLOY.md', 'CHANGELOG.md', 'ROADMAP.md', 'TODO.md', 'VERSION.md', 'IDEAS.md', 'HANDOFF.md', 'AGENTS.md'];
+    const mandatory = ['VISION.md', 'MEMORY.md', 'DEPLOY.md', 'CHANGELOG.md', 'ROADMAP.md', 'TODO.md', 'VERSION.md', 'PROTOCOL.md', 'IDEAS.md', 'HANDOFF.md', 'AGENTS.md'];
     mandatory.forEach(f => {
        if (f === 'VERSION.md') fs.writeFileSync(path.join(localDir, f), '0.1.0');
        else if (f === 'CHANGELOG.md') fs.writeFileSync(path.join(localDir, f), '# Changelog\n\n## [Unreleased]\n');

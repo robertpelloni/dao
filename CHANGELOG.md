@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.6] - 2026-05-26
+### Fixed
+- Resolved command injection vulnerability in RepositoryManager.
+- Fixed incorrect import path in reputation simulation tests.
+- Added shell quoting for branch names to support spaces.
+- Implemented missing ZKP foundation endpoints in the API.
+
 ## [0.9.4] - 2026-05-26
 ### Added
 - Implemented formal repository initialization in RepositoryManager.

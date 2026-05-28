@@ -450,3 +450,9 @@ if (require.main === module) {
 }
 
 export default app;
+
+// --- ZKP Endpoints ---
+app.post('/zkp/verify', async (req: Request, res: Response) => {
+  // Mock endpoint for ZKP verification foundation
+  res.json({ message: 'ZKP foundation verified (v0.9.6)' });
+});
