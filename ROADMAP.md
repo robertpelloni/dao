@@ -21,13 +21,13 @@
 - [x] AI-driven impact scoring for proposals.
 - [x] Multi-party consensus for milestone payouts (Oracles).
 - [x] Real-time updates for voting and funding progress.
-- [x] Integrated Autopilot Protocol into CI for automated repository handling.
+- [x] Integrated Autopilot Protocol into CI for automated repository handling (v0.9.7).
 - [x] Visual Delegation Graph for liquid power transparency.
 - [x] Subject-based power breakdown in Identity view.
 - [x] JWT Authentication foundation.
 
 ## Phase 5: Autonomous Governance & Scaling (Current)
-- [x] Integration of the AI-driven "Executive Protocol" into core DAO operations (v0.9.0).
+- [x] Integration of the AI-driven "Executive Protocol" into core DAO operations (v0.9.8).
 - [x] Subject-specific committee auto-provisioning.
 - [x] Sybil-resistant identity proof-of-humanity integration.
 - [x] Committee auto-discovery in UI.
@@ -37,3 +37,4 @@
 - [x] Historical Trend visualization (D3).
 - [ ] ZKP Identity Layer (Privacy implementation) - Foundation started in v0.9.0.
 - [x] AI Triage Agent for proposal routing (v0.9.0).
+- [x] Finalize Autonomous Executive Protocol (v0.9.8).

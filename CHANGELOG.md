@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.8] - 2026-05-26
+### Added
+- Integrated Executive Protocol Implementation: Automated roadmap extraction (syncRoadmap) and lifecycle management.
+- Enhanced TODO.md Synchronization: Automated discovery of code-level TODO/FIXME items.
+- Protocol CLI: Added `npm run protocol` for manual or automated sync triggers.
+- Refined TaskManager: Integrated autonomous protocol into the internal DAO task lifecycle.
+- Refined syncRoadmap logic with specific regex to avoid self-matching.
+
 ## [0.9.7] - 2026-05-26
 ### Added
 - Enhanced CI/CD Pipeline: Granular jobs for verify, test, build, and deploy.

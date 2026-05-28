@@ -116,4 +116,21 @@ describe('Protocol Integration', () => {
     const pkg = JSON.parse(fs.readFileSync(path.join(localDir, 'package.json'), 'utf8'));
     expect(pkg.version).toBe('0.1.1');
   });
+
+  it('should extract roadmap items from code into TODO.md', () => {
+    const mgr = new RepositoryManager(localDir);
+
+    // 1. Add a TODO in a source file
+    const srcDir = path.join(localDir, 'src');
+    fs.mkdirSync(srcDir, { recursive: true });
+    fs.writeFileSync(path.join(srcDir, 'logic.ts'), '// TODO: Implement quantum consensus');
+
+    // 2. Run syncRoadmap
+    mgr.syncRoadmap();
+
+    // 3. Verify TODO.md
+    const todoContent = fs.readFileSync(path.join(localDir, 'TODO.md'), 'utf8');
+    expect(todoContent).toContain('TODO: Implement quantum consensus');
+    expect(todoContent).toContain('Source: `src/logic.ts:1`');
+  });
 });

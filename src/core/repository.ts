@@ -337,8 +337,10 @@ export class RepositoryManager {
           const content = fs.readFileSync(filePath, 'utf8');
           const lines = content.split('\n');
           lines.forEach((line, idx) => {
-            if (line.includes('TODO:') || line.includes('FIXME:')) {
-              const task = line.substring(line.indexOf('TODO:') || line.indexOf('FIXME:')).replace(/\*\/|\/\//g, '').trim();
+            // Using a more specific pattern to avoid matching the scanner's own logic
+            const match = line.match(/\/\/\s*(TODO|FIXME):(.*)$/) || line.match(/\*\s*(TODO|FIXME):(.*)$/);
+            if (match) {
+              const task = `${match[1]}:${match[2].replace(/\*\/|\/\//g, '').trim()}`;
               const relPath = path.relative(this.rootDir, filePath);
               results.push(`- [ ] ${task} (Source: \`${relPath}:${idx + 1}\`)`);
             }
