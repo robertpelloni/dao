@@ -1,11 +1,28 @@
 #!/bin/bash
 # LiquidGov Build Script
+set -e
 
-echo "Building Backend..."
-npm run build:backend || echo "No backend build step defined (using ts-node for runtime)."
+echo "=== LiquidGov Build Sequence Start ==="
 
-echo "Building Frontend..."
-cd frontend && npm run build
-cd ..
+# Cleanup old artifacts
+echo "Cleaning up old build artifacts..."
+rm -rf dist/
+rm -rf frontend/dist/
 
-echo "Build Complete."
+echo "Building Backend (TypeScript)..."
+npm run build:backend
+
+echo "Building Frontend (Vite)..."
+if [ -d "frontend" ]; then
+    cd frontend
+    # Ensure dependencies are present for build
+    if [ ! -d "node_modules" ]; then
+        npm install
+    fi
+    npm run build
+    cd ..
+else
+    echo "Warning: frontend directory not found."
+fi
+
+echo "=== Build Complete ==="

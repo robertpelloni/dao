@@ -1,6 +1,6 @@
 {
   "name": "dao",
-  "version": "0.9.6",
+  "version": "0.9.7",
   "description": "Please help me design a distributed voluntary government organization app in which people form committees about subjects and propose actions to be voted on and crowdfunded",
   "main": "index.js",
   "scripts": {
@@ -8,6 +8,7 @@
     "lint": "eslint .",
     "build:backend": "tsc",
     "build": "bash scripts/build.sh",
+    "protocol": "bash scripts/sync-protocol.sh",
     "test:all": "npm test && cd frontend && npm run build"
   },
   "repository": {

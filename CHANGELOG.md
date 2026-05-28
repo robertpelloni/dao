@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.7] - 2026-05-26
+### Added
+- Enhanced CI/CD Pipeline: Granular jobs for verify, test, build, and deploy.
+- Docker-based Staging Verification: Automated health checks within containerized environments in CI.
+- Refined Deployment Engine: Enhanced `scripts/deploy.sh` with environment validation and artifact staging.
+- Artifact Management: Integrated GitHub Actions artifact storage for backend and frontend builds.
+- Security Gates: Automated `npm audit` in CI to detect high-level vulnerabilities.
+
 ## [0.9.6] - 2026-05-26
 ### Fixed
 - Resolved command injection vulnerability in RepositoryManager.

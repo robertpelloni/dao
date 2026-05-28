@@ -314,6 +314,63 @@ export class RepositoryManager {
     }
   }
 
+  /**
+   * Scans codebase for TODO/FIXME and syncs with TODO.md
+   */
+  syncRoadmap(): void {
+    console.log('Scanning codebase for TODO/FIXME items...');
+    const todoFile = path.join(this.rootDir, 'TODO.md');
+    if (!fs.existsSync(todoFile)) return;
+
+    let todoContent = fs.readFileSync(todoFile, 'utf8');
+    const srcDir = path.join(this.rootDir, 'src');
+
+    const findTodos = (dir: string): string[] => {
+      let results: string[] = [];
+      const list = fs.readdirSync(dir);
+      list.forEach(file => {
+        const filePath = path.join(dir, file);
+        const stat = fs.statSync(filePath);
+        if (stat && stat.isDirectory()) {
+          results = results.concat(findTodos(filePath));
+        } else if (file.endsWith('.ts') || file.endsWith('.tsx') || file.endsWith('.js')) {
+          const content = fs.readFileSync(filePath, 'utf8');
+          const lines = content.split('\n');
+          lines.forEach((line, idx) => {
+            if (line.includes('TODO:') || line.includes('FIXME:')) {
+              const task = line.substring(line.indexOf('TODO:') || line.indexOf('FIXME:')).replace(/\*\/|\/\//g, '').trim();
+              const relPath = path.relative(this.rootDir, filePath);
+              results.push(`- [ ] ${task} (Source: \`${relPath}:${idx + 1}\`)`);
+            }
+          });
+        }
+      });
+      return results;
+    };
+
+    const foundTodos = findTodos(srcDir);
+
+    // Intelligent injection into TODO.md
+    let hasChanges = false;
+    foundTodos.forEach(todo => {
+      // Check if this specific source line is already tracked
+      const sourceMatch = todo.match(/\(Source: `(.*)`\)/);
+      if (sourceMatch && !todoContent.includes(sourceMatch[0])) {
+        if (todoContent.includes('## Codebase Auto-Discovery')) {
+          todoContent = todoContent.replace('## Codebase Auto-Discovery', `## Codebase Auto-Discovery\n${todo}`);
+        } else {
+          todoContent += `\n## Codebase Auto-Discovery\n${todo}`;
+        }
+        hasChanges = true;
+      }
+    });
+
+    if (hasChanges) {
+      fs.writeFileSync(todoFile, todoContent);
+      this.activities.push('Synchronized TODO.md with codebase findings.');
+    }
+  }
+
   verifyStandards(): void {
     console.log('[4/4] Verifying documentation and script standards...');
     const mandatory = ['VISION.md', 'MEMORY.md', 'DEPLOY.md', 'CHANGELOG.md', 'ROADMAP.md', 'TODO.md', 'VERSION.md', 'IDEAS.md', 'HANDOFF.md', 'AGENTS.md'];

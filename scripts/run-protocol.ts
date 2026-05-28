@@ -19,24 +19,27 @@ async function main() {
   console.log('Step 2: Reconcile Branches');
   mgr.reconcileBranches();
 
-  console.log('Step 3: Finalize Workspace');
+  console.log('Step 3: Extract Roadmap');
+  mgr.syncRoadmap();
+
+  console.log('Step 4: Finalize Workspace');
   if (skipPush) {
       console.log('[SKIP] Push operations disabled. Finalizing local workspace only.');
   } else {
       mgr.finalizeWorkspace();
   }
 
-  console.log('Step 4: Execute Build');
+  console.log('Step 5: Execute Build');
   mgr.executeBuild();
 
-  console.log('Step 5: Generate Handoff');
+  console.log('Step 6: Generate Handoff');
   if (!skipPush) {
     mgr.generateHandoff();
   } else {
     console.log('[SKIP] Handoff generation skipped in dry-run/skip-push mode.');
   }
 
-  console.log('Step 6: Verify Standards');
+  console.log('Step 7: Verify Standards');
   mgr.verifyStandards();
 
 

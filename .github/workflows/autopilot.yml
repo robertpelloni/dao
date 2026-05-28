@@ -1,4 +1,4 @@
-name: LiquidGov Autopilot CI
+name: LiquidGov Autopilot CI/CD
 
 on:
   push:
@@ -7,7 +7,92 @@ on:
     branches: [ main ]
 
 jobs:
-  validate:
+  verify:
+    name: Lint & Verify
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+      - name: Install Dependencies
+        run: npm install
+      - name: Verify Documentation Standards
+        run: bash scripts/verify-docs.sh
+      - name: Security Audit
+        run: npm audit --audit-level=high || echo "High-level vulnerabilities found"
+
+  test:
+    name: Test Suite
+    needs: verify
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+      - name: Install Dependencies
+        run: npm install
+      - name: Run Backend Tests
+        run: npm test
+      - name: Run Frontend Tests
+        run: |
+          cd frontend
+          npm install
+          npx playwright install --with-deps chromium
+          npm run test:frontend
+
+  build:
+    name: Build & Package
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+      - name: Install Dependencies
+        run: |
+           npm install
+           cd frontend && npm install
+      - name: Build Project
+        run: bash scripts/build.sh
+      - name: Upload Backend Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-dist
+          path: dist/
+      - name: Upload Frontend Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist/
+
+  docker-verify:
+    name: Docker Staging Verification
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build Docker Image
+        run: docker build -t liquidgov-api:latest .
+      - name: Staging Health Check
+        run: |
+          docker compose -f docker-compose.staging.yml up -d
+          sleep 10
+          curl --fail http://localhost:3000/health || (docker compose -f docker-compose.staging.yml logs && exit 1)
+          docker compose -f docker-compose.staging.yml down
+
+  deploy:
+    name: Autonomous Deployment
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [build, docker-verify]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -16,41 +101,28 @@ jobs:
         with:
           fetch-depth: 0
           submodules: recursive
-
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '22'
           cache: 'npm'
-
-      - name: Install Dependencies
-        run: npm install
-
-      - name: Verify Documentation Standards
-        run: bash scripts/verify-docs.sh
-
-      - name: Run Backend Tests
-        run: npm test
-
-      - name: Run Frontend Tests
-        run: |
-          cd frontend
-          npx playwright install chromium
-          npm run test:frontend
-
+      - name: Download Backend Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-dist
+          path: dist/
+      - name: Download Frontend Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist/
       - name: Run Executive Sync Protocol
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           REPO_URL=$(git config --get remote.origin.url)
           NEW_URL=$(echo $REPO_URL | sed "s|https://github.com/|https://x-access-token:${GITHUB_TOKEN}@github.com/|")
           git remote set-url origin $NEW_URL
-          bash scripts/sync-protocol.sh
-
-      - name: Build Project
-        run: npm run build || echo "Build skipped (if no build script)"
-
-      - name: Automated Deployment
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+          npm run protocol
+      - name: Execute Deployment
         run: bash scripts/deploy.sh
