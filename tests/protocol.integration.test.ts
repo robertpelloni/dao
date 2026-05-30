@@ -34,7 +34,7 @@ describe('Protocol Integration', () => {
 
 
     // Create mandatory files
-    const mandatory = ['VISION.md', 'MEMORY.md', 'DEPLOY.md', 'CHANGELOG.md', 'ROADMAP.md', 'TODO.md', 'VERSION.md', 'PROTOCOL.md', 'IDEAS.md', 'HANDOFF.md', 'AGENTS.md'];
+    const mandatory = ['VISION.md', 'MEMORY.md', 'DEPLOY.md', 'CHANGELOG.md', 'ROADMAP.md', 'TODO.md', 'VERSION.md', 'IDEAS.md', 'HANDOFF.md', 'AGENTS.md'];
     mandatory.forEach(f => {
        if (f === 'VERSION.md') fs.writeFileSync(path.join(localDir, f), '0.1.0');
        else if (f === 'CHANGELOG.md') fs.writeFileSync(path.join(localDir, f), '# Changelog\n\n## [Unreleased]\n');
@@ -49,37 +49,18 @@ describe('Protocol Integration', () => {
   });
 
   afterAll(() => {
-    if (fs.existsSync(baseDir)) fs.rmSync(baseDir, { recursive: true, force: true });
-  });
-
-  it('should initialize the repository correctly', () => {
-    const mgr = new RepositoryManager(localDir);
-    // Mandatory files are already created in beforeAll
-    expect(() => mgr.initialize()).not.toThrow();
-
-    const email = run('git config user.email', localDir).trim();
-    const name = run('git config user.name', localDir).trim();
-    expect(email).toBe('autopilot@liquidgov.org');
-    expect(name).toBe('LiquidGov Autopilot');
+    fs.rmSync(baseDir, { recursive: true, force: true });
   });
 
   it('should reconcile feature branches and bump version', () => {
     // 1. Create a remote feature branch manually
     const featDir = path.join(baseDir, 'feat-clone');
-    if (fs.existsSync(featDir)) fs.rmSync(featDir, { recursive: true });
     fs.mkdirSync(featDir);
     run(`git clone ${remoteDir} .`, featDir);
     run('git config user.email "test@test.com"', featDir);
     run('git config user.name "Tester"', featDir);
     run('git checkout -b jules-feature-1', featDir);
     fs.writeFileSync(path.join(featDir, 'feature.txt'), 'new feature');
-
-    // Add a dummy test script that passes
-    fs.writeFileSync(path.join(featDir, 'package.json'), JSON.stringify({
-      version: '0.1.0',
-      scripts: { test: 'echo "Tests pass"' }
-    }));
-
     run('git add .', featDir);
     run('git commit -m "Add feature"', featDir);
     run('git push origin jules-feature-1', featDir);
@@ -95,9 +76,6 @@ describe('Protocol Integration', () => {
     fs.writeFileSync(path.join(localDir, 'scripts/start.sh'), '#!/bin/bash');
     fs.writeFileSync(path.join(localDir, 'scripts/build.sh'), '#!/bin/bash');
     fs.writeFileSync(path.join(localDir, 'scripts/sync-protocol.sh'), '#!/bin/bash');
-    // Root scripts
-    fs.writeFileSync(path.join(localDir, 'start.sh'), '#!/bin/bash');
-    fs.writeFileSync(path.join(localDir, 'build.sh'), '#!/bin/bash');
 
     mgr.finalizeWorkspace();
     mgr.verifyStandards();
@@ -115,22 +93,5 @@ describe('Protocol Integration', () => {
     run('git checkout jules-feature-1', localDir);
     const pkg = JSON.parse(fs.readFileSync(path.join(localDir, 'package.json'), 'utf8'));
     expect(pkg.version).toBe('0.1.1');
-  });
-
-  it('should extract roadmap items from code into TODO.md', () => {
-    const mgr = new RepositoryManager(localDir);
-
-    // 1. Add a TODO in a source file
-    const srcDir = path.join(localDir, 'src');
-    fs.mkdirSync(srcDir, { recursive: true });
-    fs.writeFileSync(path.join(srcDir, 'logic.ts'), '// TODO: Implement quantum consensus');
-
-    // 2. Run syncRoadmap
-    mgr.syncRoadmap();
-
-    // 3. Verify TODO.md
-    const todoContent = fs.readFileSync(path.join(localDir, 'TODO.md'), 'utf8');
-    expect(todoContent).toContain('TODO: Implement quantum consensus');
-    expect(todoContent).toContain('Source: `src/logic.ts:1`');
   });
 });

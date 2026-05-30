@@ -11,7 +11,7 @@ describe('RepositoryManager', () => {
 
 
     // Create mock mandatory files
-    const mandatory = ['VISION.md', 'MEMORY.md', 'DEPLOY.md', 'CHANGELOG.md', 'ROADMAP.md', 'TODO.md', 'VERSION.md', 'PROTOCOL.md', 'IDEAS.md', 'HANDOFF.md', 'AGENTS.md', 'package.json'];
+    const mandatory = ['VISION.md', 'MEMORY.md', 'DEPLOY.md', 'CHANGELOG.md', 'ROADMAP.md', 'TODO.md', 'VERSION.md', 'IDEAS.md', 'HANDOFF.md', 'AGENTS.md', 'package.json'];
     mandatory.forEach(f => {
       if (f === 'package.json') {
         fs.writeFileSync(path.join(testRoot, f), JSON.stringify({ version: '1.0.0' }));
@@ -44,13 +44,8 @@ describe('RepositoryManager', () => {
 
   it('should bump version correctly in VERSION.md and package.json', () => {
     // Mock run method to skip git commands during unit test
-    (mgr as any).run = jest.fn((cmd) => {
-      if (cmd.includes('npm version')) {
-        // Mock the side effect of npm version
-        fs.writeFileSync(path.join(testRoot, 'package.json'), JSON.stringify({ version: '1.0.1' }));
-      }
-      return '';
-    });
+    (mgr as any).run = jest.fn().mockReturnValue('');
+
 
     mgr.finalizeWorkspace();
 

@@ -14,8 +14,6 @@ This document specifies the autonomous synchronization and development protocol 
 ## 3. Versioning & Documentation Governance
 - **Automated Versioning**: Every successful protocol execution increments the patch version in `VERSION.md` and `package.json`.
 - **Documentation Sync**: `CHANGELOG.md`, `ROADMAP.md`, `TODO.md`, and `HANDOFF.md` are updated to reflect the new state.
-- **System Build**: A full system build is executed using `scripts/build.sh` or `build.bat` to ensure code integrity.
-- **Session Handoff**: A comprehensive summary of session activities (merges, bumps) is automatically generated in `HANDOFF.md`.
 - **Mandatory Standards**: The project must maintain:
   - `VISION.md`
   - `MEMORY.md`

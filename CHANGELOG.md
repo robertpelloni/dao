@@ -4,54 +4,61 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
-## [0.9.8] - 2026-05-26
+## [0.8.8] - 2026-05-23
 ### Added
-- Integrated Executive Protocol Implementation: Automated roadmap extraction (syncRoadmap) and lifecycle management.
-- Enhanced TODO.md Synchronization: Automated discovery of code-level TODO/FIXME items.
-- Protocol CLI: Added `npm run protocol` for manual or automated sync triggers.
-- Refined TaskManager: Integrated autonomous protocol into the internal DAO task lifecycle.
-- Refined syncRoadmap logic with specific regex to avoid self-matching.
+- Automated protocol sync and branch reconciliation.
 
-## [0.9.7] - 2026-05-26
+
+## [0.8.7] - 2026-05-23
 ### Added
-- Enhanced CI/CD Pipeline: Granular jobs for verify, test, build, and deploy.
-- Docker-based Staging Verification: Automated health checks within containerized environments in CI.
-- Refined Deployment Engine: Enhanced `scripts/deploy.sh` with environment validation and artifact staging.
-- Artifact Management: Integrated GitHub Actions artifact storage for backend and frontend builds.
-- Security Gates: Automated `npm audit` in CI to detect high-level vulnerabilities.
+- Automated protocol sync and branch reconciliation.
 
-## [0.9.6] - 2026-05-26
+
+## [0.8.6] - 2026-05-23
 ### Fixed
-- Resolved command injection vulnerability in RepositoryManager.
-- Fixed incorrect import path in reputation simulation tests.
-- Added shell quoting for branch names to support spaces.
-- Implemented missing ZKP foundation endpoints in the API.
+- CI authentication for autonomous protocol engine.
+- GitHub Actions workflow for push operations.
 
-## [0.9.4] - 2026-05-26
+## [0.8.5] - 2026-05-23
 ### Added
-- Implemented formal repository initialization in RepositoryManager.
-- Integrated Step 0: Initialize into the autonomous protocol lifecycle.
-- Created automated deployment scripts (scripts/deploy.sh) and staging docker-compose.
+- Robust implementation of the "Executive Protocol" for autonomous repository management.
+- Comprehensive integration tests for multi-branch merging and versioning.
+- Enhanced documentation standards verification with structural checks.
+- CLI support for protocol execution with --dry-run and --skip-push flags.
 
-## [0.9.3] - 2026-05-26
+## [0.8.3] - 2026-05-23
 ### Added
-- Implemented Autonomous Watchdog for periodic repository synchronization.
-- Integrated background protocol execution into the API server lifecycle.
+- Automated protocol sync and branch reconciliation.
 
-## [0.9.2] - 2026-05-26
+
+## [0.8.2] - 2025-05-23
 ### Added
-- Refined Executive Protocol with Section 2 (Intelligent Merge) and Section 3 (Roadmap Extraction).
-- Hardened RepositoryManager with pre-merge testing and automated conflict logging.
-- Automated synchronization of TODO.md with codebase findings.
+- Governance Health Dashboard for DAO-wide metrics.
+- Subject-specific Committee Auto-Provisioning logic.
+- Sybil-resistant Proof-of-Humanity (PoH) integration.
 
-
-## [0.9.0] - 2026-05-26
+## [0.8.1] - 2025-05-23
 ### Added
-- Finalized Autonomous Development and Repository Management Protocol (Executive Protocol).
-- Enhanced Pre-Merge Testing: Automatic test execution before merging feature branches to main.
-- High-Priority Conflict Logging: Blocked merges are automatically logged to TODO.md.
-- Atomic Versioning: Integrated `npm version` for synchronized package-lock updates.
-- Standardized cross-platform execution scripts (.sh and .bat).
-- AI Proposal Triage Agent: Implemented automated committee suggestions and redundancy detection.
-- Integrated CI deployment pipeline: Enhanced GitHub Actions for comprehensive validation and deployment.
-- ZKP Identity Layer (Phase 5.2): Initialized privacy-preserving identity foundation using Semaphore protocol.
+- Subject-based power breakdown API and Identity UI.
+- JWT Authentication foundation and refactored middleware.
+- Suggested Committees auto-discovery endpoint.
+- UI enhancements for Impact Score recalculation.
+
+## [0.8.0] - 2025-05-22
+### Added
+- **Visual Delegation Graph**: Implemented a force-directed graph in the Identity View to visualize liquid delegation flows between citizens.
+
+### Fixed
+- Fixed backend crash when processing GET requests without a request body in the auth middleware.
+
+## [0.7.1] - 2025-05-22
+### Added
+- Automated merge and protocol sync.
+- CI Workflow for autonomous repository management.
+- Fixed Tailwind CSS v4 styling regressions.
+
+## [0.7.0] - 2025-05-15
+### Added
+- Milestone Oracle System: Multi-party jury consensus for milestone fund release.
+- Real-time Updates: WebSocket integration for live dashboard updates.
+- Centralized versioning and documentation synchronization.

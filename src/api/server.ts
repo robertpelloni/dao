@@ -13,8 +13,6 @@ import { CrowdfundingEngine } from '../core/crowdfunding';
 import { calculateImpactScore } from '../core/impactScoring';
 import { globalGovernance } from '../core/governanceCycle';
 import { globalTaskManager } from '../core/tasks';
-import { globalTriage } from '../core/triage';
-import { globalWatchdog } from '../core/watchdog';
 import { User, Proposal, Committee } from '../models/types';
 import { signToken, verifyToken } from '../utils/auth';
 
@@ -41,8 +39,8 @@ app.use(express.json());
  * JWT Authentication Middleware
  */
 const authenticateToken = (req: Request, res: Response, next: any) => {
-  const skipPaths = ['/health', '/summary', '/proposals', '/committees', '/users', '/auth/login', '/governance/trends', '/governance/cycles', '/governance/cycle', '/tasks', '/proposals/triage'];
-  if (skipPaths.includes(req.path) && (req.method === 'GET' || req.path === '/proposals/triage')) return next();
+  const skipPaths = ['/health', '/summary', '/proposals', '/committees', '/users', '/auth/login', '/governance/trends', '/governance/cycles', '/governance/cycle', '/tasks'];
+  if (skipPaths.includes(req.path) && req.method === 'GET') return next();
   if (req.path === '/auth/login' && req.method === 'POST') return next();
 
   const authHeader = req.headers['authorization'];
@@ -352,17 +350,6 @@ app.post('/proposals/:id/score', (req: Request, res: Response) => {
   res.json({ id: proposal.id, impactScore: score });
 });
 
-app.post('/proposals/triage', (req: Request, res: Response) => {
-  const { title, abstract } = req.body;
-  const committees = globalStore.getCommittees();
-  const suggested = globalTriage.suggestCommittee(title || '', abstract || '', committees);
-
-  const existingProposals = globalStore.getProposals();
-  const isRedundant = globalTriage.detectRedundancy(title || '', existingProposals.map(p => p.title));
-
-  res.json({ suggested, isRedundant });
-});
-
 // --- Governance Cycle Endpoints ---
 
 app.get('/governance/cycle', (req: Request, res: Response) => {
@@ -441,18 +428,7 @@ app.get('/health', (req: Request, res: Response) => {
 if (require.main === module) {
   httpServer.listen(port, () => {
     console.log(`LiquidGov API server listening at http://localhost:${port}`);
-
-    // Start autonomous watchdog
-    if (!process.env.DISABLE_WATCHDOG) {
-      globalWatchdog.start();
-    }
   });
 }
 
 export default app;
-
-// --- ZKP Endpoints ---
-app.post('/zkp/verify', async (req: Request, res: Response) => {
-  // Mock endpoint for ZKP verification foundation
-  res.json({ message: 'ZKP foundation verified (v0.9.6)' });
-});

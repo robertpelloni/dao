@@ -23,7 +23,3 @@ frontend/src/**/*.d.ts.map
 frontend/vite.config.js
 frontend/vite.config.d.ts
 frontend/vite.config.d.ts.map
-tests/integration-tmp/
-tests/full-integration-tmp/
-deploy-artifacts/
-*.log

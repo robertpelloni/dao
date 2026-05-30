@@ -120,6 +120,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          npm install
           REPO_URL=$(git config --get remote.origin.url)
           NEW_URL=$(echo $REPO_URL | sed "s|https://github.com/|https://x-access-token:${GITHUB_TOKEN}@github.com/|")
           git remote set-url origin $NEW_URL

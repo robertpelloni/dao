@@ -9,7 +9,9 @@
     "build:backend": "tsc",
     "build": "bash scripts/build.sh",
     "protocol": "bash scripts/sync-protocol.sh",
-    "test:all": "npm test && cd frontend && npm run build"
+    "test:protocol": "npx jest tests/protocol.integration.test.ts",
+    "test:all": "npm test && cd frontend && npm run build",
+    "setup": "npm install && npx ts-node scripts/init-repo.ts"
   },
   "repository": {
     "type": "git",

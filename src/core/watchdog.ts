@@ -1,6 +1,5 @@
 import { RepositoryManager } from './repository';
 import { TaskManager, globalTaskManager } from './tasks';
-import { Store, globalStore } from '../models/Store';
 
 /**
  * Autonomous Watchdog

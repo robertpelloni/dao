@@ -1,5 +1,5 @@
 import { Store, globalStore } from '../models/Store';
-import { AutonomousTask, TaskStatus } from '../models/types';
+import { AutonomousTask } from '../models/types';
 import { RepositoryManager } from './repository';
 
 /**
@@ -44,6 +44,8 @@ export class TaskManager {
 
       this.repoManager.syncUpstream();
       this.repoManager.reconcileBranches();
+      this.repoManager.syncRoadmap();
+      this.repoManager.syncSubmoduleMap();
       this.repoManager.finalizeWorkspace();
       this.repoManager.executeBuild();
       this.repoManager.generateHandoff();
