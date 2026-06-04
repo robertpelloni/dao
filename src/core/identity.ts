@@ -138,6 +138,18 @@ export class IdentityManager {
     }
     return isValid;
   }
+
+  /**
+   * Rewards a user with reputation for positive governance actions.
+   */
+  rewardReputation(userId: string, subject: string, amount: number): void {
+    const user = this.store.getUser(userId);
+    if (!user) return;
+
+    user.reputation[subject] = (user.reputation[subject] || 0) + amount;
+    this.store.addUser(user);
+    console.log(`User ${userId} earned ${amount} rep in ${subject}`);
+  }
 }
 
 export const globalIdentity = new IdentityManager(globalStore);

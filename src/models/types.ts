@@ -18,6 +18,7 @@ export interface Milestone {
   isCompleted: boolean;
   completionProof?: string; // URL or hash
   juryVotes?: string[]; // IDs of users who verified this milestone
+  assignedJury?: string[]; // IDs of users randomly selected to verify this milestone
   requiredJuryQuorum?: number; // Number of jury votes needed to release funds
 }
 

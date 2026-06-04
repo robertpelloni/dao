@@ -10,7 +10,7 @@
 - [x] Historical Trend API & Charts.
 - [x] ZKP Privacy Layer (Semaphore/Circuits).
 - [x] AI Proposal Triage Agent.
-- [ ] Automated Reputation Decay simulation tests.
+- [x] Automated Reputation Decay simulation tests.
 
 ## Maintenance
 - [x] Validate cross-platform batch scripts (.bat).

@@ -37,3 +37,9 @@
 - **AI Triage Agent:** Keyword-based committee matching and title-based redundancy detection provides immediate "Cognitive Meritocracy" assistance to users.
 - **Semaphore ZKP:** Integration of Semaphore for identity verification allows for Sybil-resistant, privacy-preserving governance.
 - **Protocol Integrity:** The RepositoryManager is the heart of the system; ensuring its methods (syncRoadmap, executeBuild, etc.) are robustly implemented is critical for long-term autonomous execution.
+
+## Version 1.0.0: The Autonomous Core
+- **Treasury Hardening:** Moving from simple crowdfunding to Quadratic Funding (QF) ensures that small donors have a massive collective impact, fulfilling the democratic vision.
+- **Jury Dynamics:** Random assignment of jury duties from the pool of verified humans prevents collusion and distributes responsibility.
+- **Reputation as Currency:** Reputation is now earned, not just mock-initialized. This creates a circular economy of expertise where successful delivery leads to more governance influence.
+- **Code as Law:** The autonomous execution simulation (executeAutonomousPayload) is the precursor to real smart-contract triggers.

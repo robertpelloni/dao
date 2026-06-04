@@ -37,6 +37,14 @@ All notable changes to this project will be documented in this file.
 - Fixed Semaphore Group constructor to match latest SDK (members array required).
 - Exempted `VERSION.md` from mandatory header checks in documentation verification.
 
+## [1.0.0] - 2026-06-04
+### Added
+- Quadratic Funding (QF) matching engine in `TreasuryManager`.
+- Reputation Reward System: Citizens earn subject-specific rep for successful project delivery and jury service.
+- Randomized Jury Selection: Verified humans are automatically assigned to verify milestones.
+- Autonomous Execution Simulation: COMPLETED proposals trigger payload execution hooks with audit logs.
+- Advanced Health Dashboard with matching pool status and QF amplification tooltips.
+
 ## [0.8.9] - 2026-06-04
 ### Added
 - Automated protocol sync and branch reconciliation.

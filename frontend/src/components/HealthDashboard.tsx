@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Proposal, Committee, User, GovernanceCycle } from '../../../src/models/types.js';
-import { Activity, Landmark, TrendingUp, Users, PieChart, AlertCircle, FastForward, Clock } from 'lucide-react';
+import { Activity, Landmark, TrendingUp, Users, PieChart, AlertCircle, FastForward, Clock, Coins } from 'lucide-react';
 import api from '../api/client.js';
 import { CycleTrends } from './CycleTrends.js';
 
@@ -93,6 +93,36 @@ export const HealthDashboard: React.FC<HealthDashboardProps> = ({ proposals, com
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <CycleTrends />
+
+        <section className="bg-slate-900 text-white border rounded-3xl p-8 shadow-xl relative overflow-hidden">
+          <Coins className="absolute -right-8 -bottom-8 text-blue-500/10" size={200} />
+          <div className="relative z-10">
+            <h3 className="text-xl font-black mb-6 flex items-center gap-2">
+              <Landmark className="text-blue-400" />
+              Matching Pool Status
+            </h3>
+            <div className="space-y-6">
+               <div>
+                  <p className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] mb-1">Available Matching Funds</p>
+                  <p className="text-4xl font-black text-blue-400">$25,000</p>
+               </div>
+               <div className="p-4 bg-white/5 rounded-2xl border border-white/10">
+                  <p className="text-xs font-bold text-slate-300 leading-relaxed italic">
+                    "Quadratic Funding matches individual contributions, amplifying the reach of projects supported by a broad base of citizens."
+                  </p>
+               </div>
+               <div className="space-y-2">
+                  <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-slate-500">
+                    <span>Pool Utilization</span>
+                    <span>42%</span>
+                  </div>
+                  <div className="h-2 w-full bg-slate-800 rounded-full overflow-hidden">
+                    <div className="h-full bg-blue-500 shadow-[0_0_12px_rgba(59,130,246,0.5)]" style={{ width: '42%' }} />
+                  </div>
+               </div>
+            </div>
+          </div>
+        </section>
 
         <section className="bg-white border rounded-3xl p-8 shadow-sm">
           <h3 className="text-xl font-black text-slate-800 mb-6 flex items-center gap-2">

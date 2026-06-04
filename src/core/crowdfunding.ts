@@ -1,4 +1,6 @@
 import { Store } from '../models/Store';
+import { TreasuryManager } from './treasury';
+import { globalIdentity } from './identity';
 
 /**
  * Crowdfunding and Escrow Engine
@@ -17,8 +19,15 @@ export interface Contribution {
 export class CrowdfundingEngine {
   // Map<proposalId, Contribution[]>
   private contributions: Map<string, Contribution[]> = new Map();
+  private treasury: TreasuryManager;
 
-  constructor(private store: Store) {}
+  constructor(private store: Store) {
+    this.treasury = new TreasuryManager(store);
+  }
+
+  getTreasury(): TreasuryManager {
+    return this.treasury;
+  }
 
   /**
    * Contribute funds to a proposal.
@@ -54,7 +63,23 @@ export class CrowdfundingEngine {
     if (!proposal) return false;
 
     if (proposal.currentFunding >= proposal.totalTargetBudget) {
-      this.store.updateProposal(proposalId, { status: 'FUNDED' });
+      // Calculate matching funds
+      const pContributions = this.contributions.get(proposalId) || [];
+      const match = this.treasury.calculateMatch(pContributions);
+
+      // Assign random juries for all milestones
+      const verifiedHumans = this.store.getUsers().filter(u => globalIdentity.isVerified(u.id)).map(u => u.id);
+      const updatedMilestones = proposal.milestones.map(m => {
+        // Randomly select 3 citizens for each milestone if possible
+        const jury = [...verifiedHumans].sort(() => 0.5 - Math.random()).slice(0, 3);
+        return { ...m, assignedJury: jury, requiredJuryQuorum: Math.min(jury.length, 2) };
+      });
+
+      this.store.updateProposal(proposalId, {
+        status: 'FUNDED',
+        currentFunding: proposal.currentFunding + match,
+        milestones: updatedMilestones
+      });
       return true;
     } else {
       this.refund(proposalId);
@@ -87,6 +112,11 @@ export class CrowdfundingEngine {
 
     const milestone = milestones[index]!;
     const votes = [...(milestone.juryVotes || [])];
+    const assigned = milestone.assignedJury || [];
+
+    if (assigned.length > 0 && !assigned.includes(userId)) {
+      throw new Error('User is not an assigned jury member for this milestone');
+    }
 
     if (votes.includes(userId)) {
       throw new Error('User already voted on this milestone');
@@ -134,9 +164,21 @@ export class CrowdfundingEngine {
 
     console.log(`Released ${milestone.targetBudget} for milestone ${milestone.description}`);
 
+    // Reward proposer with reputation for milestone completion
+    const committee = this.store.getCommittee(proposal.committeeId);
+    const subject = committee?.subject || 'General';
+    globalIdentity.rewardReputation(proposal.proposerId, subject, 5);
+
+    // Reward jury members
+    votes.forEach(uid => {
+      globalIdentity.rewardReputation(uid, subject, 1);
+    });
+
     // Check if all milestones are done
     if (updatedMilestones.every(m => m.isCompleted)) {
       this.store.updateProposal(proposalId, { status: 'COMPLETED' });
+      // Bonus reputation for full project success
+      globalIdentity.rewardReputation(proposal.proposerId, subject, 10);
     }
 
     return true;

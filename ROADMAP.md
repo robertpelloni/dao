@@ -26,7 +26,7 @@
 - [x] Subject-based power breakdown in Identity view.
 - [x] JWT Authentication foundation.
 
-## Phase 5: Autonomous Governance & Scaling (Current)
+## Phase 5: Autonomous Governance & Scaling (Complete)
 - [x] Integration of the AI-driven "Executive Protocol" into core DAO operations.
 - [x] Subject-specific committee auto-provisioning.
 - [x] Sybil-resistant identity proof-of-humanity integration.
@@ -37,3 +37,9 @@
 - [x] Historical Trend visualization (D3).
 - [x] ZKP Identity Layer (Privacy implementation).
 - [x] AI Triage Agent for proposal routing.
+
+## Phase 6: LiquidGov 1.0.0 - Sophisticated Autonomy (Complete)
+- [x] Quadratic Funding Matching Engine.
+- [x] Reputation Reward System for Active Citizens.
+- [x] Randomized Jury Verification Protocol.
+- [x] Autonomous Execution Hooks & Audit Logs.
