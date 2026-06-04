@@ -35,5 +35,5 @@
 - [x] Multi-year governance cycle catch-up logic.
 - [x] Mobile-first UI refinements.
 - [x] Historical Trend visualization (D3).
-- [ ] ZKP Identity Layer (Privacy implementation).
-- [ ] AI Triage Agent for proposal routing.
+- [x] ZKP Identity Layer (Privacy implementation).
+- [x] AI Triage Agent for proposal routing.

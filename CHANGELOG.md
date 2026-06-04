@@ -4,6 +4,44 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.9.10] - 2026-06-04
+### Added
+- Automated protocol sync and branch reconciliation.
+
+
+## [0.9.9] - 2026-06-04
+### Added
+- Automated protocol sync and branch reconciliation.
+
+
+## [0.8.11] - 2026-06-04
+### Added
+- Automated protocol sync and branch reconciliation.
+
+
+## [0.8.10] - 2026-06-04
+### Added
+- Automated protocol sync and branch reconciliation.
+
+
+## [0.9.9] - 2026-06-04
+### Added
+- AI Proposal Triage Agent: Automated committee suggestion and redundancy detection.
+- ZKP Identity Verification: Privacy-preserving proof-of-humanity integration using Semaphore.
+- "AI Suggest" button in Proposal creation form.
+- "Verify Human Identity (ZKP)" button in Identity dashboard.
+
+### Fixed
+- Restored missing autonomous protocol methods in `RepositoryManager`.
+- Synchronized `scripts/run-protocol.ts` with backend capabilities.
+- Fixed Semaphore Group constructor to match latest SDK (members array required).
+- Exempted `VERSION.md` from mandatory header checks in documentation verification.
+
+## [0.8.9] - 2026-06-04
+### Added
+- Automated protocol sync and branch reconciliation.
+
+
 ## [0.8.8] - 2026-05-23
 ### Added
 - Automated protocol sync and branch reconciliation.

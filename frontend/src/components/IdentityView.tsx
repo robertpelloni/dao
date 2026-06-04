@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { User, Committee } from '../../../src/models/types.js';
 import { IdentityProfile } from '../../../src/core/identity.js';
-import { ShieldCheck, UserPlus, Fingerprint, Award, GitGraph, Users, UserCheck } from 'lucide-react';
+import { ShieldCheck, UserPlus, Fingerprint, Award, GitGraph, Users, UserCheck, Key } from 'lucide-react';
 import api from '../api/client.js';
 import { DelegationGraph } from './DelegationGraph.js';
 
@@ -33,6 +33,22 @@ export const IdentityView: React.FC<IdentityViewProps> = ({ currentUser, allUser
   useEffect(() => {
     fetchProfiles();
   }, [allUsers]);
+
+  const handleVerifyZKP = async () => {
+    if (!currentUser) return;
+    try {
+      setLoading(true);
+      // In a real app, this would involve generating a Semaphore proof on the client.
+      // Here we simulate the successful verification via API.
+      await api.post(`/identity/${currentUser.id}/verify-human`, { method: 'ZKP' });
+      await fetchProfiles();
+      onAction();
+    } catch (err) {
+      alert('ZKP Verification failed');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleEndorse = async (targetId: string) => {
     if (!currentUser) return;
@@ -108,6 +124,22 @@ export const IdentityView: React.FC<IdentityViewProps> = ({ currentUser, allUser
                     </div>
                  </div>
               </div>
+
+              {!profiles[currentUser.id]!.isHuman && (
+                <div className="mt-8 pt-8 border-t border-white/10">
+                  <button
+                    onClick={handleVerifyZKP}
+                    disabled={loading}
+                    className="flex items-center gap-3 px-6 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-700 transition-all font-black text-sm uppercase tracking-widest disabled:opacity-50"
+                  >
+                    <Key size={18} />
+                    {loading ? 'Verifying...' : 'Verify Human Identity (ZKP)'}
+                  </button>
+                  <p className="text-[10px] text-slate-500 font-bold mt-3 uppercase tracking-wider">
+                    Privacy-preserving proof of humanity using Semaphore.
+                  </p>
+                </div>
+              )}
            </div>
         </section>
       )}

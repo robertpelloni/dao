@@ -1,5 +1,6 @@
 import { Store, globalStore } from '../models/Store';
 import { calculateEffectivePower } from './delegation';
+import { globalZKP } from './zkp';
 
 /**
  * Identity Layer (Mock Sybil Resistance)
@@ -14,7 +15,7 @@ export interface IdentityProfile {
   verificationScore: number; // 0 to 100
   endorsedBy: string[]; // List of user IDs
   isHuman: boolean; // Sybil resistance status
-  pohMethod?: 'Mock' | 'Endorsement' | 'External';
+  pohMethod?: 'Mock' | 'Endorsement' | 'External' | 'ZKP';
 }
 
 export class IdentityManager {
@@ -116,13 +117,26 @@ export class IdentityManager {
     }
   }
 
-  verifyHuman(userId: string, method: 'Mock' | 'Endorsement' | 'External' = 'Mock'): void {
+  verifyHuman(userId: string, method: 'Mock' | 'Endorsement' | 'External' | 'ZKP' = 'Mock'): void {
     const profile = this.profiles.get(userId);
     if (profile) {
       profile.isHuman = true;
       profile.pohMethod = method;
       this.profiles.set(userId, profile);
     }
+  }
+
+  async verifyZKP(userId: string, proof: any): Promise<boolean> {
+    const profile = this.profiles.get(userId);
+    if (!profile) return false;
+
+    const isValid = await globalZKP.verify(proof);
+    if (isValid) {
+      profile.isHuman = true;
+      profile.pohMethod = 'ZKP';
+      this.profiles.set(userId, profile);
+    }
+    return isValid;
   }
 }
 

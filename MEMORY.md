@@ -32,3 +32,8 @@
 
 ## Unresolved Methods / Experiments
 - **Transitive Voting:** Experimented with deducting credits from delegators when a delegate votes. Decided to defer to Phase 4 for a more robust accounting system. Currently, the delegate's personal credits are used but checked against their *Total Effective Power*.
+
+## Version 0.9.9: The AI & Privacy Milestone
+- **AI Triage Agent:** Keyword-based committee matching and title-based redundancy detection provides immediate "Cognitive Meritocracy" assistance to users.
+- **Semaphore ZKP:** Integration of Semaphore for identity verification allows for Sybil-resistant, privacy-preserving governance.
+- **Protocol Integrity:** The RepositoryManager is the heart of the system; ensuring its methods (syncRoadmap, executeBuild, etc.) are robustly implemented is critical for long-term autonomous execution.

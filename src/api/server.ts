@@ -13,6 +13,7 @@ import { CrowdfundingEngine } from '../core/crowdfunding';
 import { calculateImpactScore } from '../core/impactScoring';
 import { globalGovernance } from '../core/governanceCycle';
 import { globalTaskManager } from '../core/tasks';
+import { globalTriage } from '../core/triage';
 import { User, Proposal, Committee } from '../models/types';
 import { signToken, verifyToken } from '../utils/auth';
 
@@ -40,7 +41,10 @@ app.use(express.json());
  */
 const authenticateToken = (req: Request, res: Response, next: any) => {
   const skipPaths = ['/health', '/summary', '/proposals', '/committees', '/users', '/auth/login', '/governance/trends', '/governance/cycles', '/governance/cycle', '/tasks'];
+  const publicPostPaths = ['/proposals/triage'];
+
   if (skipPaths.includes(req.path) && req.method === 'GET') return next();
+  if (publicPostPaths.includes(req.path) && req.method === 'POST') return next();
   if (req.path === '/auth/login' && req.method === 'POST') return next();
 
   const authHeader = req.headers['authorization'];
@@ -348,6 +352,24 @@ app.post('/proposals/:id/score', (req: Request, res: Response) => {
   const score = calculateImpactScore(proposal);
   globalStore.updateProposal(s(req.params.id), { impactScore: score });
   res.json({ id: proposal.id, impactScore: score });
+});
+
+app.post('/proposals/triage', (req: Request, res: Response) => {
+  const { title, abstract } = req.body;
+  if (!title || !abstract) return res.status(400).json({ error: 'Title and abstract required' });
+
+  const committees = Array.from(globalStore.committees.values());
+  const suggested = globalTriage.suggestCommittee(title, abstract, committees);
+
+  const existingProposals = globalStore.getProposals();
+  const existingTitles = existingProposals.map(p => p.title);
+  const isRedundant = globalTriage.detectRedundancy(title, existingTitles);
+
+  res.json({
+    suggestedCommittee: suggested,
+    isRedundant,
+    message: isRedundant ? 'Warning: A similar proposal might already exist.' : 'No obvious redundancies detected.'
+  });
 });
 
 // --- Governance Cycle Endpoints ---
