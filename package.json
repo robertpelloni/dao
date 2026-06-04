@@ -8,7 +8,10 @@
     "lint": "eslint .",
     "build:backend": "tsc",
     "build": "bash scripts/build.sh",
-    "test:all": "npm test && cd frontend && npm run build"
+    "protocol": "bash scripts/sync-protocol.sh",
+    "test:protocol": "npx jest tests/protocol.integration.test.ts",
+    "test:all": "npm test && cd frontend && npm run build",
+    "setup": "npm install && npx ts-node scripts/init-repo.ts"
   },
   "repository": {
     "type": "git",
@@ -41,6 +44,9 @@
     "typescript-eslint": "^8.24.1"
   },
   "dependencies": {
+    "@semaphore-protocol/group": "^4.14.2",
+    "@semaphore-protocol/identity": "^4.14.2",
+    "@semaphore-protocol/proof": "^4.14.2",
     "@types/socket.io": "^3.0.1",
     "better-sqlite3": "^12.10.0",
     "cors": "^2.8.6",
