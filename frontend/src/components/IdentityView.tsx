@@ -206,7 +206,7 @@ export const IdentityView: React.FC<IdentityViewProps> = ({ currentUser, allUser
            Citizen Registry
         </h3>
         <div className="grid gap-4">
-          {allUsers.filter(u => u.id !== currentUser?.id).map((u) => (
+          {allUsers.filter((u: User) => u.id !== currentUser?.id).map((u: User) => (
             <div key={u.id} className="bg-white border rounded-2xl p-6 flex items-center justify-between shadow-sm hover:shadow-md transition-all">
                <div className="flex items-center gap-4">
                   <div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center font-black text-slate-400 text-xl uppercase">
