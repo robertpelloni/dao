@@ -22,6 +22,7 @@ cp -r frontend/dist deploy-artifacts/frontend
 # 3. Simulate Environment Push
 echo "Pushing verified artifacts to production nodes..."
 sleep 2
-echo "Artifacts deployed: v1.0.0"
+const_version=$(cat VERSION.md)
+echo "Artifacts deployed: v$const_version"
 
 echo "Deployment Complete. System is LIVE."
