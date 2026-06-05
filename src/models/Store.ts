@@ -40,6 +40,7 @@ export class Store {
         milestones TEXT,
         totalTargetBudget REAL,
         currentFunding REAL,
+        tokenSymbol TEXT,
         votesFor REAL,
         votesAgainst REAL,
         impactScore REAL,
@@ -77,6 +78,7 @@ export class Store {
         userId TEXT,
         proposalId TEXT,
         amount REAL,
+        tokenSymbol TEXT,
         timestamp INTEGER
       );
     `);
@@ -148,13 +150,13 @@ export class Store {
     const stmt = this.db.prepare(`
       INSERT OR REPLACE INTO proposals (
         id, title, abstract, detailedSpecs, proposerId, committeeId,
-        status, milestones, totalTargetBudget, currentFunding,
+        status, milestones, totalTargetBudget, currentFunding, tokenSymbol,
         votesFor, votesAgainst, impactScore, executionPayload
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
     stmt.run(
       proposal.id, proposal.title, proposal.abstract, proposal.detailedSpecs, proposal.proposerId, proposal.committeeId,
-      proposal.status, JSON.stringify(proposal.milestones), proposal.totalTargetBudget, proposal.currentFunding,
+      proposal.status, JSON.stringify(proposal.milestones), proposal.totalTargetBudget, proposal.currentFunding, proposal.tokenSymbol || 'USD',
       proposal.votesFor, proposal.votesAgainst, proposal.impactScore || 0, proposal.executionPayload
     );
   }
@@ -273,8 +275,8 @@ export class Store {
   }
 
   addContribution(contribution: Contribution) {
-    const stmt = this.db.prepare('INSERT INTO contributions (userId, proposalId, amount, timestamp) VALUES (?, ?, ?, ?)');
-    stmt.run(contribution.userId, contribution.proposalId, contribution.amount, contribution.timestamp);
+    const stmt = this.db.prepare('INSERT INTO contributions (userId, proposalId, amount, tokenSymbol, timestamp) VALUES (?, ?, ?, ?, ?)');
+    stmt.run(contribution.userId, contribution.proposalId, contribution.amount, contribution.tokenSymbol, contribution.timestamp);
   }
 
   getContributionsByUser(userId: string): Contribution[] {

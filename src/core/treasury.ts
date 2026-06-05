@@ -1,6 +1,5 @@
 import { Store } from '../models/Store';
-import { Proposal } from '../models/types';
-import { Contribution } from './crowdfunding';
+import { Proposal, Contribution } from '../models/types';
 
 /**
  * Treasury and Quadratic Funding (QF) Engine
@@ -10,15 +9,19 @@ import { Contribution } from './crowdfunding';
  * QF Match = (Sum(Sqrt(contributions)))^2 - Sum(contributions)
  */
 export class TreasuryManager {
-  private matchingPool: number = 0;
+  // Map of token symbol to matching pool amount
+  private matchingPools: Map<string, number> = new Map();
 
-  constructor(private store: Store) {}
+  constructor(private store: Store) {
+    // Initialize default USD pool
+    this.matchingPools.set('USD', 0);
+  }
 
   /**
-   * Sets the matching pool for the current governance cycle.
+   * Sets the matching pool for a specific token.
    */
-  setMatchingPool(amount: number): void {
-    this.matchingPool = amount;
+  setMatchingPool(amount: number, tokenSymbol: string = 'USD'): void {
+    this.matchingPools.set(tokenSymbol, amount);
   }
 
   /**
@@ -44,9 +47,14 @@ export class TreasuryManager {
 
   /**
    * Allocates matching funds to all funded proposals based on their QF scores.
-   * If the total matching requirement exceeds the pool, it scales proportionally.
+   * If the total matching requirement exceeds the pool for that token, it scales proportionally.
    */
-  allocateMatchingFunds(proposals: Proposal[], allContributions: Map<string, Contribution[]>): Record<string, number> {
+  allocateMatchingFunds(
+    proposals: Proposal[],
+    allContributions: Map<string, Contribution[]>,
+    tokenSymbol: string = 'USD'
+  ): Record<string, number> {
+    const pool = this.matchingPools.get(tokenSymbol) || 0;
     const matches: Record<string, number> = {};
     let totalMatchRequired = 0;
 
@@ -58,8 +66,8 @@ export class TreasuryManager {
     });
 
     // Scale if we exceed the pool
-    if (totalMatchRequired > this.matchingPool && totalMatchRequired > 0) {
-      const scale = this.matchingPool / totalMatchRequired;
+    if (totalMatchRequired > pool && totalMatchRequired > 0) {
+      const scale = pool / totalMatchRequired;
       Object.keys(matches).forEach(id => {
         const currentMatch = matches[id];
         if (currentMatch !== undefined) {
@@ -71,7 +79,15 @@ export class TreasuryManager {
     return matches;
   }
 
-  getPoolBalance(): number {
-    return this.matchingPool;
+  getPoolBalance(tokenSymbol: string = 'USD'): number {
+    return this.matchingPools.get(tokenSymbol) || 0;
+  }
+
+  getAllPools(): Record<string, number> {
+    const result: Record<string, number> = {};
+    this.matchingPools.forEach((amount, symbol) => {
+      result[symbol] = amount;
+    });
+    return result;
   }
 }

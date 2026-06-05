@@ -105,7 +105,7 @@ export class RepositoryManager {
 
 
       // Security: Validate branch name to prevent command injection
-      if (!/^[a-zA-Z0-9./_-]+$/.test(cleanBranch)) {
+      if (!/^[a-zA-Z0-9.\/_-]+$/.test(cleanBranch)) {
         console.warn(`Skipping potentially unsafe branch name: ${cleanBranch}`);
         continue;
       }

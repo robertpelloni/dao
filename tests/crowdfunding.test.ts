@@ -22,7 +22,7 @@ describe('Crowdfunding and Escrow Engine', () => {
         { id: 'm1', description: 'Survey', targetBudget: 500, isCompleted: false },
         { id: 'm2', description: 'Build', targetBudget: 1500, isCompleted: false }
       ],
-      totalTargetBudget: 2000,
+      totalTargetBudget: 2000, tokenSymbol: "USD",
       currentFunding: 0,
       votesFor: 0,
       votesAgainst: 0,

@@ -1,6 +1,7 @@
 import { Store } from '../models/Store';
 import { TreasuryManager } from './treasury';
 import { globalIdentity } from './identity';
+import { Contribution } from '../models/types';
 
 /**
  * Crowdfunding and Escrow Engine
@@ -8,13 +9,6 @@ import { globalIdentity } from './identity';
  * Manages financial contributions to proposals and their release based on milestones.
  * Implements Dominant Assurance logic where funds are held in escrow and returned if the goal isn't met.
  */
-
-export interface Contribution {
-  userId: string;
-  proposalId: string;
-  amount: number;
-  timestamp: number;
-}
 
 export class CrowdfundingEngine {
   // Map<proposalId, Contribution[]>
@@ -40,6 +34,7 @@ export class CrowdfundingEngine {
       userId,
       proposalId,
       amount,
+      tokenSymbol: proposal.tokenSymbol || 'USD',
       timestamp: Date.now()
     };
 
@@ -57,6 +52,7 @@ export class CrowdfundingEngine {
       userId,
       proposalId,
       amount,
+      tokenSymbol: contribution.tokenSymbol,
       timestamp: contribution.timestamp
     });
   }

@@ -48,6 +48,7 @@ export interface Proposal {
   milestones: Milestone[];
   totalTargetBudget: number;
   currentFunding: number;
+  tokenSymbol: string;
   votesFor: number;
   votesAgainst: number;
   impactScore?: number; // Calculated by AI/Heuristics
@@ -89,5 +90,6 @@ export interface Contribution {
   userId: string;
   proposalId: string;
   amount: number;
+  tokenSymbol: string;
   timestamp: number;
 }

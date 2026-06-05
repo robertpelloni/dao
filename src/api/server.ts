@@ -261,6 +261,7 @@ app.post('/proposals', (req: Request, res: Response) => {
     milestones: data.milestones || [],
     totalTargetBudget: data.totalTargetBudget,
     currentFunding: 0,
+    tokenSymbol: data.tokenSymbol || 'USD',
     votesFor: 0,
     votesAgainst: 0,
     executionPayload: data.executionPayload || '{}'
