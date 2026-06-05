@@ -102,7 +102,9 @@ export class IdentityManager {
   }
 
   isVerified(userId: string): boolean {
-    return this.profiles.get(userId)?.isVerified || false;
+    const profile = this.profiles.get(userId);
+    if (profile?.flaggedAsSybil) return false;
+    return profile?.isVerified || false;
   }
 
   /**

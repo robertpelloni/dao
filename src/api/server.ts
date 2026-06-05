@@ -373,6 +373,17 @@ app.post('/proposals/triage', (req: Request, res: Response) => {
   });
 });
 
+// --- Security & Audit Endpoints ---
+
+app.get('/security/flagged', (req: Request, res: Response) => {
+  const users = globalStore.getUsers();
+  const flagged = users.filter(u => {
+    const profile = globalIdentity.getProfile(u.id);
+    return profile?.flaggedAsSybil === true;
+  });
+  res.json(flagged);
+});
+
 // --- Governance Cycle Endpoints ---
 
 app.get('/governance/cycle', (req: Request, res: Response) => {

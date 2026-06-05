@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Proposal, Committee, User, GovernanceCycle } from '../../../src/models/types.js';
-import { Activity, Landmark, TrendingUp, Users, PieChart, AlertCircle, FastForward, Clock, Coins } from 'lucide-react';
+import { Activity, Landmark, TrendingUp, Users, PieChart, AlertCircle, FastForward, Clock, Coins, ShieldAlert } from 'lucide-react';
 import api from '../api/client.js';
 import { CycleTrends } from './CycleTrends.js';
 
@@ -14,6 +14,20 @@ interface HealthDashboardProps {
 
 export const HealthDashboard: React.FC<HealthDashboardProps> = ({ proposals, committees, allUsers, currentCycle, onAction }) => {
   const [loading, setLoading] = useState(false);
+  const [flaggedUsers, setFlaggedUsers] = useState<User[]>([]);
+
+  useEffect(() => {
+    const fetchFlagged = async () => {
+      try {
+        const res = await api.get('/security/flagged');
+        setFlaggedUsers(res.data);
+      } catch (err) {
+        console.error('Failed to fetch flagged users', err);
+      }
+    };
+    fetchFlagged();
+  }, [currentCycle]);
+
   const totalFunding = proposals.reduce((acc, p) => acc + p.currentFunding, 0);
   const activeProposals = proposals.filter(p => p.status !== 'COMPLETED' && p.status !== 'REJECTED' && p.status !== 'DRAFT').length;
   const totalBudgetRequired = proposals.reduce((acc, p) => acc + p.totalTargetBudget, 0);
@@ -151,6 +165,35 @@ export const HealthDashboard: React.FC<HealthDashboardProps> = ({ proposals, com
         </section>
 
         <section className="bg-white border rounded-3xl p-8 shadow-sm">
+          <h3 className="text-xl font-black text-slate-800 mb-6 flex items-center gap-2">
+            <ShieldAlert className="text-red-600" />
+            Security & Trust
+          </h3>
+          <div className="space-y-6 mb-8">
+             <div>
+                <p className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] mb-1">Flagged Sybil Sinks</p>
+                <p className="text-4xl font-black text-red-600">{flaggedUsers.length}</p>
+             </div>
+             {flaggedUsers.length > 0 && (
+                <div className="p-4 bg-red-50 border border-red-100 rounded-2xl">
+                   <p className="text-xs font-bold text-red-900 mb-2 italic leading-relaxed">
+                     Automated detection has identified suspicious delegation clusters. Flagged accounts are restricted from voting.
+                   </p>
+                   <ul className="text-[10px] font-black text-red-700 uppercase tracking-widest space-y-1">
+                      {flaggedUsers.slice(0, 3).map(u => <li key={u.id}>• {u.name} ({u.id})</li>)}
+                      {flaggedUsers.length > 3 && <li>• ...and {flaggedUsers.length - 3} more</li>}
+                   </ul>
+                </div>
+             )}
+             <div className="p-4 bg-emerald-50 border border-emerald-100 rounded-2xl flex gap-3">
+                <TrendingUp className="text-emerald-600 shrink-0" size={20} />
+                <div>
+                   <p className="text-sm font-bold text-emerald-900">Expertise Decay Active</p>
+                   <p className="text-xs text-emerald-700">10% per cycle erosion is ensuring expertise remains fresh and active.</p>
+                </div>
+             </div>
+          </div>
+
           <h3 className="text-xl font-black text-slate-800 mb-6 flex items-center gap-2">
             <AlertCircle className="text-amber-600" />
             System Alerts
