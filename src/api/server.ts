@@ -149,6 +149,20 @@ app.post('/identity/:id/verify-human', (req: Request, res: Response) => {
   }
 });
 
+app.post('/identity/:id/verify-zkp', async (req: Request, res: Response) => {
+  const { proof } = req.body;
+  try {
+    const success = await globalIdentity.verifyZKP(s(req.params.id), proof);
+    if (success) {
+      res.json(globalIdentity.getProfile(s(req.params.id)));
+    } else {
+      res.status(400).json({ error: 'Invalid ZKP proof' });
+    }
+  } catch (err: any) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
 app.post('/users/:id/endorse', (req: Request, res: Response) => {
   const { endorserId } = req.body;
   try {
