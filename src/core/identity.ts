@@ -16,6 +16,7 @@ export interface IdentityProfile {
   endorsedBy: string[]; // List of user IDs
   isHuman: boolean; // Sybil resistance status
   pohMethod?: 'Mock' | 'Endorsement' | 'External' | 'ZKP';
+  flaggedAsSybil: boolean;
 }
 
 export class IdentityManager {
@@ -32,7 +33,8 @@ export class IdentityManager {
       isVerified: false,
       verificationScore: 0,
       endorsedBy: [],
-      isHuman: false
+      isHuman: false,
+      flaggedAsSybil: false
     };
     this.profiles.set(userId, profile);
     return profile;
@@ -113,6 +115,7 @@ export class IdentityManager {
       profile.verificationScore = 100;
       profile.isHuman = true;
       profile.pohMethod = 'External';
+      profile.flaggedAsSybil = false;
       this.profiles.set(userId, profile);
     }
   }
@@ -122,8 +125,16 @@ export class IdentityManager {
     if (profile) {
       profile.isHuman = true;
       profile.pohMethod = method;
+      profile.flaggedAsSybil = false;
       this.profiles.set(userId, profile);
     }
+  }
+
+  flagSybil(userId: string): void {
+    const profile = this.profiles.get(userId) || this.createProfile(userId);
+    profile.flaggedAsSybil = true;
+    profile.isHuman = false;
+    this.profiles.set(userId, profile);
   }
 
   async verifyZKP(userId: string, proof: any): Promise<boolean> {

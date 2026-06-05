@@ -4,42 +4,30 @@
 - [x] Initialize project structure and documentation.
 - [x] Define core data schemas (User, Committee, Proposal).
 - [x] Implement basic Quadratic Voting logic.
-- [x] Setup initial testing framework.
 
 ## Phase 2: Core Engine (Complete)
 - [x] Identity Layer: Mock/Prototype DID integration.
-- [x] Committee Layer: Subject tree implementation and basic delegation.
-- [x] Proposal Layer: State machine for proposal lifecycle.
-- [x] Treasury/Escrow: Basic crowdfunding and refund logic.
+- [x] Committee Layer: Subject tree implementation.
+- [x] Proposal Layer: State machine for lifecycle.
 
 ## Phase 3: UI & Integration (Complete)
-- [x] Develop frontend prototype for Proposal browsing and interaction.
+- [x] Develop frontend prototype for Proposal interaction.
 - [x] Implement QV and Funding dashboards.
-- [x] Implement Proposal creation and Committee browsing.
 
 ## Phase 4: Refinement & Advanced Features (Complete)
 - [x] AI-driven impact scoring for proposals.
-- [x] Multi-party consensus for milestone payouts (Oracles).
-- [x] Real-time updates for voting and funding progress.
-- [x] Integrated Autopilot Protocol into CI for automated repository handling.
-- [x] Visual Delegation Graph for liquid power transparency.
-- [x] Subject-based power breakdown in Identity view.
-- [x] JWT Authentication foundation.
+- [x] Multi-party consensus for milestone payouts.
+- [x] Visual Delegation Graph for transparency.
 
 ## Phase 5: Autonomous Governance & Scaling (Complete)
-- [x] Integration of the AI-driven "Executive Protocol" into core DAO operations.
-- [x] Subject-specific committee auto-provisioning.
-- [x] Sybil-resistant identity proof-of-humanity integration.
-- [x] Committee auto-discovery in UI.
-- [x] CI/CD Authentication and push stabilization.
-- [x] Multi-year governance cycle catch-up logic.
-- [x] Mobile-first UI refinements.
-- [x] Historical Trend visualization (D3).
-- [x] ZKP Identity Layer (Privacy implementation).
+- [x] Integration of the "Executive Protocol" for repo management.
+- [x] Sybil-resistant identity proof-of-humanity.
+- [x] ZKP Identity Layer.
 - [x] AI Triage Agent for proposal routing.
 
-## Phase 6: LiquidGov 1.0.0 - Sophisticated Autonomy (Complete)
+## Phase 6: LiquidGov 1.0.1 - Security & Hardening (Complete)
 - [x] Quadratic Funding Matching Engine.
-- [x] Reputation Reward System for Active Citizens.
+- [x] Reputation Reward & Automated Decay System.
 - [x] Randomized Jury Verification Protocol.
-- [x] Autonomous Execution Hooks & Audit Logs.
+- [x] **Security Engine: Graph-based Sybil Detection cluster analysis.**
+- [x] Autonomous Execution Watchdog.
