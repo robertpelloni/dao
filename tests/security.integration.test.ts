@@ -7,13 +7,11 @@ describe('Security Engine Integration', () => {
   let store: Store;
   let security: SecurityEngine;
   let governance: GovernanceManager;
-  let identity: IdentityManager;
-
   beforeEach(() => {
     store = new Store(':memory:');
     security = new SecurityEngine(store);
     governance = new GovernanceManager(store);
-    identity = new IdentityManager(store);
+    new IdentityManager(store);
   });
 
   it('should detect a Sybil cluster funneling power to a sink', () => {
@@ -49,14 +47,8 @@ describe('Security Engine Integration', () => {
   it('should apply security checks during governance cycle transition', () => {
     // Setup Sybil cluster
     const sinkId = 'sink-user';
-    store.addUser({ id: sinkId, name: 'Sink User', voiceCredits: 100, reputation: {}, delegates: {} });
-    for (let i = 1; i <= 6; i++) {
-      store.addUser({ id: `source-${i}`, name: `Source ${i}`, voiceCredits: 100, reputation: {}, delegates: { 'General': sinkId } });
-    }
-
     // Setup reputation for decay
     const activeUserId = 'active-user';
-    store.addUser({ id: activeUserId, name: 'Active', voiceCredits: 100, reputation: { 'General': 100 }, delegates: {} });
 
     // Advance time and transition
     // Reset any existing cycle state

@@ -41,7 +41,7 @@ export class RepositoryManager {
     console.log('[1/8] Fetching all remotes and updating submodules recursively...');
     try {
       this.run('git fetch --all --tags');
-    } catch (err) {
+    } catch {
       console.error('[!] Root fetch failed. Continuing with local state if possible.');
     }
 
@@ -64,7 +64,7 @@ export class RepositoryManager {
       } else {
         console.log('No upstream remote found. Skipping upstream sync.');
       }
-    } catch (err) {
+    } catch {
       console.warn('[!] Upstream merge skipped (no changes or merge conflict).');
     }
 
@@ -72,7 +72,7 @@ export class RepositoryManager {
     try {
       console.log('Updating submodules to latest tracked commits...');
       this.run('git submodule update --init --recursive --remote');
-    } catch (err) {
+    } catch {
       console.error('[!] Recursive submodule update failed. Check submodule configurations.');
     }
   }
@@ -105,7 +105,7 @@ export class RepositoryManager {
 
 
       // Security: Validate branch name to prevent command injection
-      if (!/^[a-zA-Z0-9.\/_-]+$/.test(cleanBranch)) {
+      if (!/^[a-zA-Z0-9./_-]+$/.test(cleanBranch)) {
         console.warn(`Skipping potentially unsafe branch name: ${cleanBranch}`);
         continue;
       }
@@ -152,7 +152,6 @@ export class RepositoryManager {
    */
   syncRoadmap(): void {
     console.log('[3/8] Extracting roadmap from codebase (TODO/FIXME scanning)...');
-    const roadmapFile = path.join(this.rootDir, 'ROADMAP.md');
     const todoFile = path.join(this.rootDir, 'TODO.md');
 
     // Scans src directory for TODO/FIXME and populates TODO.md
