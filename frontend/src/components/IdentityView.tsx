@@ -40,7 +40,14 @@ export const IdentityView: React.FC<IdentityViewProps> = ({ currentUser, allUser
       setLoading(true);
       // In a real app, this would involve generating a Semaphore proof on the client.
       // Here we simulate the successful verification via API.
-      await api.post(`/identity/${currentUser.id}/verify-human`, { method: 'ZKP' });
+      const mockProof = {
+        merkleTreeRoot: '0',
+        signal: '1',
+        nullifierHash: '2',
+        externalNullifier: '3',
+        proof: ['0', '1', '2', '3', '4', '5', '6', '7']
+      };
+      await api.post(`/identity/${currentUser.id}/verify-zkp`, { proof: mockProof });
       await fetchProfiles();
       onAction();
     } catch (err) {

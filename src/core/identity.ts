@@ -115,20 +115,24 @@ export class IdentityManager {
     if (profile) {
       profile.isVerified = true;
       profile.verificationScore = 100;
-      profile.isHuman = true;
-      profile.pohMethod = 'External';
-      profile.flaggedAsSybil = false;
-      this.profiles.set(userId, profile);
+      this.verifyHuman(userId, 'External');
     }
   }
 
   verifyHuman(userId: string, method: 'Mock' | 'Endorsement' | 'External' | 'ZKP' = 'Mock'): void {
     const profile = this.profiles.get(userId);
     if (profile) {
-      profile.isHuman = true;
-      profile.pohMethod = method;
-      profile.flaggedAsSybil = false;
-      this.profiles.set(userId, profile);
+      // Priority-based upgrade: only update if new method is stronger
+      const priorities = { 'Mock': 0, 'Endorsement': 1, 'External': 2, 'ZKP': 3 };
+      const currentPriority = priorities[profile.pohMethod || 'Mock'];
+      const newPriority = priorities[method];
+
+      if (newPriority >= currentPriority) {
+        profile.isHuman = true;
+        profile.pohMethod = method;
+        profile.flaggedAsSybil = false;
+        this.profiles.set(userId, profile);
+      }
     }
   }
 
@@ -145,9 +149,8 @@ export class IdentityManager {
 
     const isValid = await globalZKP.verify(proof);
     if (isValid) {
-      profile.isHuman = true;
-      profile.pohMethod = 'ZKP';
-      this.profiles.set(userId, profile);
+      // Use verifyHuman to handle priority and consistency
+      this.verifyHuman(userId, 'ZKP');
     }
     return isValid;
   }

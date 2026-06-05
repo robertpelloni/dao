@@ -51,6 +51,14 @@ export class CrowdfundingEngine {
     this.store.updateProposal(proposalId, {
       currentFunding: (proposal.currentFunding || 0) + amount
     });
+
+    // Persist contribution for security analysis
+    this.store.addContribution({
+      userId,
+      proposalId,
+      amount,
+      timestamp: contribution.timestamp
+    });
   }
 
   /**

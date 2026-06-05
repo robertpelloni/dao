@@ -60,9 +60,11 @@ export class SecurityEngine {
   }
 
   private hasActivity(user: User): boolean {
-    // In a real system, we'd query votes/contributions tables.
-    // For this PoC, we check if they have spent any credits or have significant reputation.
-    const totalRep = Object.values(user.reputation).reduce((a, b) => a + b, 0);
-    return user.voiceCredits < 100 || totalRep > 10;
+    // Query actual votes and contributions from the Store
+    const votes = this.store.getVotesByUser(user.id);
+    const contributions = this.store.getContributionsByUser(user.id);
+
+    // Activity is defined as having cast at least one vote or made one contribution
+    return votes.length > 0 || contributions.length > 0;
   }
 }

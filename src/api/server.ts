@@ -322,6 +322,15 @@ app.post('/proposals/:id/vote', (req: Request, res: Response) => {
     proposal.votesAgainst += Math.abs(votes);
   }
 
+  // Persist vote record for security analysis
+  globalStore.addVote({
+    userId,
+    proposalId: s(req.params.id),
+    amount: votes,
+    subject: subject || 'General',
+    timestamp: Date.now()
+  });
+
   globalStore.updateProposal(s(req.params.id), proposal);
   notifyUpdate(s(req.params.id));
   res.json({ message: 'Vote cast successfully', proposal });

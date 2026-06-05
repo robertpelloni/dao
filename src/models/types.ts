@@ -76,3 +76,18 @@ export interface AutonomousTask {
   branchName?: string;
   createdAt: number;
 }
+
+export interface Vote {
+  userId: string;
+  proposalId: string;
+  amount: number;
+  subject: string;
+  timestamp: number;
+}
+
+export interface Contribution {
+  userId: string;
+  proposalId: string;
+  amount: number;
+  timestamp: number;
+}

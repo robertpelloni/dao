@@ -1,5 +1,5 @@
 import Database from 'better-sqlite3';
-import { User, Committee, Proposal, GovernanceCycle, AutonomousTask } from './types';
+import { User, Committee, Proposal, GovernanceCycle, AutonomousTask, Vote, Contribution } from './types';
 
 /**
  * SQLite Store for LiquidGov
@@ -63,6 +63,21 @@ export class Store {
         status TEXT,
         branchName TEXT,
         createdAt INTEGER
+      );
+
+      CREATE TABLE IF NOT EXISTS votes (
+        userId TEXT,
+        proposalId TEXT,
+        amount REAL,
+        subject TEXT,
+        timestamp INTEGER
+      );
+
+      CREATE TABLE IF NOT EXISTS contributions (
+        userId TEXT,
+        proposalId TEXT,
+        amount REAL,
+        timestamp INTEGER
       );
     `);
   }
@@ -247,8 +262,28 @@ export class Store {
     }
   }
 
+  addVote(vote: Vote) {
+    const stmt = this.db.prepare('INSERT INTO votes (userId, proposalId, amount, subject, timestamp) VALUES (?, ?, ?, ?, ?)');
+    stmt.run(vote.userId, vote.proposalId, vote.amount, vote.subject, vote.timestamp);
+  }
+
+  getVotesByUser(userId: string): Vote[] {
+    const stmt = this.db.prepare('SELECT * FROM votes WHERE userId = ?');
+    return stmt.all(userId) as Vote[];
+  }
+
+  addContribution(contribution: Contribution) {
+    const stmt = this.db.prepare('INSERT INTO contributions (userId, proposalId, amount, timestamp) VALUES (?, ?, ?, ?)');
+    stmt.run(contribution.userId, contribution.proposalId, contribution.amount, contribution.timestamp);
+  }
+
+  getContributionsByUser(userId: string): Contribution[] {
+    const stmt = this.db.prepare('SELECT * FROM contributions WHERE userId = ?');
+    return stmt.all(userId) as Contribution[];
+  }
+
   clear() {
-    this.db.exec('DELETE FROM users; DELETE FROM committees; DELETE FROM proposals; DELETE FROM governance_cycles; DELETE FROM tasks;');
+    this.db.exec('DELETE FROM users; DELETE FROM committees; DELETE FROM proposals; DELETE FROM governance_cycles; DELETE FROM tasks; DELETE FROM votes; DELETE FROM contributions;');
   }
 }
 
