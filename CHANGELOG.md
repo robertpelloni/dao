@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-06-05
+### Added
+- Automated protocol sync and branch reconciliation.
+
+
 ## [0.9.10] - 2026-06-04
 ### Added
 - Automated protocol sync and branch reconciliation.

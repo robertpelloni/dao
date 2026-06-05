@@ -14,6 +14,7 @@ import { calculateImpactScore } from '../core/impactScoring';
 import { globalGovernance } from '../core/governanceCycle';
 import { globalTaskManager } from '../core/tasks';
 import { globalTriage } from '../core/triage';
+import { globalWatchdog } from '../core/watchdog';
 import { User, Proposal, Committee } from '../models/types';
 import { signToken, verifyToken } from '../utils/auth';
 
@@ -450,6 +451,9 @@ app.get('/health', (req: Request, res: Response) => {
 if (require.main === module) {
   httpServer.listen(port, () => {
     console.log(`LiquidGov API server listening at http://localhost:${port}`);
+
+    // Start the Autonomous Watchdog
+    globalWatchdog.start();
   });
 }
 
