@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [1.0.3] - 2026-06-05
+## [1.0.4] - 2026-06-05
 ### Added
 - **Security Engine**: Implemented `src/core/security.ts` with graph-based Sybil detection and reputation decay algorithms.
 - **Sybil Resistance**: Automated flagging of suspicious delegation clusters during governance transitions.

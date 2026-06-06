@@ -93,3 +93,13 @@ export interface Contribution {
   tokenSymbol: string;
   timestamp: number;
 }
+
+export interface TreasuryTransaction {
+  id: string;
+  amount: number;
+  tokenSymbol: string;
+  source: 'MatchingPool' | 'Individual' | 'External';
+  type: 'DEPOSIT' | 'WITHDRAWAL';
+  timestamp: number;
+  description: string;
+}
