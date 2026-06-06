@@ -1,23 +1,24 @@
-# HANDOFF - LiquidGov v1.0.4 Phase 7 (Infrastructure & Scalability)
+# HANDOFF - LiquidGov v1.0.5 Integration Verified
 
 ## 1. Technical Transfer Summary
-LiquidGov has transitioned to Phase 7, focusing on production-grade infrastructure and scalability. Version 1.0.4 introduces a formalized Treasury transaction model.
+Milestone v1.0.5 establishes the "Validated Infrastructure" baseline. All core components (Protocol, Security, Treasury, Identity) have been integration-tested as a unified system.
 
-### Core Architectural Invariants:
-- **Treasury Model**: Transitioned from simple state initialization to a persistent transaction-based ledger. Every matching pool deposit or individual contribution is now recorded in the `treasury_transactions` table.
-- **SQL-Backed Security**: The `SecurityEngine` and `Store` now utilize dedicated activity logs for Sybil detection, ensuring high-fidelity participation audits.
+### Verified Status (v1.0.5):
+- **Economic engine**: Treasury Intake API and SQL-backed participation logs are functional and synchronized.
+- **Security Audit**: Autonomous Sybil detection successfully flags delegation sinks during transition cycles.
+- **Protocol**: Executive Protocol correctly reconciles AI-driven branches and maintains version standards.
 
-## 2. Technical Outcomes (v1.0.4)
-- **Formalized Treasury API**: New endpoints for `DEPOSIT` and `WITHDRAWAL` transactions, enabling real-world capital intake simulations.
-- **Multi-Token Matching**: Full backend support for managing multiple matching pools (e.g., USD, DAO) within the same governance cycle.
-- **Transaction Auditing**: Persistent ledger for all financial movements within the DAO core.
+## 2. Integrated Artifact findings
+- **Database**: `dao.db` expanded with `votes`, `contributions`, and `treasury_transactions` tables.
+- **Identity**: Proof-of-Humanity hierarchy (ZKP > Endorsement > External) correctly preserves elite status.
+- **CI/CD**: Autopilot pipeline successfully generates backend/frontend binaries.
 
-## 3. Backlog: Phase 7 Continued
-- **ZKP Scalability**: Optimize client-side SNARK generation speed.
-- **Constitutional Logic**: Implement programmatic "Execution Guards" for state-machine transitions.
-- **Cross-Platform Symmetry**: Finalize parity between Unix shell and Windows batch scripts.
+## 3. Backlog for Phase 7 (Infrastructure & Scale)
+- **Rollback Logic**: Enhance `scripts/deploy.sh` with automated git-revert functionality upon health check failure.
+- **Circular Detection**: Upgrade `SecurityEngine` to detect long-chain delegation loops (A->B->C->A).
+- **SNARK Performance**: Research client-side optimizations for Semaphore proofs.
 
 ## 4. Operational Protocols
-- **Build**: `npm run build`
-- **Audit**: `GET /security/flagged` (High-fidelity detection).
-- **Intake**: `POST /treasury/deposit` (Formal transaction intake).
+- **Baseline Test**: `npm test` (171 tests passing).
+- **Security Audit**: `npx jest tests/security.integration.test.ts`.
+- **Full Lifecycle**: `npx jest tests/protocol.full.integration.test.ts`.

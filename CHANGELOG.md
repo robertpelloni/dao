@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.5] - 2026-06-05
+### Added
+- **Formalized Treasury Intake**: Added `treasury_transactions` ledger for matching pool auditing.
+- **Participation Auditing**: Persistent SQL records for all votes and contributions to support high-fidelity security analysis.
+- **Identity Prioritization**: Hierarchical Proof-of-Humanity logic to preserve the strongest citizen verification method.
+- **Integration Milestone**: Verified end-to-end stability with protocol and security regression tests.
+
 ## [1.0.4] - 2026-06-05
 ### Added
 - **Security Engine**: Implemented `src/core/security.ts` with graph-based Sybil detection and reputation decay algorithms.
