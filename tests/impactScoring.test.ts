@@ -11,7 +11,7 @@ describe('Impact Scoring Heuristics', () => {
     committeeId: 'c1',
     status: 'DRAFT',
     milestones: [{ id: 'm1', description: 'One', targetBudget: 1000, isCompleted: false }],
-    totalTargetBudget: 1000,
+    totalTargetBudget: 1000, tokenSymbol: "USD",
     currentFunding: 0,
     votesFor: 0,
     votesAgainst: 0,

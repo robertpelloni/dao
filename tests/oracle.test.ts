@@ -24,7 +24,7 @@ describe('Milestone Oracle System (Jury Voting)', () => {
         juryVotes: []
       }
     ],
-    totalTargetBudget: 1000,
+    totalTargetBudget: 1000, tokenSymbol: "USD",
     currentFunding: 1000,
     votesFor: 0,
     votesAgainst: 0,

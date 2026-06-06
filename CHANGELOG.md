@@ -2,63 +2,53 @@
 
 All notable changes to this project will be documented in this file.
 
-## [Unreleased]
+## [1.0.5] - 2026-06-05
+### Added
+- **Formalized Treasury Intake**: Added `treasury_transactions` ledger for matching pool auditing.
+- **Participation Auditing**: Persistent SQL records for all votes and contributions to support high-fidelity security analysis.
+- **Identity Prioritization**: Hierarchical Proof-of-Humanity logic to preserve the strongest citizen verification method.
+- **Integration Milestone**: Verified end-to-end stability with protocol and security regression tests.
+
+## [1.0.4] - 2026-06-05
+### Added
+- **Security Engine**: Implemented `src/core/security.ts` with graph-based Sybil detection and reputation decay algorithms.
+- **Sybil Resistance**: Automated flagging of suspicious delegation clusters during governance transitions.
+- **Governance Transitions**: Enhanced `GovernanceManager` with automated security audits and standardized decay.
+- **Integration Tests**: New `tests/security.integration.test.ts` verifying the core data-processing logic.
+- **ZKP Identity Verification**: Added `POST /identity/:id/verify-zkp` endpoint and UI flow for privacy-preserving proof-of-humanity.
+
+### Fixed
+- Restored missing autonomous protocol methods in `RepositoryManager`.
+- Synchronized `package-lock.json` with release version.
+- Cleaned up internal git artifacts from the test directory.
+
+## [1.0.1] - 2026-06-05
+### Added
+- Automated protocol sync and branch reconciliation.
+
+## [1.0.0] - 2026-06-04
+### Added
+- **Quadratic Funding (QF)**: Implemented matching engine in `TreasuryManager`.
+- **Reputation Economy**: Citizen rewards for subject-specific reputation.
+- **Randomized Juries**: Automated assignment of verified humans to project verification.
+- **Autonomous Execution**: State-transition hooks for simulated payload execution.
+- **AI Triage Agent**: Automated committee suggestions and redundancy detection.
+- **ZKP Identity Layer**: Foundation for privacy-preserving proof-of-humanity.
 
 ## [0.8.8] - 2026-05-23
 ### Added
 - Automated protocol sync and branch reconciliation.
 
-
-## [0.8.7] - 2026-05-23
-### Added
-- Automated protocol sync and branch reconciliation.
-
-
-## [0.8.6] - 2026-05-23
-### Fixed
-- CI authentication for autonomous protocol engine.
-- GitHub Actions workflow for push operations.
-
 ## [0.8.5] - 2026-05-23
 ### Added
 - Robust implementation of the "Executive Protocol" for autonomous repository management.
 - Comprehensive integration tests for multi-branch merging and versioning.
-- Enhanced documentation standards verification with structural checks.
-- CLI support for protocol execution with --dry-run and --skip-push flags.
-
-## [0.8.3] - 2026-05-23
-### Added
-- Automated protocol sync and branch reconciliation.
-
-
-## [0.8.2] - 2025-05-23
-### Added
-- Governance Health Dashboard for DAO-wide metrics.
-- Subject-specific Committee Auto-Provisioning logic.
-- Sybil-resistant Proof-of-Humanity (PoH) integration.
-
-## [0.8.1] - 2025-05-23
-### Added
-- Subject-based power breakdown API and Identity UI.
-- JWT Authentication foundation and refactored middleware.
-- Suggested Committees auto-discovery endpoint.
-- UI enhancements for Impact Score recalculation.
 
 ## [0.8.0] - 2025-05-22
 ### Added
-- **Visual Delegation Graph**: Implemented a force-directed graph in the Identity View to visualize liquid delegation flows between citizens.
-
-### Fixed
-- Fixed backend crash when processing GET requests without a request body in the auth middleware.
-
-## [0.7.1] - 2025-05-22
-### Added
-- Automated merge and protocol sync.
-- CI Workflow for autonomous repository management.
-- Fixed Tailwind CSS v4 styling regressions.
+- **Visual Delegation Graph**: Implemented a force-directed graph in the Identity View.
 
 ## [0.7.0] - 2025-05-15
 ### Added
 - Milestone Oracle System: Multi-party jury consensus for milestone fund release.
 - Real-time Updates: WebSocket integration for live dashboard updates.
-- Centralized versioning and documentation synchronization.

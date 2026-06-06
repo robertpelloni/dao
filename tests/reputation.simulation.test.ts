@@ -1,6 +1,6 @@
 import { Store } from '../src/models/Store';
 import { GovernanceManager } from '../src/core/governanceCycle';
-import { User } from '../models/types';
+import { User } from '../src/models/types';
 
 describe('Automated Reputation Decay Simulation', () => {
   let store: Store;

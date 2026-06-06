@@ -18,6 +18,7 @@ export interface Milestone {
   isCompleted: boolean;
   completionProof?: string; // URL or hash
   juryVotes?: string[]; // IDs of users who verified this milestone
+  assignedJury?: string[]; // IDs of users randomly selected to verify this milestone
   requiredJuryQuorum?: number; // Number of jury votes needed to release funds
 }
 
@@ -47,6 +48,7 @@ export interface Proposal {
   milestones: Milestone[];
   totalTargetBudget: number;
   currentFunding: number;
+  tokenSymbol: string;
   votesFor: number;
   votesAgainst: number;
   impactScore?: number; // Calculated by AI/Heuristics
@@ -74,4 +76,20 @@ export interface AutonomousTask {
   status: TaskStatus;
   branchName?: string;
   createdAt: number;
+}
+
+export interface Vote {
+  userId: string;
+  proposalId: string;
+  amount: number;
+  subject: string;
+  timestamp: number;
+}
+
+export interface Contribution {
+  userId: string;
+  proposalId: string;
+  amount: number;
+  tokenSymbol: string;
+  timestamp: number;
 }

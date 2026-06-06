@@ -6,7 +6,7 @@ export class ZKPManager {
   private group: Group;
 
   constructor() {
-    this.group = new Group([], 5);
+    this.group = new Group();
   }
 
   createIdentity(seed?: string): Identity {

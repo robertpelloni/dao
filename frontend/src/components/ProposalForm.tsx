@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Proposal, Milestone } from '../../../src/models/types.js';
-import { Send, Plus, X, Award } from 'lucide-react';
+import { Send, Plus, X, Award, BrainCircuit, AlertTriangle } from 'lucide-react';
 import api from '../api/client.js';
 
 interface ProposalFormProps {
@@ -18,6 +18,27 @@ export const ProposalForm: React.FC<ProposalFormProps> = ({ userId, onSuccess, o
     { description: '', targetBudget: 0, isCompleted: false }
   ]);
   const [loading, setLoading] = useState(false);
+  const [triaging, setTriaging] = useState(false);
+  const [redundancyWarning, setRedundancyWarning] = useState<string | null>(null);
+
+  const handleTriage = async () => {
+    if (!title || !abstract) return;
+    setTriaging(true);
+    setRedundancyWarning(null);
+    try {
+      const res = await api.post('/proposals/triage', { title, abstract });
+      if (res.data.suggestedCommittee) {
+        setCommitteeId(res.data.suggestedCommittee.id);
+      }
+      if (res.data.isRedundant) {
+        setRedundancyWarning(res.data.message);
+      }
+    } catch (err) {
+      console.error('Triage failed', err);
+    } finally {
+      setTriaging(false);
+    }
+  };
 
   const addMilestone = () => {
     setMilestones([...milestones, { description: '', targetBudget: 0, isCompleted: false }]);
@@ -84,7 +105,17 @@ export const ProposalForm: React.FC<ProposalFormProps> = ({ userId, onSuccess, o
           </div>
 
           <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Target Committee</label>
+            <div className="flex justify-between items-center">
+              <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Target Committee</label>
+              <button
+                type="button"
+                disabled={triaging || !title || !abstract}
+                onClick={handleTriage}
+                className="text-indigo-600 hover:text-indigo-700 font-black text-[10px] uppercase flex items-center gap-1 disabled:opacity-30 transition-all"
+              >
+                <BrainCircuit size={14} /> {triaging ? 'Thinking...' : 'AI Suggest'}
+              </button>
+            </div>
             <select
               className="w-full bg-gray-50 border-2 border-transparent focus:border-blue-600 focus:bg-white rounded-2xl px-6 py-4 outline-none font-bold transition-all appearance-none"
               value={committeeId}
@@ -98,6 +129,12 @@ export const ProposalForm: React.FC<ProposalFormProps> = ({ userId, onSuccess, o
 
           <div className="space-y-2">
             <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Abstract Summary</label>
+            {redundancyWarning && (
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 flex items-start gap-2 text-amber-800 text-xs font-bold animate-pulse">
+                <AlertTriangle size={16} className="shrink-0" />
+                {redundancyWarning}
+              </div>
+            )}
             <textarea
               required
               rows={4}
