@@ -15,7 +15,7 @@ import { globalGovernance } from '../core/governanceCycle';
 import { globalTaskManager } from '../core/tasks';
 import { globalTriage } from '../core/triage';
 import { globalWatchdog } from '../core/watchdog';
-import { User, Proposal, Committee, TreasuryTransaction } from '../models/types';
+import { User, Proposal, Committee } from '../models/types';
 import { signToken, verifyToken } from '../utils/auth';
 
 /**
@@ -406,36 +406,6 @@ app.get('/security/flagged', (req: Request, res: Response) => {
     return profile?.flaggedAsSybil === true;
   });
   res.json(flagged);
-});
-
-// --- Treasury Endpoints ---
-
-app.get('/treasury/balance/:token', (req: Request, res: Response) => {
-  const balance = globalStore.getTreasuryBalance(s(req.params.token));
-  res.json({ token: req.params.token, balance });
-});
-
-app.get('/treasury/transactions', (req: Request, res: Response) => {
-  const token = req.query.token as string;
-  res.json(globalStore.getTreasuryTransactions(token));
-});
-
-app.post('/treasury/deposit', (req: Request, res: Response) => {
-  const { amount, tokenSymbol, source, description } = req.body;
-  if (!amount || !tokenSymbol) return res.status(400).json({ error: 'Amount and tokenSymbol required' });
-
-  const tx: TreasuryTransaction = {
-    id: `tx-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-    amount,
-    tokenSymbol,
-    source: source || 'External',
-    type: 'DEPOSIT',
-    timestamp: Date.now(),
-    description: description || 'Direct Treasury Deposit'
-  };
-
-  globalStore.addTreasuryTransaction(tx);
-  res.status(201).json(tx);
 });
 
 // --- Governance Cycle Endpoints ---

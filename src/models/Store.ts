@@ -1,5 +1,5 @@
 import Database from 'better-sqlite3';
-import { User, Committee, Proposal, GovernanceCycle, AutonomousTask, Vote, Contribution, TreasuryTransaction } from './types';
+import { User, Committee, Proposal, GovernanceCycle, AutonomousTask, Vote, Contribution } from './types';
 
 /**
  * SQLite Store for LiquidGov
@@ -80,16 +80,6 @@ export class Store {
         amount REAL,
         tokenSymbol TEXT,
         timestamp INTEGER
-      );
-
-      CREATE TABLE IF NOT EXISTS treasury_transactions (
-        id TEXT PRIMARY KEY,
-        amount REAL,
-        tokenSymbol TEXT,
-        source TEXT,
-        type TEXT,
-        timestamp INTEGER,
-        description TEXT
       );
     `);
   }
@@ -294,31 +284,8 @@ export class Store {
     return stmt.all(userId) as Contribution[];
   }
 
-  addTreasuryTransaction(tx: TreasuryTransaction) {
-    const stmt = this.db.prepare(`
-      INSERT INTO treasury_transactions (id, amount, tokenSymbol, source, type, timestamp, description)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
-    `);
-    stmt.run(tx.id, tx.amount, tx.tokenSymbol, tx.source, tx.type, tx.timestamp, tx.description);
-  }
-
-  getTreasuryTransactions(tokenSymbol?: string): TreasuryTransaction[] {
-    if (tokenSymbol) {
-      const stmt = this.db.prepare('SELECT * FROM treasury_transactions WHERE tokenSymbol = ? ORDER BY timestamp DESC');
-      return stmt.all(tokenSymbol) as TreasuryTransaction[];
-    }
-    const stmt = this.db.prepare('SELECT * FROM treasury_transactions ORDER BY timestamp DESC');
-    return stmt.all() as TreasuryTransaction[];
-  }
-
-  getTreasuryBalance(tokenSymbol: string): number {
-    const stmt = this.db.prepare("SELECT SUM(CASE WHEN type = 'DEPOSIT' THEN amount ELSE -amount END) as balance FROM treasury_transactions WHERE tokenSymbol = ?");
-    const result = stmt.get(tokenSymbol) as { balance: number | null };
-    return result?.balance || 0;
-  }
-
   clear() {
-    this.db.exec('DELETE FROM users; DELETE FROM committees; DELETE FROM proposals; DELETE FROM governance_cycles; DELETE FROM tasks; DELETE FROM votes; DELETE FROM contributions; DELETE FROM treasury_transactions;');
+    this.db.exec('DELETE FROM users; DELETE FROM committees; DELETE FROM proposals; DELETE FROM governance_cycles; DELETE FROM tasks; DELETE FROM votes; DELETE FROM contributions;');
   }
 }
 
