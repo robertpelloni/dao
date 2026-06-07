@@ -9,19 +9,18 @@ import { Proposal, Contribution } from '../models/types';
  * QF Match = (Sum(Sqrt(contributions)))^2 - Sum(contributions)
  */
 export class TreasuryManager {
-  // Map of token symbol to matching pool amount
-  private matchingPools: Map<string, number> = new Map();
-
   constructor(private store: Store) {
-    // Initialize default USD pool
-    this.matchingPools.set('USD', 0);
+    // Ensure default USD pool exists in persistent store if not set
+    if (this.store.getMatchingPool('USD') === 0) {
+      this.store.setMatchingPool('USD', 0);
+    }
   }
 
   /**
    * Sets the matching pool for a specific token.
    */
   setMatchingPool(amount: number, tokenSymbol: string = 'USD'): void {
-    this.matchingPools.set(tokenSymbol, amount);
+    this.store.setMatchingPool(tokenSymbol, amount);
   }
 
   /**
@@ -54,7 +53,7 @@ export class TreasuryManager {
     allContributions: Map<string, Contribution[]>,
     tokenSymbol: string = 'USD'
   ): Record<string, number> {
-    const pool = this.matchingPools.get(tokenSymbol) || 0;
+    const pool = this.store.getMatchingPool(tokenSymbol);
     const matches: Record<string, number> = {};
     let totalMatchRequired = 0;
 
@@ -80,14 +79,28 @@ export class TreasuryManager {
   }
 
   getPoolBalance(tokenSymbol: string = 'USD'): number {
-    return this.matchingPools.get(tokenSymbol) || 0;
+    return this.store.getMatchingPool(tokenSymbol);
   }
 
   getAllPools(): Record<string, number> {
-    const result: Record<string, number> = {};
-    this.matchingPools.forEach((amount, symbol) => {
-      result[symbol] = amount;
+    return this.store.getAllMatchingPools();
+  }
+
+  deposit(amount: number, tokenSymbol: string = 'USD', description: string = 'Deposit'): void {
+    const current = this.getPoolBalance(tokenSymbol);
+    this.setMatchingPool(current + amount, tokenSymbol);
+
+    this.store.addTreasuryTransaction({
+      id: `tx-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+      tokenSymbol,
+      amount,
+      type: 'DEPOSIT',
+      description,
+      timestamp: Date.now()
     });
-    return result;
+  }
+
+  getTransactions(): any[] {
+    return this.store.getTreasuryTransactions();
   }
 }

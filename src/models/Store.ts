@@ -81,6 +81,20 @@ export class Store {
         tokenSymbol TEXT,
         timestamp INTEGER
       );
+
+      CREATE TABLE IF NOT EXISTS matching_pools (
+        tokenSymbol TEXT PRIMARY KEY,
+        amount REAL
+      );
+
+      CREATE TABLE IF NOT EXISTS treasury_transactions (
+        id TEXT PRIMARY KEY,
+        tokenSymbol TEXT,
+        amount REAL,
+        type TEXT,
+        description TEXT,
+        timestamp INTEGER
+      );
     `);
   }
 
@@ -284,8 +298,44 @@ export class Store {
     return stmt.all(userId) as Contribution[];
   }
 
+  getContributionsByProposal(proposalId: string): Contribution[] {
+    const stmt = this.db.prepare('SELECT * FROM contributions WHERE proposalId = ?');
+    return stmt.all(proposalId) as Contribution[];
+  }
+
+  setMatchingPool(tokenSymbol: string, amount: number) {
+    const stmt = this.db.prepare('INSERT OR REPLACE INTO matching_pools (tokenSymbol, amount) VALUES (?, ?)');
+    stmt.run(tokenSymbol, amount);
+  }
+
+  getMatchingPool(tokenSymbol: string): number {
+    const stmt = this.db.prepare('SELECT amount FROM matching_pools WHERE tokenSymbol = ?');
+    const row = stmt.get(tokenSymbol) as any;
+    return row ? row.amount : 0;
+  }
+
+  getAllMatchingPools(): Record<string, number> {
+    const stmt = this.db.prepare('SELECT * FROM matching_pools');
+    const rows = stmt.all() as any[];
+    const result: Record<string, number> = {};
+    rows.forEach(row => {
+      result[row.tokenSymbol] = row.amount;
+    });
+    return result;
+  }
+
+  addTreasuryTransaction(tx: { id: string; tokenSymbol: string; amount: number; type: string; description: string; timestamp: number }) {
+    const stmt = this.db.prepare('INSERT INTO treasury_transactions (id, tokenSymbol, amount, type, description, timestamp) VALUES (?, ?, ?, ?, ?, ?)');
+    stmt.run(tx.id, tx.tokenSymbol, tx.amount, tx.type, tx.description, tx.timestamp);
+  }
+
+  getTreasuryTransactions(): any[] {
+    const stmt = this.db.prepare('SELECT * FROM treasury_transactions ORDER BY timestamp DESC');
+    return stmt.all();
+  }
+
   clear() {
-    this.db.exec('DELETE FROM users; DELETE FROM committees; DELETE FROM proposals; DELETE FROM governance_cycles; DELETE FROM tasks; DELETE FROM votes; DELETE FROM contributions;');
+    this.db.exec('DELETE FROM users; DELETE FROM committees; DELETE FROM proposals; DELETE FROM governance_cycles; DELETE FROM tasks; DELETE FROM votes; DELETE FROM contributions; DELETE FROM matching_pools; DELETE FROM treasury_transactions;');
   }
 }
 

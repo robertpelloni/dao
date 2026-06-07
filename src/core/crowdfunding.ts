@@ -11,8 +11,6 @@ import { Contribution } from '../models/types';
  */
 
 export class CrowdfundingEngine {
-  // Map<proposalId, Contribution[]>
-  private contributions: Map<string, Contribution[]> = new Map();
   private treasury: TreasuryManager;
 
   constructor(private store: Store) {
@@ -37,10 +35,6 @@ export class CrowdfundingEngine {
       tokenSymbol: proposal.tokenSymbol || 'USD',
       timestamp: Date.now()
     };
-
-    const list = this.contributions.get(proposalId) || [];
-    list.push(contribution);
-    this.contributions.set(proposalId, list);
 
     // Update proposal state
     this.store.updateProposal(proposalId, {
@@ -68,7 +62,7 @@ export class CrowdfundingEngine {
 
     if (proposal.currentFunding >= proposal.totalTargetBudget) {
       // Calculate matching funds
-      const pContributions = this.contributions.get(proposalId) || [];
+      const pContributions = this.store.getContributionsByProposal(proposalId);
       const match = this.treasury.calculateMatch(pContributions);
 
       // Assign random juries for all milestones
@@ -96,10 +90,10 @@ export class CrowdfundingEngine {
    * Returns funds to all contributors for a specific proposal.
    */
   private refund(proposalId: string): void {
-    const list = this.contributions.get(proposalId) || [];
+    const list = this.store.getContributionsByProposal(proposalId);
     // In a real system, we would execute actual financial transactions here.
     console.log(`Refunding ${list.length} contributors for proposal ${proposalId}`);
-    this.contributions.delete(proposalId);
+    // Ideally we would delete them from the contributions table or mark them as refunded
     this.store.updateProposal(proposalId, { currentFunding: 0 });
   }
 
@@ -189,6 +183,6 @@ export class CrowdfundingEngine {
   }
 
   getContributions(proposalId: string): Contribution[] {
-    return this.contributions.get(proposalId) || [];
+    return this.store.getContributionsByProposal(proposalId);
   }
 }

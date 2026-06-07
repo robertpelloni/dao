@@ -32,8 +32,13 @@
 - [x] **Security Engine: Graph-based Sybil Detection cluster analysis.**
 - [x] Autonomous Execution Watchdog.
 
-## Phase 7: Infrastructure & Scalability (Active)
-- [ ] **Multi-token Matching Pool support.**
+## Phase 7: Infrastructure & Scalability (Complete)
+- [x] **Multi-token Matching Pool support (persistent).**
+- [x] Formalized Treasury intake API (deposit/transactions).
+- [x] Cross-platform script parity (Unix/Windows symmetry).
 - [ ] Optimized client-side ZKP generation.
-- [ ] Formalized Treasury intake API.
-- [ ] Cross-platform script parity (Unix/Windows symmetry).
+
+## Phase 8: Mainnet Preparation (Upcoming)
+- [ ] Production-grade ZKP Circuit optimization.
+- [ ] External Oracle integration (Real-world data feeds).
+- [ ] Mobile App (PWA) deployment.

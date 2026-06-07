@@ -1,7 +1,13 @@
 @echo off
-echo Starting LiquidGov Services...
-start /b cmd /c "npm run build:backend && node src/api/server.js"
+echo Starting LiquidGov Governance Engine (Backend)...
+start /b cmd /c "npx ts-node src/api/server.ts > server.log 2>&1"
+
+echo Starting LiquidGov Dashboard (Frontend)...
 cd frontend
-start /b cmd /c "npm run dev"
+start /b cmd /c "npm run dev > vite.log 2>&1"
 cd ..
-echo Services started in background.
+
+echo Both services are starting.
+echo Backend: http://localhost:3000
+echo Frontend: http://localhost:5173
+echo Close this window to stop both.

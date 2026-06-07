@@ -15,6 +15,7 @@ import { globalGovernance } from '../core/governanceCycle';
 import { globalTaskManager } from '../core/tasks';
 import { globalTriage } from '../core/triage';
 import { globalWatchdog } from '../core/watchdog';
+import { TreasuryManager } from '../core/treasury';
 import { User, Proposal, Committee } from '../models/types';
 import { signToken, verifyToken } from '../utils/auth';
 
@@ -33,6 +34,7 @@ const io = new Server(httpServer, {
 
 const port = process.env.PORT || 3000;
 const crowdfunding = new CrowdfundingEngine(globalStore);
+const globalTreasury = new TreasuryManager(globalStore);
 
 app.use(cors());
 app.use(express.json());
@@ -395,6 +397,28 @@ app.post('/proposals/triage', (req: Request, res: Response) => {
     isRedundant,
     message: isRedundant ? 'Warning: A similar proposal might already exist.' : 'No obvious redundancies detected.'
   });
+});
+
+// --- Treasury Endpoints ---
+
+app.get('/treasury/balance/:token', (req: Request, res: Response) => {
+  const balance = globalTreasury.getPoolBalance(req.params.token);
+  res.json({ tokenSymbol: req.params.token, balance });
+});
+
+app.get('/treasury/pools', (req: Request, res: Response) => {
+  res.json(globalTreasury.getAllPools());
+});
+
+app.get('/treasury/transactions', (req: Request, res: Response) => {
+  res.json(globalTreasury.getTransactions());
+});
+
+app.post('/treasury/deposit', (req: Request, res: Response) => {
+  const { amount, tokenSymbol, description } = req.body;
+  if (!amount) return res.status(400).json({ error: 'Amount required' });
+  globalTreasury.deposit(amount, tokenSymbol || 'USD', description || 'Direct Deposit');
+  res.json({ message: 'Deposit successful', balance: globalTreasury.getPoolBalance(tokenSymbol || 'USD') });
 });
 
 // --- Security & Audit Endpoints ---
