@@ -1,5 +1,5 @@
 import Database from 'better-sqlite3';
-import { User, Committee, Proposal, GovernanceCycle, AutonomousTask } from './types';
+import { User, Committee, Proposal, GovernanceCycle, AutonomousTask, Vote, Contribution } from './types';
 
 /**
  * SQLite Store for LiquidGov
@@ -40,6 +40,7 @@ export class Store {
         milestones TEXT,
         totalTargetBudget REAL,
         currentFunding REAL,
+        tokenSymbol TEXT,
         votesFor REAL,
         votesAgainst REAL,
         impactScore REAL,
@@ -63,6 +64,22 @@ export class Store {
         status TEXT,
         branchName TEXT,
         createdAt INTEGER
+      );
+
+      CREATE TABLE IF NOT EXISTS votes (
+        userId TEXT,
+        proposalId TEXT,
+        amount REAL,
+        subject TEXT,
+        timestamp INTEGER
+      );
+
+      CREATE TABLE IF NOT EXISTS contributions (
+        userId TEXT,
+        proposalId TEXT,
+        amount REAL,
+        tokenSymbol TEXT,
+        timestamp INTEGER
       );
     `);
   }
@@ -133,13 +150,13 @@ export class Store {
     const stmt = this.db.prepare(`
       INSERT OR REPLACE INTO proposals (
         id, title, abstract, detailedSpecs, proposerId, committeeId,
-        status, milestones, totalTargetBudget, currentFunding,
+        status, milestones, totalTargetBudget, currentFunding, tokenSymbol,
         votesFor, votesAgainst, impactScore, executionPayload
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
     stmt.run(
       proposal.id, proposal.title, proposal.abstract, proposal.detailedSpecs, proposal.proposerId, proposal.committeeId,
-      proposal.status, JSON.stringify(proposal.milestones), proposal.totalTargetBudget, proposal.currentFunding,
+      proposal.status, JSON.stringify(proposal.milestones), proposal.totalTargetBudget, proposal.currentFunding, proposal.tokenSymbol || 'USD',
       proposal.votesFor, proposal.votesAgainst, proposal.impactScore || 0, proposal.executionPayload
     );
   }
@@ -247,8 +264,28 @@ export class Store {
     }
   }
 
+  addVote(vote: Vote) {
+    const stmt = this.db.prepare('INSERT INTO votes (userId, proposalId, amount, subject, timestamp) VALUES (?, ?, ?, ?, ?)');
+    stmt.run(vote.userId, vote.proposalId, vote.amount, vote.subject, vote.timestamp);
+  }
+
+  getVotesByUser(userId: string): Vote[] {
+    const stmt = this.db.prepare('SELECT * FROM votes WHERE userId = ?');
+    return stmt.all(userId) as Vote[];
+  }
+
+  addContribution(contribution: Contribution) {
+    const stmt = this.db.prepare('INSERT INTO contributions (userId, proposalId, amount, tokenSymbol, timestamp) VALUES (?, ?, ?, ?, ?)');
+    stmt.run(contribution.userId, contribution.proposalId, contribution.amount, contribution.tokenSymbol, contribution.timestamp);
+  }
+
+  getContributionsByUser(userId: string): Contribution[] {
+    const stmt = this.db.prepare('SELECT * FROM contributions WHERE userId = ?');
+    return stmt.all(userId) as Contribution[];
+  }
+
   clear() {
-    this.db.exec('DELETE FROM users; DELETE FROM committees; DELETE FROM proposals; DELETE FROM governance_cycles; DELETE FROM tasks;');
+    this.db.exec('DELETE FROM users; DELETE FROM committees; DELETE FROM proposals; DELETE FROM governance_cycles; DELETE FROM tasks; DELETE FROM votes; DELETE FROM contributions;');
   }
 }
 

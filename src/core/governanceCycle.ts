@@ -1,12 +1,18 @@
 import { Store, globalStore } from '../models/Store';
 import { GovernanceCycle, User } from '../models/types';
+import { SecurityEngine } from './security';
+import { globalIdentity } from './identity';
 
 /**
  * Governance Cycle Manager
  * Handles transitions between governance epochs, reputation decay, and credit refreshing.
  */
 export class GovernanceManager {
-  constructor(private store: Store) {}
+  private security: SecurityEngine;
+
+  constructor(private store: Store) {
+    this.security = new SecurityEngine(store);
+  }
 
   /**
    * Initializes the first governance cycle if none exists.
@@ -73,7 +79,8 @@ export class GovernanceManager {
         totalFundingAllocated: 0
       };
       this.store.addCycle(next);
-      this.processEndOfCycle();
+      console.log(`Transitioning to cycle ${next.number}`);
+      this.processEndOfCycle(1); // 1 cycle missed at a time in loop
       current = next;
       catchupOccurred = true;
     }
@@ -94,23 +101,31 @@ export class GovernanceManager {
         totalFundingAllocated: 0
       };
       this.store.addCycle(next);
-      this.processEndOfCycle();
+      this.processEndOfCycle(1);
       return next;
     }
 
     return current;
   }
 
-  private processEndOfCycle() {
+  private processEndOfCycle(missedCycles: number = 1) {
     const users = this.store.getUsers();
+
+    // 1. Run Sybil Detection
+    const flaggedSinks = this.security.detectSybilClusters();
+    flaggedSinks.forEach(sinkId => {
+      globalIdentity.flagSybil(sinkId);
+      console.warn(`[SECURITY] Flagged user ${sinkId} as Sybil Sink.`);
+    });
+
     for (const user of users) {
-      // 1. Reputation Decay (10% decay per cycle to ensure experts stay current)
+      // 2. Reputation Decay (Use SecurityEngine for automated erosion)
       const newReputation: Record<string, number> = {};
       Object.entries(user.reputation).forEach(([subject, value]) => {
-        newReputation[subject] = Math.round(value * 0.9 * 100) / 100;
+        newReputation[subject] = this.security.calculateReputationDecay(value, missedCycles);
       });
 
-      // 2. Voice Credit Refresh (Refill to base 100 or matching new rules)
+      // 3. Voice Credit Refresh (Refill to base 100 or matching new rules)
       const updatedUser: User = {
         ...user,
         reputation: newReputation,

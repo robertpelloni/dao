@@ -27,7 +27,8 @@ for FILE in "${MANDATORY_FILES[@]}"; do
         if [ ! -s "$FILE" ]; then
             echo "[!] File is empty: $FILE"
             FAILED=1
-        elif ! grep -q "#" "$FILE"; then
+        # VERSION.md is exempt from header check as it contains a raw version string
+        elif [ "$FILE" != "VERSION.md" ] && ! grep -q "#" "$FILE"; then
              echo "[!] File lacks structure (no headers): $FILE"
              FAILED=1
         else

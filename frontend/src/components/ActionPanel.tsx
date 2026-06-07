@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Proposal, User } from '../../../src/models/types.js';
-import { ThumbsUp, ThumbsDown, DollarSign, CheckCircle2, UserPlus } from 'lucide-react';
+import { ThumbsUp, ThumbsDown, DollarSign, CheckCircle2, UserPlus, Info } from 'lucide-react';
 import api from '../api/client.js';
 
 interface ActionPanelProps {
@@ -156,6 +156,12 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({ proposal, user, onActi
               <DollarSign size={18} className="text-emerald-500" />
               Crowdfunding
             </h4>
+            <div className="group relative">
+               <Info size={14} className="text-slate-300 cursor-help" />
+               <div className="absolute bottom-full right-0 mb-2 w-48 p-2 bg-slate-800 text-white text-[10px] rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                  Quadratic Funding Matching is active. Your contribution will be amplified.
+               </div>
+            </div>
           </div>
           <div className="flex gap-2 mb-4">
             <input

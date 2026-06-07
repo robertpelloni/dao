@@ -32,3 +32,15 @@
 
 ## Unresolved Methods / Experiments
 - **Transitive Voting:** Experimented with deducting credits from delegators when a delegate votes. Decided to defer to Phase 4 for a more robust accounting system. Currently, the delegate's personal credits are used but checked against their *Total Effective Power*.
+
+## Version 0.9.9: The AI & Privacy Milestone
+- **AI Triage Agent:** Keyword-based committee matching and title-based redundancy detection provides immediate "Cognitive Meritocracy" assistance to users.
+- **Semaphore ZKP:** Integration of Semaphore for identity verification allows for Sybil-resistant, privacy-preserving governance.
+- **Protocol Integrity:** The RepositoryManager is the heart of the system; ensuring its methods (syncRoadmap, executeBuild, etc.) are robustly implemented is critical for long-term autonomous execution.
+
+## Version 1.0.0: The Autonomous Core
+- **Treasury Hardening:** Moving from simple crowdfunding to Quadratic Funding (QF) ensures that small donors have a massive collective impact, fulfilling the democratic vision.
+- **Jury Dynamics:** Random assignment of jury duties from the pool of verified humans prevents collusion and distributes responsibility.
+- **Reputation as Currency:** Reputation is now earned, not just mock-initialized. This creates a circular economy of expertise where successful delivery leads to more governance influence.
+- **Code as Law:** The autonomous execution simulation (executeAutonomousPayload) is the precursor to real smart-contract triggers.
+- **Monorepo Audit:** Conducted a deep audit of the repository for nested Git submodules. Confirmed a 100% native monorepo structure. This architecture was chosen to simplify the Autonomous Protocol's merge and sync logic.

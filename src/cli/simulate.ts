@@ -65,7 +65,7 @@ async function runSimulation() {
       { id: 'm1', description: 'Design Phase', targetBudget: 500, isCompleted: false },
       { id: 'm2', description: 'Installation', targetBudget: 1500, isCompleted: false }
     ],
-    totalTargetBudget: 2000,
+    totalTargetBudget: 2000, tokenSymbol: "USD",
     currentFunding: 0,
     votesFor: 0,
     votesAgainst: 0,

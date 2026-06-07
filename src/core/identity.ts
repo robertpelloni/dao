@@ -1,5 +1,6 @@
 import { Store, globalStore } from '../models/Store';
 import { calculateEffectivePower } from './delegation';
+import { globalZKP } from './zkp';
 
 /**
  * Identity Layer (Mock Sybil Resistance)
@@ -14,7 +15,8 @@ export interface IdentityProfile {
   verificationScore: number; // 0 to 100
   endorsedBy: string[]; // List of user IDs
   isHuman: boolean; // Sybil resistance status
-  pohMethod?: 'Mock' | 'Endorsement' | 'External';
+  pohMethod?: 'Mock' | 'Endorsement' | 'External' | 'ZKP';
+  flaggedAsSybil: boolean;
 }
 
 export class IdentityManager {
@@ -31,7 +33,8 @@ export class IdentityManager {
       isVerified: false,
       verificationScore: 0,
       endorsedBy: [],
-      isHuman: false
+      isHuman: false,
+      flaggedAsSybil: false
     };
     this.profiles.set(userId, profile);
     return profile;
@@ -99,7 +102,9 @@ export class IdentityManager {
   }
 
   isVerified(userId: string): boolean {
-    return this.profiles.get(userId)?.isVerified || false;
+    const profile = this.profiles.get(userId);
+    if (profile?.flaggedAsSybil) return false;
+    return profile?.isVerified || false;
   }
 
   /**
@@ -110,19 +115,56 @@ export class IdentityManager {
     if (profile) {
       profile.isVerified = true;
       profile.verificationScore = 100;
-      profile.isHuman = true;
-      profile.pohMethod = 'External';
-      this.profiles.set(userId, profile);
+      this.verifyHuman(userId, 'External');
     }
   }
 
-  verifyHuman(userId: string, method: 'Mock' | 'Endorsement' | 'External' = 'Mock'): void {
+  verifyHuman(userId: string, method: 'Mock' | 'Endorsement' | 'External' | 'ZKP' = 'Mock'): void {
     const profile = this.profiles.get(userId);
     if (profile) {
-      profile.isHuman = true;
-      profile.pohMethod = method;
-      this.profiles.set(userId, profile);
+      // Priority-based upgrade: only update if new method is stronger
+      const priorities = { 'Mock': 0, 'Endorsement': 1, 'External': 2, 'ZKP': 3 };
+      const currentPriority = priorities[profile.pohMethod || 'Mock'];
+      const newPriority = priorities[method];
+
+      if (newPriority >= currentPriority) {
+        profile.isHuman = true;
+        profile.pohMethod = method;
+        profile.flaggedAsSybil = false;
+        this.profiles.set(userId, profile);
+      }
     }
+  }
+
+  flagSybil(userId: string): void {
+    const profile = this.profiles.get(userId) || this.createProfile(userId);
+    profile.flaggedAsSybil = true;
+    profile.isHuman = false;
+    this.profiles.set(userId, profile);
+  }
+
+  async verifyZKP(userId: string, proof: any): Promise<boolean> {
+    const profile = this.profiles.get(userId);
+    if (!profile) return false;
+
+    const isValid = await globalZKP.verify(proof);
+    if (isValid) {
+      // Use verifyHuman to handle priority and consistency
+      this.verifyHuman(userId, 'ZKP');
+    }
+    return isValid;
+  }
+
+  /**
+   * Rewards a user with reputation for positive governance actions.
+   */
+  rewardReputation(userId: string, subject: string, amount: number): void {
+    const user = this.store.getUser(userId);
+    if (!user) return;
+
+    user.reputation[subject] = (user.reputation[subject] || 0) + amount;
+    this.store.addUser(user);
+    console.log(`User ${userId} earned ${amount} rep in ${subject}`);
   }
 }
 

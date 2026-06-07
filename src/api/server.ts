@@ -13,6 +13,8 @@ import { CrowdfundingEngine } from '../core/crowdfunding';
 import { calculateImpactScore } from '../core/impactScoring';
 import { globalGovernance } from '../core/governanceCycle';
 import { globalTaskManager } from '../core/tasks';
+import { globalTriage } from '../core/triage';
+import { globalWatchdog } from '../core/watchdog';
 import { User, Proposal, Committee } from '../models/types';
 import { signToken, verifyToken } from '../utils/auth';
 
@@ -40,7 +42,10 @@ app.use(express.json());
  */
 const authenticateToken = (req: Request, res: Response, next: any) => {
   const skipPaths = ['/health', '/summary', '/proposals', '/committees', '/users', '/auth/login', '/governance/trends', '/governance/cycles', '/governance/cycle', '/tasks'];
+  const publicPostPaths = ['/proposals/triage'];
+
   if (skipPaths.includes(req.path) && req.method === 'GET') return next();
+  if (publicPostPaths.includes(req.path) && req.method === 'POST') return next();
   if (req.path === '/auth/login' && req.method === 'POST') return next();
 
   const authHeader = req.headers['authorization'];
@@ -144,6 +149,20 @@ app.post('/identity/:id/verify-human', (req: Request, res: Response) => {
   }
 });
 
+app.post('/identity/:id/verify-zkp', async (req: Request, res: Response) => {
+  const { proof } = req.body;
+  try {
+    const success = await globalIdentity.verifyZKP(s(req.params.id), proof);
+    if (success) {
+      res.json(globalIdentity.getProfile(s(req.params.id)));
+    } else {
+      res.status(400).json({ error: 'Invalid ZKP proof' });
+    }
+  } catch (err: any) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
 app.post('/users/:id/endorse', (req: Request, res: Response) => {
   const { endorserId } = req.body;
   try {
@@ -242,6 +261,7 @@ app.post('/proposals', (req: Request, res: Response) => {
     milestones: data.milestones || [],
     totalTargetBudget: data.totalTargetBudget,
     currentFunding: 0,
+    tokenSymbol: data.tokenSymbol || 'USD',
     votesFor: 0,
     votesAgainst: 0,
     executionPayload: data.executionPayload || '{}'
@@ -303,6 +323,15 @@ app.post('/proposals/:id/vote', (req: Request, res: Response) => {
     proposal.votesAgainst += Math.abs(votes);
   }
 
+  // Persist vote record for security analysis
+  globalStore.addVote({
+    userId,
+    proposalId: s(req.params.id),
+    amount: votes,
+    subject: subject || 'General',
+    timestamp: Date.now()
+  });
+
   globalStore.updateProposal(s(req.params.id), proposal);
   notifyUpdate(s(req.params.id));
   res.json({ message: 'Vote cast successfully', proposal });
@@ -348,6 +377,35 @@ app.post('/proposals/:id/score', (req: Request, res: Response) => {
   const score = calculateImpactScore(proposal);
   globalStore.updateProposal(s(req.params.id), { impactScore: score });
   res.json({ id: proposal.id, impactScore: score });
+});
+
+app.post('/proposals/triage', (req: Request, res: Response) => {
+  const { title, abstract } = req.body;
+  if (!title || !abstract) return res.status(400).json({ error: 'Title and abstract required' });
+
+  const committees = Array.from(globalStore.committees.values());
+  const suggested = globalTriage.suggestCommittee(title, abstract, committees);
+
+  const existingProposals = globalStore.getProposals();
+  const existingTitles = existingProposals.map(p => p.title);
+  const isRedundant = globalTriage.detectRedundancy(title, existingTitles);
+
+  res.json({
+    suggestedCommittee: suggested,
+    isRedundant,
+    message: isRedundant ? 'Warning: A similar proposal might already exist.' : 'No obvious redundancies detected.'
+  });
+});
+
+// --- Security & Audit Endpoints ---
+
+app.get('/security/flagged', (req: Request, res: Response) => {
+  const users = globalStore.getUsers();
+  const flagged = users.filter(u => {
+    const profile = globalIdentity.getProfile(u.id);
+    return profile?.flaggedAsSybil === true;
+  });
+  res.json(flagged);
 });
 
 // --- Governance Cycle Endpoints ---
@@ -428,6 +486,9 @@ app.get('/health', (req: Request, res: Response) => {
 if (require.main === module) {
   httpServer.listen(port, () => {
     console.log(`LiquidGov API server listening at http://localhost:${port}`);
+
+    // Start the Autonomous Watchdog
+    globalWatchdog.start();
   });
 }
 

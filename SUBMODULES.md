@@ -1,9 +1,18 @@
-# Structural Map of Submodules
+# SUBMODULE MAP
 
-Currently, the LiquidGov project does not utilize external Git submodules. All logic for the Identity Layer, Committee Layer, Proposal Layer, and Quadratic Engine is implemented natively within the primary repository to ensure a lightweight and dependency-minimal footprint.
+## Current Status
+As of version 1.0.1, LiquidGov (dao) utilizes a **Native Monorepo** architecture. There are currently no external Git submodules integrated into the project.
 
-- **Main Repository:** `github.com/robertpelloni/dao`
-- **Frontend:** Integrated React/Vite/Tailwind app in `/frontend`
-- **Backend:** Node.js/TypeScript engine in `/src`
+## Architectural Decision
+To ensure maximum reliability and minimize dependency-related friction for the Autonomous Protocol, all core logic has been unified within the primary repository:
 
-If submodules are added in the future (e.g., for specialized ZKP circuits or On-Chain hooks), they will be documented here with their remote URLs and tracking commits.
+- **Frontend**: Located in `/frontend` (React + Vite + Tailwind).
+- **Backend Core**: Located in `/src/core` (TypeScript).
+- **API Server**: Located in `/src/api` (Express).
+- **Data Layer**: Located in `/src/models` (SQLite).
+
+## Future Considerations
+If specialized, independently-versioned components (e.g., specific ZKP circuit libraries or multi-chain adapter hooks) are required, they may be introduced as submodules. Any such additions must be registered here with:
+1. Remote URL
+2. Target tracking commit/branch
+3. Functional responsibility

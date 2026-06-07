@@ -11,7 +11,7 @@ describe('Proposal State Machine', () => {
     committeeId: 'comm-1',
     status: 'DRAFT',
     milestones: [],
-    totalTargetBudget: 1000,
+    totalTargetBudget: 1000, tokenSymbol: "USD",
     currentFunding: 0,
     votesFor: 0,
     votesAgainst: 0,
