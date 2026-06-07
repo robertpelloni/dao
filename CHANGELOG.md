@@ -1,3 +1,18 @@
+## [1.0.6] - 2026-06-07
+## [1.0.6] - 2026-06-07
+### Added
+- Automated Protocol Sync and Branch Reconciliation.
+
+## [1.0.5] - 2026-06-07
+## [1.0.5] - 2026-06-07
+### Added
+- Automated Protocol Sync and Branch Reconciliation.
+
+## [1.0.4] - 2026-06-07
+## [1.0.4] - 2026-06-07
+### Added
+- Automated Protocol Sync and Branch Reconciliation.
+
 # Changelog
 
 All notable changes to this project will be documented in this file.
