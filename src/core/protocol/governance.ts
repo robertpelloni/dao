@@ -83,13 +83,13 @@ export class ProtocolGovernance {
     if (!fs.existsSync(changelogFile)) return;
 
     const date = new Date().toISOString().split('T')[0];
-    const entry = `\n## [${version}] - ${date}\n### Added\n- Automated Protocol Sync and Branch Reconciliation.\n`;
+    const entry = `## [${version}] - ${date}\n### Added\n- Automated Protocol Sync and Branch Reconciliation.\n`;
 
     let content = fs.readFileSync(changelogFile, 'utf8');
     if (content.includes('## [Unreleased]')) {
-       content = content.replace('## [Unreleased]', `## [Unreleased]\n${entry}`);
+       content = content.replace('## [Unreleased]', `## [Unreleased]\n\n${entry}`);
     } else {
-       content = `## [${version}] - ${date}${entry}\n` + content;
+       content = entry + '\n' + content;
     }
     fs.writeFileSync(changelogFile, content);
     console.log('✓ CHANGELOG.md updated.');
