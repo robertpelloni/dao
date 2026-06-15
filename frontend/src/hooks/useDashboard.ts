@@ -13,6 +13,7 @@ export function useDashboard(userId: string) {
   const [suggestedCommittees, setSuggestedCommittees] = useState<Committee[]>([]);
   const [suggestedProposals, setSuggestedProposals] = useState<Proposal[]>([]);
   const [allUsers, setAllUsers] = useState<User[]>([]);
+  const [treasuryBalances, setTreasuryBalances] = useState<any[]>([]);
   const [currentCycle, setCurrentCycle] = useState<GovernanceCycle | null>(null);
   const [powerBreakdown, setPowerBreakdown] = useState<Record<string, number>>({});
   const [selectedProposalId, setSelectedProposalId] = useState<string | null>(null);
@@ -21,7 +22,7 @@ export function useDashboard(userId: string) {
   const fetchData = useCallback(async (silent = false) => {
     try {
       if (!silent) setLoading(true);
-      const [uRes, pRes, cRes, usersRes, bRes, sRes, cyRes, spRes] = await Promise.all([
+      const [uRes, pRes, cRes, usersRes, bRes, sRes, cyRes, spRes, tRes] = await Promise.all([
         api.get(`/users/${userId}`),
         api.get('/proposals'),
         api.get('/committees'),
@@ -29,7 +30,8 @@ export function useDashboard(userId: string) {
         api.get(`/identity/${userId}/breakdown`),
         api.get(`/committees/suggested/${userId}`),
         api.get('/governance/cycle'),
-        api.get(`/proposals/suggested/${userId}`)
+        api.get(`/proposals/suggested/${userId}`),
+        api.get('/treasury/balance')
       ]);
       setUser(uRes.data);
       // Mock verification check
@@ -41,6 +43,7 @@ export function useDashboard(userId: string) {
       setAllUsers(usersRes.data);
       setPowerBreakdown(bRes.data);
       setCurrentCycle(cyRes.data);
+      setTreasuryBalances(tRes.data);
     } catch (err) {
       console.error('Failed to fetch dashboard data', err);
     } finally {
@@ -75,6 +78,7 @@ export function useDashboard(userId: string) {
     suggestedCommittees,
     suggestedProposals,
     allUsers,
+    treasuryBalances,
     currentCycle,
     powerBreakdown,
     selectedProposal,

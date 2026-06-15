@@ -16,10 +16,10 @@ function App() {
   const [activeTab, setActiveTab] = useState('proposals')
   const [showForm, setShowForm] = useState(false)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
-  const { user, isVerified, proposals, committees, suggestedCommittees, suggestedProposals, allUsers, currentCycle, powerBreakdown, selectedProposal, setSelectedProposalId, loading, refresh } = useDashboard('alice')
+  const { user, isVerified, proposals, committees, suggestedCommittees, suggestedProposals, allUsers, treasuryBalances, currentCycle, powerBreakdown, selectedProposal, setSelectedProposalId, loading, refresh } = useDashboard('alice')
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col pb-[env(safe-area-inset-bottom)]">
       {/* Header */}
       <header className="bg-white border-b px-4 md:px-6 py-4 flex justify-between items-center sticky top-0 z-20 shadow-sm">
         <div className="flex items-center gap-2">
@@ -71,29 +71,29 @@ function App() {
           </div>
           <p className="px-4 py-2 text-[10px] font-black uppercase text-gray-400 tracking-[0.2em] mb-2 hidden md:block">Navigation</p>
           <button
-            onClick={() => { setActiveTab('proposals'); setSelectedProposalId(null); setShowForm(false); setIsSidebarOpen(false); }}
-            className={`flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all ${activeTab === 'proposals' ? 'bg-blue-600 text-white shadow-blue-200 shadow-lg' : 'hover:bg-gray-50 text-gray-500'}`}
+            onClick={() => { setActiveTab('proposals'); setSelectedProposalId(null); setShowForm(false); setIsSidebarOpen(false); window.scrollTo(0,0); }}
+            className={`flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all active:scale-95 ${activeTab === 'proposals' ? 'bg-blue-600 text-white shadow-blue-200 shadow-lg' : 'hover:bg-gray-50 text-gray-500'}`}
           >
             <FileText size={18} />
             <span>Proposals</span>
           </button>
           <button
-            onClick={() => { setActiveTab('committees'); setShowForm(false); setIsSidebarOpen(false); }}
-            className={`flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all ${activeTab === 'committees' ? 'bg-blue-600 text-white shadow-blue-200 shadow-lg' : 'hover:bg-gray-50 text-gray-500'}`}
+            onClick={() => { setActiveTab('committees'); setShowForm(false); setIsSidebarOpen(false); window.scrollTo(0,0); }}
+            className={`flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all active:scale-95 ${activeTab === 'committees' ? 'bg-blue-600 text-white shadow-blue-200 shadow-lg' : 'hover:bg-gray-50 text-gray-500'}`}
           >
             <Users size={18} />
             <span>Committees</span>
           </button>
           <button
-            onClick={() => { setActiveTab('identity'); setShowForm(false); setIsSidebarOpen(false); }}
-            className={`flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all ${activeTab === 'identity' ? 'bg-blue-600 text-white shadow-blue-200 shadow-lg' : 'hover:bg-gray-50 text-gray-500'}`}
+            onClick={() => { setActiveTab('identity'); setShowForm(false); setIsSidebarOpen(false); window.scrollTo(0,0); }}
+            className={`flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all active:scale-95 ${activeTab === 'identity' ? 'bg-blue-600 text-white shadow-blue-200 shadow-lg' : 'hover:bg-gray-50 text-gray-500'}`}
           >
             <Shield size={18} />
             <span>My Identity</span>
           </button>
           <button
-            onClick={() => { setActiveTab('treasury'); setShowForm(false); setIsSidebarOpen(false); }}
-            className={`flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all ${activeTab === 'treasury' ? 'bg-blue-600 text-white shadow-blue-200 shadow-lg' : 'hover:bg-gray-50 text-gray-500'}`}
+            onClick={() => { setActiveTab('treasury'); setShowForm(false); setIsSidebarOpen(false); window.scrollTo(0,0); }}
+            className={`flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all active:scale-95 ${activeTab === 'treasury' ? 'bg-blue-600 text-white shadow-blue-200 shadow-lg' : 'hover:bg-gray-50 text-gray-500'}`}
           >
             <Landmark size={18} />
             <span>Treasury</span>
@@ -261,7 +261,14 @@ function App() {
                 ) : activeTab === 'autonomous' ? (
                    <TaskMonitor />
                 ) : (
-                   <HealthDashboard proposals={proposals} committees={committees} allUsers={allUsers} currentCycle={currentCycle} onAction={refresh} />
+                   <HealthDashboard
+                    proposals={proposals}
+                    committees={committees}
+                    allUsers={allUsers}
+                    treasuryBalances={treasuryBalances}
+                    currentCycle={currentCycle}
+                    onAction={refresh}
+                  />
                 )}
               </div>
             )}
