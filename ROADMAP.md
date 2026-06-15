@@ -32,20 +32,22 @@
 - [x] **Security Engine: Graph-based Sybil Detection cluster analysis.**
 - [x] Autonomous Execution Watchdog.
 
-## Phase 7: Infrastructure & Scalability (Complete)
-- [x] **Multi-token Matching Pool support.**
+## Phase 7: Infrastructure & Hardening (Complete)
+- [x] Multi-token Matching Pool support.
 - [x] Formalized Treasury intake API.
-- [ ] Optimized client-side ZKP generation.
-- [x] **Cross-platform script parity (Unix/Windows symmetry).**
+- [x] Cross-platform script parity (Unix/Windows symmetry).
+- [x] Committee Sunsetting & Resource Recycling logic.
 
 ## Phase 8: The Voluntary State (Complete)
-- [x] **Direct-to-subject voluntary tax routing.**
-- [x] **Reputation-weighted matching pool rewards (Stake-based Rep).**
-- [x] **Mobile-first PWA for citizen participation.**
-- [x] **Democratic Treasury Control (Matching pool reallocation).**
+- [x] Voluntary Tax Routing: Subject-specific matching pools.
+- [x] Meritocratic Voice Credits: Stipends based on reputation.
+- [x] Emergency Fast-track Governance.
+- [x] Expert-weighted Milestone Verification (Weighted Juries).
+- [x] Milestone Dispute Resolution System.
+- [x] Security: Delegation Chain Depth Analysis for Sybil resistance.
 
-## Phase 9: Verifiable Payouts & Global Scaling (Planned)
-- [ ] **On-chain Action Hooks**: Integration with L2s for trustless fund distribution.
-- [ ] **Decentralized Metadata**: IPFS/Arweave storage for proposal specs and milestone proofs.
-- [ ] **Advanced Sybil Analysis**: Graph-based machine learning for identifying complex delegation attack vectors.
-- [ ] **Cross-DAO Bridge**: Liquid delegation across multiple DAO instances.
+## Phase 9: Global Scaling & Privacy (Active)
+- [ ] Optimized client-side ZKP generation (Semaphore v4).
+- [ ] Privacy-preserving Quadratic Funding.
+- [ ] Mobile PWA: Push notifications for critical votes.
+- [ ] Decentralized File Storage (IPFS/Arweave) for specs.

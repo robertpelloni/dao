@@ -72,9 +72,10 @@ export const TreasuryDashboard: React.FC<TreasuryDashboardProps> = ({ onAction }
     ? transactions
     : transactions.filter(tx => tx.subject === filterSubject);
 
-  const totalUSD = balances
-    .filter(b => b.tokenSymbol === 'USD')
-    .reduce((acc, b) => acc + b.amount, 0);
+  const tokenTotals = balances.reduce((acc: Record<string, number>, b) => {
+    acc[b.tokenSymbol] = (acc[b.tokenSymbol] || 0) + b.amount;
+    return acc;
+  }, {});
 
   const subjects = ['General', ...new Set(committees.map(c => c.subject))];
 
@@ -84,10 +85,20 @@ export const TreasuryDashboard: React.FC<TreasuryDashboardProps> = ({ onAction }
         <Landmark className="absolute -right-10 -bottom-10 text-white/5 w-64 h-64" />
         <div className="relative z-10">
           <h2 className="text-sm font-black uppercase tracking-[0.2em] text-blue-400 mb-2">Central Treasury</h2>
-          <div className="flex flex-col md:flex-row md:items-end gap-4 md:gap-12">
-            <div>
-              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Total Voluntary Capital (USD)</p>
-              <p className="text-5xl md:text-6xl font-black">${totalUSD.toLocaleString()}</p>
+          <div className="flex flex-col md:flex-row md:items-start gap-4 md:gap-12">
+            <div className="flex flex-wrap gap-12">
+              {Object.entries(tokenTotals).map(([symbol, total]) => (
+                <div key={symbol}>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Total {symbol} Capital</p>
+                  <p className="text-5xl md:text-6xl font-black">{symbol === 'USD' ? '$' : ''}{total.toLocaleString()}</p>
+                </div>
+              ))}
+              {Object.keys(tokenTotals).length === 0 && (
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Total Voluntary Capital</p>
+                  <p className="text-5xl md:text-6xl font-black">$0</p>
+                </div>
+              )}
             </div>
             <div className="flex gap-8 border-l border-slate-700 pl-8 hidden md:flex">
               <div>
@@ -108,10 +119,20 @@ export const TreasuryDashboard: React.FC<TreasuryDashboardProps> = ({ onAction }
       {/* Subject Breakdown */}
       <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
          {balances.map((b, i) => (
-           <div key={i} className="bg-white border rounded-2xl p-4 shadow-sm hover:border-blue-200 transition-colors">
-              <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-1">{b.subject}</p>
-              <p className="text-xl font-black text-slate-800">${b.amount.toLocaleString()}</p>
-              <p className="text-[10px] font-bold text-blue-600 mt-1">{b.tokenSymbol} Pool</p>
+           <div key={i} className="bg-white border rounded-2xl p-5 shadow-sm hover:border-blue-200 transition-all hover:shadow-md group">
+              <div className="flex justify-between items-start mb-2">
+                 <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">{b.subject}</p>
+                 <div className="flex gap-1 h-4 items-end">
+                    {[0.4, 0.7, 0.5, 0.9, 0.6].map((h, j) => (
+                      <div key={j} className="w-1 bg-blue-100 group-hover:bg-blue-500 transition-colors rounded-full" style={{ height: `${h * 100}%` }} />
+                    ))}
+                 </div>
+              </div>
+              <p className="text-2xl font-black text-slate-800">{b.tokenSymbol === 'USD' ? '$' : ''}{b.amount.toLocaleString()}</p>
+              <div className="flex justify-between items-center mt-2">
+                 <p className="text-[10px] font-bold text-blue-600">{b.tokenSymbol} Matching Pool</p>
+                 <span className="text-[9px] font-black bg-green-50 text-green-600 px-1.5 py-0.5 rounded">Efficiency: 94%</span>
+              </div>
            </div>
          ))}
       </section>
