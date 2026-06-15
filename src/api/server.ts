@@ -360,9 +360,9 @@ app.post('/proposals/:id/release-milestone', (req: Request, res: Response) => {
 });
 
 app.post('/proposals/:id/milestones/:mid/jury-vote', (req: Request, res: Response) => {
-  const { userId } = req.body;
+  const { userId, action } = req.body;
   try {
-    crowdfunding.voteOnMilestone(s(req.params.id), s(req.params.mid), userId);
+    crowdfunding.voteOnMilestone(s(req.params.id), s(req.params.mid), userId, action || 'APPROVE');
     notifyUpdate(s(req.params.id));
     res.json({ success: true, proposal: globalStore.getProposal(s(req.params.id)) });
   } catch (err: any) {
@@ -377,6 +377,28 @@ app.post('/proposals/:id/score', (req: Request, res: Response) => {
   const score = calculateImpactScore(proposal);
   globalStore.updateProposal(s(req.params.id), { impactScore: score });
   res.json({ id: proposal.id, impactScore: score });
+});
+
+app.get('/proposals/:id/estimate-match', (req: Request, res: Response) => {
+  const amount = Number(req.query.amount);
+  const userId = s(req.query.userId);
+  if (isNaN(amount) || amount <= 0) return res.status(400).json({ error: 'Valid amount required' });
+
+  const contributions = globalStore.getContributionsByProposal(s(req.params.id));
+
+  // Current match
+  const currentMatch = crowdfunding.getTreasury().calculateMatch(contributions);
+
+  // Hypothetical match
+  const hypothetical = [...contributions, { userId, amount, proposalId: s(req.params.id), tokenSymbol: 'USD', timestamp: Date.now() }];
+  const newMatch = crowdfunding.getTreasury().calculateMatch(hypothetical);
+
+  res.json({
+    currentMatch,
+    newMatch,
+    delta: newMatch - currentMatch,
+    multiplier: (amount + (newMatch - currentMatch)) / amount
+  });
 });
 
 app.post('/proposals/triage', (req: Request, res: Response) => {

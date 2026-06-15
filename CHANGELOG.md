@@ -1,3 +1,8 @@
+## [1.0.25] - 2026-06-15
+## [1.0.25] - 2026-06-15
+### Added
+- Automated Protocol Sync and Branch Reconciliation.
+
 ## [1.0.19] - 2026-06-15
 ## [1.0.19] - 2026-06-15
 ### Added
@@ -6,6 +11,17 @@
 # Changelog
 
 All notable changes to this project will be documented in this file.
+
+## [1.0.23] - 2026-06-15
+### Added
+- **Milestone Dispute System:** Juries can now reject milestones, triggering a "Disputed" state and halting fund release.
+- **Reputation Slashing:** Proposers whose milestones are rejected by a jury quorum suffer a significant loss in subject reputation.
+- **Enhanced Jury UI:** Added "Approve" and "Reject" controls for assigned jury members with weighted quorum feedback.
+
+## [1.0.21] - 2026-06-15
+### Added
+- **QF Impact Estimation:** Citizens now see real-time estimates of how much matching capital their contribution will trigger before they commit.
+- **Amplification UI:** Added impact multiplier and delta visualization to the crowdfunding panel.
 
 ## [1.0.15] - 2026-06-15
 ### Added

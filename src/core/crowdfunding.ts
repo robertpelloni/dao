@@ -10,13 +10,17 @@ import { Contribution } from '../models/types';
  * Implements Dominant Assurance logic where funds are held in escrow and returned if the goal isn't met.
  */
 
+import { IdentityManager } from './identity';
+
 export class CrowdfundingEngine {
   // Map<proposalId, Contribution[]>
   private contributions: Map<string, Contribution[]> = new Map();
   private treasury: TreasuryManager;
+  private identity: IdentityManager;
 
   constructor(private store: Store) {
     this.treasury = new TreasuryManager(store);
+    this.identity = new IdentityManager(store);
   }
 
   getTreasury(): TreasuryManager {
@@ -155,7 +159,7 @@ export class CrowdfundingEngine {
   /**
    * Vote on a milestone as a jury member.
    */
-  voteOnMilestone(proposalId: string, milestoneId: string, userId: string): void {
+  voteOnMilestone(proposalId: string, milestoneId: string, userId: string, action: 'APPROVE' | 'REJECT' = 'APPROVE'): void {
     const proposal = this.store.getProposal(proposalId);
     if (!proposal) throw new Error('Proposal not found');
 
@@ -165,37 +169,57 @@ export class CrowdfundingEngine {
 
     const milestone = milestones[index]!;
     const votes = [...(milestone.juryVotes || [])];
+    const rejectionVotes = [...(milestone.rejectionVotes || [])];
     const assigned = milestone.assignedJury || [];
 
     if (assigned.length > 0 && !assigned.includes(userId)) {
       throw new Error('User is not an assigned jury member for this milestone');
     }
 
-    if (votes.includes(userId)) {
+    if (votes.includes(userId) || rejectionVotes.includes(userId)) {
       throw new Error('User already voted on this milestone');
     }
 
-    votes.push(userId);
-    milestones[index] = { ...milestone, juryVotes: votes };
-
-    this.store.updateProposal(proposalId, { milestones });
-
-    // Calculate weighted vote total
     const committee = this.store.getCommittee(proposal.committeeId);
     const subject = committee?.subject || 'General';
 
-    let weightedTotal = 0;
-    votes.forEach(vid => {
-      const vUser = this.store.getUser(vid);
-      const rep = vUser?.reputation[subject] || 0;
-      // Experts (rep >= 10) count as 2 votes, beginners count as 1
-      weightedTotal += (rep >= 10) ? 2 : 1;
-    });
+    if (action === 'APPROVE') {
+      votes.push(userId);
+      milestone.juryVotes = votes;
+    } else {
+      rejectionVotes.push(userId);
+      milestone.rejectionVotes = rejectionVotes;
+    }
 
-    // Auto-trigger release if weighted quorum is met
-    // Default required is 2 (from finalizeFunding), which means either 1 expert or 2 beginners
+    milestones[index] = milestone;
+    this.store.updateProposal(proposalId, { milestones });
+
+    // Calculate weighted totals
+    const getWeighted = (vids: string[]) => {
+      return vids.reduce((total, vid) => {
+        const vUser = this.store.getUser(vid);
+        const rep = vUser?.reputation[subject] || 0;
+        return total + (rep >= 10 ? 2 : 1);
+      }, 0);
+    };
+
+    const approvalWeighted = getWeighted(votes);
+    const rejectionWeighted = getWeighted(rejectionVotes);
     const required = milestone.requiredJuryQuorum || 2;
-    if (weightedTotal >= required) {
+
+    // Handle Rejection/Dispute
+    if (rejectionWeighted >= required) {
+      milestones[index] = { ...milestone, isDisputed: true, juryVotes: [], rejectionVotes: [] };
+      this.store.updateProposal(proposalId, { milestones });
+
+      // Slash reputation for dispute
+      this.identity.rewardReputation(proposal.proposerId, subject, -10);
+      console.warn(`[DISPUTE] Milestone ${milestoneId} rejected. Proposer ${proposal.proposerId} slashed.`);
+      return;
+    }
+
+    // Handle Approval
+    if (approvalWeighted >= required) {
       this.releaseMilestoneFunds(proposalId, milestoneId);
     }
   }
@@ -241,18 +265,18 @@ export class CrowdfundingEngine {
     console.log(`Released ${milestone.targetBudget} for milestone ${milestone.description}`);
 
     // Reward proposer with reputation for milestone completion
-    globalIdentity.rewardReputation(proposal.proposerId, subject, 5);
+    this.identity.rewardReputation(proposal.proposerId, subject, 5);
 
     // Reward jury members
     votes.forEach(uid => {
-      globalIdentity.rewardReputation(uid, subject, 1);
+      this.identity.rewardReputation(uid, subject, 1);
     });
 
     // Check if all milestones are done
     if (updatedMilestones.every(m => m.isCompleted)) {
       this.store.updateProposal(proposalId, { status: 'COMPLETED' });
       // Bonus reputation for full project success
-      globalIdentity.rewardReputation(proposal.proposerId, subject, 10);
+      this.identity.rewardReputation(proposal.proposerId, subject, 10);
     }
 
     return true;

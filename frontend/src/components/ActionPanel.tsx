@@ -12,6 +12,7 @@ interface ActionPanelProps {
 export const ActionPanel: React.FC<ActionPanelProps> = ({ proposal, user, onAction }) => {
   const [voteCount, setVoteCount] = useState(1);
   const [contribution, setContribution] = useState(10);
+  const [matchEstimate, setMatchEstimate] = useState<{ delta: number, multiplier: number } | null>(null);
   const [loading, setLoading] = useState(false);
 
   if (!user) return null;
@@ -32,6 +33,24 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({ proposal, user, onActi
     }
   };
 
+  const fetchEstimate = async (amount: number) => {
+    try {
+      const res = await api.get(`/proposals/${proposal.id}/estimate-match?amount=${amount}&userId=${user?.id}`);
+      setMatchEstimate({ delta: res.data.delta, multiplier: res.data.multiplier });
+    } catch (err) {
+      console.error('Failed to fetch estimate', err);
+    }
+  };
+
+  React.useEffect(() => {
+    if (contribution > 0 && user) {
+      const timer = setTimeout(() => fetchEstimate(contribution), 500);
+      return () => clearTimeout(timer);
+    } else {
+      setMatchEstimate(null);
+    }
+  }, [contribution, user]);
+
   const handleContribute = async () => {
     try {
       setLoading(true);
@@ -39,6 +58,7 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({ proposal, user, onActi
         userId: user.id,
         amount: contribution
       });
+      setMatchEstimate(null);
       onAction();
     } catch (err) {
       alert('Contribution failed');
@@ -59,11 +79,12 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({ proposal, user, onActi
     }
   };
 
-  const handleJuryVote = async (milestoneId: string) => {
+  const handleJuryVote = async (milestoneId: string, action: 'APPROVE' | 'REJECT' = 'APPROVE') => {
     try {
       setLoading(true);
       await api.post(`/proposals/${proposal.id}/milestones/${milestoneId}/jury-vote`, {
-        userId: user.id
+        userId: user.id,
+        action
       });
       onAction();
     } catch (err) {
@@ -93,7 +114,7 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({ proposal, user, onActi
               Cost: {voteCount * voteCount} credits
             </span>
           </div>
-          <div className="flex gap-2 mb-4">
+          <div className="flex gap-2 mb-2">
             <input
               type="number"
               min="1"
@@ -172,6 +193,19 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({ proposal, user, onActi
               className="flex-1 border rounded-xl px-4 py-2 focus:ring-2 focus:ring-emerald-500 outline-none"
             />
           </div>
+          {matchEstimate && (
+            <div className="mb-4 animate-in fade-in slide-in-from-top-2 duration-300">
+               <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-3">
+                  <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-emerald-600 mb-1">
+                     <span>QF Amplification</span>
+                     <span className="bg-emerald-600 text-white px-1.5 py-0.5 rounded">{matchEstimate.multiplier.toFixed(1)}x Impact</span>
+                  </div>
+                  <p className="text-xs font-bold text-emerald-800">
+                     Your ${contribution} will trigger an additional <span className="text-emerald-600">${Math.round(matchEstimate.delta)}</span> in matching funds.
+                  </p>
+               </div>
+            </div>
+          )}
           <button
             disabled={loading}
             onClick={handleContribute}
@@ -198,8 +232,13 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({ proposal, user, onActi
             </h4>
             <div className="space-y-3">
               {proposal.milestones.filter(m => !m.isCompleted).map(m => (
-                <div key={m.id} className="p-3 bg-indigo-50 rounded-xl border border-indigo-100">
-                  <p className="text-sm font-bold text-indigo-900">{m.description}</p>
+                <div key={m.id} className={`p-3 rounded-xl border ${m.isDisputed ? 'bg-red-50 border-red-100' : 'bg-indigo-50 border-indigo-100'}`}>
+                  <div className="flex justify-between items-start">
+                    <p className={`text-sm font-bold ${m.isDisputed ? 'text-red-900' : 'text-indigo-900'}`}>{m.description}</p>
+                    {m.isDisputed && (
+                      <span className="bg-red-600 text-white text-[8px] font-black uppercase px-1.5 py-0.5 rounded animate-pulse">Disputed</span>
+                    )}
+                  </div>
 
                   <div className="mt-2 flex flex-wrap gap-1">
                      {(m as any).assignedJury?.map((jid: string) => (
@@ -209,17 +248,27 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({ proposal, user, onActi
                      ))}
                   </div>
 
-                  <div className="flex justify-between items-center mt-3 pt-2 border-t border-indigo-100/50">
-                    <span className="text-[10px] font-black uppercase text-indigo-400">
-                      Weighted Quorum: {(m as any).requiredJuryQuorum || 2}
+                  <div className={`flex justify-between items-center mt-3 pt-2 border-t ${m.isDisputed ? 'border-red-100' : 'border-indigo-100/50'}`}>
+                    <span className={`text-[10px] font-black uppercase ${m.isDisputed ? 'text-red-400' : 'text-indigo-400'}`}>
+                      Quorum: {(m as any).requiredJuryQuorum || 2}
                     </span>
-                    <button
-                      disabled={loading || !(m as any).assignedJury?.includes(user.id) || (m as any).juryVotes?.includes(user.id)}
-                      onClick={() => handleJuryVote(m.id)}
-                      className="text-xs bg-indigo-600 text-white px-3 py-1.5 rounded-lg font-bold hover:bg-indigo-700 disabled:opacity-50"
-                    >
-                      {!(m as any).assignedJury?.includes(user.id) ? 'Locked' : (m as any).juryVotes?.includes(user.id) ? 'Voted' : 'Verify'}
-                    </button>
+
+                    <div className="flex gap-2">
+                      <button
+                        disabled={loading || !(m as any).assignedJury?.includes(user.id) || (m as any).juryVotes?.includes(user.id) || (m as any).rejectionVotes?.includes(user.id)}
+                        onClick={() => handleJuryVote(m.id, 'APPROVE')}
+                        className={`text-[10px] px-2 py-1 rounded font-bold transition-all disabled:opacity-30 ${m.isDisputed ? 'bg-slate-200 text-slate-400' : 'bg-indigo-600 text-white hover:bg-indigo-700'}`}
+                      >
+                         Approve
+                      </button>
+                      <button
+                        disabled={loading || !(m as any).assignedJury?.includes(user.id) || (m as any).juryVotes?.includes(user.id) || (m as any).rejectionVotes?.includes(user.id)}
+                        onClick={() => handleJuryVote(m.id, 'REJECT')}
+                        className="text-[10px] bg-red-100 text-red-600 px-2 py-1 rounded font-bold hover:bg-red-200 transition-all disabled:opacity-30"
+                      >
+                         Reject
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
