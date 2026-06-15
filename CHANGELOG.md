@@ -1,6 +1,17 @@
+## [1.0.19] - 2026-06-15
+## [1.0.19] - 2026-06-15
+### Added
+- Automated Protocol Sync and Branch Reconciliation.
+
 # Changelog
 
 All notable changes to this project will be documented in this file.
+
+## [1.0.15] - 2026-06-15
+### Added
+- **Expert-Prioritized Juries:** Milestone verification juries now automatically prioritize citizens with subject-matter reputation.
+- **Weighted Milestone Quorum:** Expert votes (rep >= 10) now count double during milestone verification, allowing faster fund release by trusted specialists.
+- **Clean Repository Governance:** Refactored APEP Metadata Governance to generate readable, actionable `TODO.md` lists from codebase scanning.
 
 ## [1.0.13] - 2026-06-15
 ### Added

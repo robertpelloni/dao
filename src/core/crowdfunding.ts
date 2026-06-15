@@ -102,11 +102,29 @@ export class CrowdfundingEngine {
         });
       }
 
-      // Assign random juries for all milestones
-      const verifiedHumans = this.store.getUsers().filter(u => globalIdentity.isVerified(u.id)).map(u => u.id);
+      // Assign experts and random juries for all milestones
+      const allUsers = this.store.getUsers();
+      const verifiedHumans = allUsers.filter(u => globalIdentity.isVerified(u.id));
+
       const updatedMilestones = proposal.milestones.map(m => {
-        // Randomly select 3 citizens for each milestone if possible
-        const jury = [...verifiedHumans].sort(() => 0.5 - Math.random()).slice(0, 3);
+        // Prioritize experts (rep > 0 in subject)
+        const experts = verifiedHumans
+          .filter(u => (u.reputation[subject] || 0) > 0)
+          .map(u => u.id);
+
+        const others = verifiedHumans
+          .filter(u => (u.reputation[subject] || 0) === 0)
+          .map(u => u.id);
+
+        // Select up to 3 jury members, favoring experts
+        const jury = [...experts].sort(() => 0.5 - Math.random()).slice(0, 2);
+
+        if (jury.length < 3) {
+          const needed = 3 - jury.length;
+          const fillers = others.sort(() => 0.5 - Math.random()).slice(0, needed);
+          jury.push(...fillers);
+        }
+
         return { ...m, assignedJury: jury, requiredJuryQuorum: Math.min(jury.length, 2) };
       });
 
@@ -162,9 +180,22 @@ export class CrowdfundingEngine {
 
     this.store.updateProposal(proposalId, { milestones });
 
-    // Auto-trigger release if quorum is met
-    const required = milestone.requiredJuryQuorum || 1;
-    if (votes.length >= required) {
+    // Calculate weighted vote total
+    const committee = this.store.getCommittee(proposal.committeeId);
+    const subject = committee?.subject || 'General';
+
+    let weightedTotal = 0;
+    votes.forEach(vid => {
+      const vUser = this.store.getUser(vid);
+      const rep = vUser?.reputation[subject] || 0;
+      // Experts (rep >= 10) count as 2 votes, beginners count as 1
+      weightedTotal += (rep >= 10) ? 2 : 1;
+    });
+
+    // Auto-trigger release if weighted quorum is met
+    // Default required is 2 (from finalizeFunding), which means either 1 expert or 2 beginners
+    const required = milestone.requiredJuryQuorum || 2;
+    if (weightedTotal >= required) {
       this.releaseMilestoneFunds(proposalId, milestoneId);
     }
   }
@@ -180,10 +211,20 @@ export class CrowdfundingEngine {
     const milestone = proposal.milestones.find(m => m.id === milestoneId);
     if (!milestone || milestone.isCompleted) return false;
 
-    // Verify jury consensus if required
+    // Verify jury consensus (Weighted)
+    const committee = this.store.getCommittee(proposal.committeeId);
+    const subject = committee?.subject || 'General';
     const votes = milestone.juryVotes || [];
+
+    let weightedTotal = 0;
+    votes.forEach(vid => {
+      const vUser = this.store.getUser(vid);
+      const rep = vUser?.reputation[subject] || 0;
+      weightedTotal += (rep >= 10) ? 2 : 1;
+    });
+
     const required = milestone.requiredJuryQuorum || 0;
-    if (votes.length < required) {
+    if (weightedTotal < required) {
       return false;
     }
 
@@ -200,8 +241,6 @@ export class CrowdfundingEngine {
     console.log(`Released ${milestone.targetBudget} for milestone ${milestone.description}`);
 
     // Reward proposer with reputation for milestone completion
-    const committee = this.store.getCommittee(proposal.committeeId);
-    const subject = committee?.subject || 'General';
     globalIdentity.rewardReputation(proposal.proposerId, subject, 5);
 
     // Reward jury members

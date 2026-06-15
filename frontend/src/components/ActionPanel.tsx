@@ -200,16 +200,25 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({ proposal, user, onActi
               {proposal.milestones.filter(m => !m.isCompleted).map(m => (
                 <div key={m.id} className="p-3 bg-indigo-50 rounded-xl border border-indigo-100">
                   <p className="text-sm font-bold text-indigo-900">{m.description}</p>
-                  <div className="flex justify-between items-center mt-2">
+
+                  <div className="mt-2 flex flex-wrap gap-1">
+                     {(m as any).assignedJury?.map((jid: string) => (
+                        <span key={jid} className="text-[9px] font-bold bg-white text-indigo-600 px-1.5 py-0.5 rounded border border-indigo-100" title="Assigned Jury Member">
+                           {jid}
+                        </span>
+                     ))}
+                  </div>
+
+                  <div className="flex justify-between items-center mt-3 pt-2 border-t border-indigo-100/50">
                     <span className="text-[10px] font-black uppercase text-indigo-400">
-                      Votes: {(m as any).juryVotes?.length || 0} / {(m as any).requiredJuryQuorum || 1}
+                      Weighted Quorum: {(m as any).requiredJuryQuorum || 2}
                     </span>
                     <button
-                      disabled={loading || (m as any).juryVotes?.includes(user.id)}
+                      disabled={loading || !(m as any).assignedJury?.includes(user.id) || (m as any).juryVotes?.includes(user.id)}
                       onClick={() => handleJuryVote(m.id)}
                       className="text-xs bg-indigo-600 text-white px-3 py-1.5 rounded-lg font-bold hover:bg-indigo-700 disabled:opacity-50"
                     >
-                      {(m as any).juryVotes?.includes(user.id) ? 'Voted' : 'Verify'}
+                      {!(m as any).assignedJury?.includes(user.id) ? 'Locked' : (m as any).juryVotes?.includes(user.id) ? 'Voted' : 'Verify'}
                     </button>
                   </div>
                 </div>
