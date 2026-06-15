@@ -244,7 +244,18 @@ function App() {
                 ) : activeTab === 'committees' ? (
                    <CommitteeList committees={committees} />
                 ) : activeTab === 'identity' ? (
-                   <IdentityView currentUser={user} allUsers={allUsers} powerBreakdown={powerBreakdown} suggestedCommittees={suggestedCommittees} suggestedProposals={suggestedProposals} onAction={refresh} />
+                   <IdentityView
+                    currentUser={user}
+                    allUsers={allUsers}
+                    powerBreakdown={powerBreakdown}
+                    suggestedCommittees={suggestedCommittees}
+                    suggestedProposals={suggestedProposals}
+                    onAction={refresh}
+                    onSelectProposal={(id) => {
+                      setSelectedProposalId(id);
+                      setActiveTab('proposals');
+                    }}
+                  />
                 ) : activeTab === 'treasury' ? (
                    <TreasuryDashboard onAction={refresh} />
                 ) : activeTab === 'autonomous' ? (

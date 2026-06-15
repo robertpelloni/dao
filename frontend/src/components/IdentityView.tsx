@@ -12,9 +12,10 @@ interface IdentityViewProps {
   suggestedCommittees: Committee[];
   suggestedProposals: Proposal[];
   onAction: () => void;
+  onSelectProposal: (id: string) => void;
 }
 
-export const IdentityView: React.FC<IdentityViewProps> = ({ currentUser, allUsers, powerBreakdown, suggestedCommittees, suggestedProposals, onAction }) => {
+export const IdentityView: React.FC<IdentityViewProps> = ({ currentUser, allUsers, powerBreakdown, suggestedCommittees, suggestedProposals, onAction, onSelectProposal }) => {
   const [profiles, setProfiles] = useState<Record<string, IdentityProfile>>({});
   const [loading, setLoading] = useState(false);
 
@@ -172,7 +173,10 @@ export const IdentityView: React.FC<IdentityViewProps> = ({ currentUser, allUser
                              </div>
                              <h4 className="font-bold text-lg mb-2">{p.title}</h4>
                              <p className="text-sm text-blue-100 line-clamp-2 mb-4">{p.abstract}</p>
-                             <button className="w-full bg-white text-blue-600 font-black py-2 rounded-xl text-xs uppercase tracking-widest">
+                             <button
+                                onClick={() => onSelectProposal(p.id)}
+                                className="w-full bg-white text-blue-600 font-black py-2 rounded-xl text-xs uppercase tracking-widest hover:bg-blue-50 transition-colors"
+                             >
                                 Review & Vote
                              </button>
                           </div>
@@ -207,10 +211,13 @@ export const IdentityView: React.FC<IdentityViewProps> = ({ currentUser, allUser
 
       {/* Power Breakdown Table */}
       <section className="bg-white border rounded-3xl p-8 shadow-sm">
-        <h3 className="text-xl font-black text-slate-800 mb-6 flex items-center gap-2">
+        <h3 className="text-xl font-black text-slate-800 mb-2 flex items-center gap-2">
            <ShieldCheck className="text-blue-600" />
            Liquid Power Breakdown
         </h3>
+        <p className="text-xs text-slate-500 font-medium mb-6 leading-relaxed">
+           Your voting power is subject-specific. It represents the sum of your voice credits and any power delegated to you by other citizens who trust your expertise.
+        </p>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {Object.entries(powerBreakdown).map(([subject, power]) => (
             <div key={subject} className="p-4 rounded-2xl border bg-gray-50/50 flex justify-between items-center">
@@ -228,10 +235,13 @@ export const IdentityView: React.FC<IdentityViewProps> = ({ currentUser, allUser
 
       {/* Delegation Graph */}
       <section>
-        <h3 className="text-xl font-black text-slate-800 mb-6 flex items-center gap-2">
+        <h3 className="text-xl font-black text-slate-800 mb-2 flex items-center gap-2">
            <GitGraph className="text-blue-600" />
            Voting Power Delegation flow
         </h3>
+        <p className="text-xs text-slate-500 font-medium mb-6 leading-relaxed">
+           Visualize how trust flows through the network. Delegation allows specialized knowledge to scale without central authority.
+        </p>
         <DelegationGraph users={allUsers} subject="Roads" />
       </section>
 
@@ -261,14 +271,41 @@ export const IdentityView: React.FC<IdentityViewProps> = ({ currentUser, allUser
                   </div>
                </div>
 
-               <button
-                disabled={loading || (profiles[u.id]?.endorsedBy.includes(currentUser?.id || '') ?? false)}
-                onClick={() => handleEndorse(u.id)}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-black text-xs uppercase tracking-widest bg-white border-2 border-slate-100 text-slate-600 hover:border-blue-600 hover:text-blue-600 transition-all disabled:opacity-30 disabled:hover:border-slate-100 disabled:hover:text-slate-600"
-               >
-                  <Award size={16} />
-                  {profiles[u.id]?.endorsedBy.includes(currentUser?.id || '') ? 'Endorsed' : 'Endorse'}
-               </button>
+               <div className="flex gap-2">
+                  <button
+                    disabled={loading}
+                    onClick={async () => {
+                       const subject = prompt('Delegate power for which subject?', 'General');
+                       if (!subject || !currentUser) return;
+                       try {
+                          setLoading(true);
+                          await api.post('/delegate', {
+                             userId: currentUser.id,
+                             delegateId: u.id,
+                             subject
+                          });
+                          onAction();
+                       } catch (err) {
+                          alert('Delegation failed');
+                       } finally {
+                          setLoading(false);
+                       }
+                    }}
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-black text-xs uppercase tracking-widest bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-all disabled:opacity-30"
+                  >
+                     <GitGraph size={14} />
+                     Delegate
+                  </button>
+
+                  <button
+                    disabled={loading || (profiles[u.id]?.endorsedBy.includes(currentUser?.id || '') ?? false)}
+                    onClick={() => handleEndorse(u.id)}
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-black text-xs uppercase tracking-widest bg-white border-2 border-slate-100 text-slate-600 hover:border-blue-600 hover:text-blue-600 transition-all disabled:opacity-30 disabled:hover:border-slate-100 disabled:hover:text-slate-600"
+                  >
+                      <Award size={14} />
+                      {profiles[u.id]?.endorsedBy.includes(currentUser?.id || '') ? 'Endorsed' : 'Endorse'}
+                  </button>
+               </div>
             </div>
           ))}
         </div>
