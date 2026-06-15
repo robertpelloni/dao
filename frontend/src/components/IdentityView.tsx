@@ -17,6 +17,7 @@ interface IdentityViewProps {
 
 export const IdentityView: React.FC<IdentityViewProps> = ({ currentUser, allUsers, powerBreakdown, suggestedCommittees, suggestedProposals, onAction, onSelectProposal }) => {
   const [profiles, setProfiles] = useState<Record<string, IdentityProfile>>({});
+  const [delegators, setDelegators] = useState<Record<string, User[]>>({});
   const [loading, setLoading] = useState(false);
 
   const fetchProfiles = async () => {
@@ -34,7 +35,21 @@ export const IdentityView: React.FC<IdentityViewProps> = ({ currentUser, allUser
 
   useEffect(() => {
     fetchProfiles();
-  }, [allUsers]);
+
+    // Fetch delegators for each subject in power breakdown
+    const fetchDelegators = async () => {
+       if (!currentUser) return;
+       const results: Record<string, User[]> = {};
+       await Promise.all(Object.keys(powerBreakdown).map(async subject => {
+          try {
+             const res = await api.get(`/delegators/${currentUser.id}/${subject}`);
+             results[subject] = res.data;
+          } catch(e) {}
+       }));
+       setDelegators(results);
+    };
+    fetchDelegators();
+  }, [allUsers, powerBreakdown, currentUser]);
 
   const handleVerifyZKP = async () => {
     if (!currentUser) return;
@@ -234,14 +249,29 @@ export const IdentityView: React.FC<IdentityViewProps> = ({ currentUser, allUser
         </p>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {Object.entries(powerBreakdown).map(([subject, power]) => (
-            <div key={subject} className="p-4 rounded-2xl border bg-gray-50/50 flex justify-between items-center">
-              <div>
-                <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest">{subject}</p>
-                <p className="text-xl font-black text-slate-800">{power}</p>
+            <div key={subject} className="p-5 rounded-2xl border bg-gray-50/50 flex flex-col gap-4">
+              <div className="flex justify-between items-start">
+                 <div>
+                    <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest">{subject}</p>
+                    <p className="text-2xl font-black text-slate-800">{power}</p>
+                 </div>
+                 <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600">
+                    <GitGraph size={20} />
+                 </div>
               </div>
-              <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600">
-                <GitGraph size={20} />
-              </div>
+
+              {delegators[subject] && delegators[subject].length > 0 && (
+                <div className="pt-3 border-t border-gray-100">
+                   <p className="text-[8px] font-black uppercase text-slate-400 tracking-widest mb-2">Trusting Citizens ({delegators[subject].length})</p>
+                   <div className="flex flex-wrap gap-1">
+                      {delegators[subject].map(d => (
+                         <span key={d.id} className="bg-white px-2 py-0.5 rounded border text-[9px] font-bold text-slate-600" title={d.name}>
+                            {d.name}
+                         </span>
+                      ))}
+                   </div>
+                </div>
+              )}
             </div>
           ))}
         </div>

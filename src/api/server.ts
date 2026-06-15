@@ -316,6 +316,11 @@ app.get('/power/:userId/:subject', (req: Request, res: Response) => {
   res.json({ userId: req.params.userId, subject: req.params.subject, effectivePower: power });
 });
 
+app.get('/delegators/:userId/:subject', (req: Request, res: Response) => {
+  const delegators = globalStore.getDelegators(s(req.params.userId), s(req.params.subject));
+  res.json(delegators);
+});
+
 // --- Proposal Endpoints ---
 
 app.post('/proposals', (req: Request, res: Response) => {

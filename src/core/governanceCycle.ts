@@ -134,6 +134,22 @@ export class GovernanceManager {
       console.warn(`[SECURITY] Flagged user ${sinkId} as Sybil Sink.`);
     });
 
+    // 1.5. Auto-provision high-activity committees
+    const newSubjects = this.store.getHighActivitySubjects(5); // Threshold of 5 delegations
+    newSubjects.forEach(subject => {
+       const id = `${subject.replace(/\s+/g, '-')}-Committee`;
+       if (!this.store.getCommittee(id)) {
+          this.store.addCommittee({
+             id,
+             subject,
+             members: [],
+             thresholdQuorum: 0.05,
+             lastActivityAt: Date.now()
+          });
+          console.log(`[GOVERNANCE] Auto-provisioned committee for active subject: ${subject}`);
+       }
+    });
+
     for (const user of users) {
       // 2. Reputation Decay (Use SecurityEngine for automated erosion)
       const newReputation: Record<string, number> = {};

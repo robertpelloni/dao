@@ -35,7 +35,8 @@ export const TreasuryDashboard: React.FC<TreasuryDashboardProps> = ({ onAction }
   useEffect(() => {
     fetchData();
 
-    const socket = io('http://localhost:3000');
+    // Use relative path for socket if possible, or consistent with Vite proxy
+    const socket = io();
     socket.on('TREASURY_UPDATED', () => {
       fetchData();
     });

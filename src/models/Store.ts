@@ -308,6 +308,14 @@ export class Store {
     return stmt.all(proposalId) as Contribution[];
   }
 
+  /**
+   * Retrieves all users who have delegated power to a specific target user for a specific subject.
+   */
+  getDelegators(targetId: string, subject: string): User[] {
+    const users = this.getUsers();
+    return users.filter(u => u.delegates[subject] === targetId);
+  }
+
   setMatchingPool(tokenSymbol: string, subject: string, amount: number) {
     const stmt = this.db.prepare('INSERT OR REPLACE INTO matching_pools (tokenSymbol, subject, amount) VALUES (?, ?, ?)');
     stmt.run(tokenSymbol, subject, amount);

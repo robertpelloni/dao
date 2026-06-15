@@ -3,8 +3,6 @@ import { io } from 'socket.io-client';
 import api from '../api/client.js';
 import { User, Proposal, Committee, GovernanceCycle } from '../../../src/models/types.js';
 
-const SOCKET_URL = 'http://localhost:3000';
-
 export function useDashboard(userId: string) {
   const [user, setUser] = useState<User | null>(null);
   const [isVerified, setIsVerified] = useState(false);
@@ -66,7 +64,7 @@ export function useDashboard(userId: string) {
   }, [fetchData]);
 
   useEffect(() => {
-    const socket = io(SOCKET_URL);
+    const socket = io();
 
     socket.on('PROPOSAL_UPDATED', () => {
       console.log('Proposal updated, refreshing...');

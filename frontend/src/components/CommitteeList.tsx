@@ -20,9 +20,17 @@ export const CommitteeList: React.FC<CommitteeListProps> = ({ committees }) => {
             Threshold Quorum: <span className="text-slate-900 font-bold">{(c.thresholdQuorum * 100).toFixed(0)}%</span>
           </p>
 
-          <div className="flex items-center gap-2 text-xs font-bold text-slate-400 mb-6 uppercase tracking-wider">
-             <Clock size={14} />
-             Last Activity: {c.lastActivityAt ? new Date(c.lastActivityAt).toLocaleDateString() : 'None'}
+          <div className="flex items-center justify-between mb-6">
+             <div className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-wider">
+                <Clock size={14} />
+                Last Activity: {c.lastActivityAt ? new Date(c.lastActivityAt).toLocaleDateString() : 'None'}
+             </div>
+             {c.lastActivityAt && (Date.now() - c.lastActivityAt > 30 * 24 * 60 * 60 * 1000) && (
+                <span className="text-[8px] font-black uppercase bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded animate-pulse">Near Sunset</span>
+             )}
+             {(!c.lastActivityAt || Date.now() - c.lastActivityAt < 7 * 24 * 60 * 60 * 1000) && (
+                <span className="text-[8px] font-black uppercase bg-green-100 text-green-700 px-1.5 py-0.5 rounded">Active</span>
+             )}
           </div>
 
           <div className="flex items-center justify-between pt-6 border-t border-gray-50">
