@@ -33,6 +33,17 @@ describe('Treasury & Voluntary Tax Integration', () => {
     expect(txs[0].description).toBe('Citizen Donation');
   });
 
+  test('Stake-based Reputation for Contribution', () => {
+    store.addUser({ id: 'alice', name: 'Alice', voiceCredits: 100, reputation: {}, delegates: {} });
+    treasury.deposit(100, 'USD', 'Education', 'School funding', 'alice');
+
+    const user = store.getUser('alice');
+    expect(user?.reputation['Education']).toBe(10);
+
+    const txs = treasury.getTransactions();
+    expect(txs[0].userId).toBe('alice');
+  });
+
   test('Automated Match Allocation during Finalization with Subject Routing', () => {
     // 1. Setup matching pools
     treasury.deposit(2000, 'USD', 'Infrastructure', 'Initial Pool');

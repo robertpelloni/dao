@@ -93,6 +93,7 @@ export class Store {
         id TEXT PRIMARY KEY,
         tokenSymbol TEXT,
         subject TEXT,
+        userId TEXT,
         amount REAL,
         type TEXT,
         description TEXT,
@@ -322,9 +323,9 @@ export class Store {
     return stmt.all();
   }
 
-  addTreasuryTransaction(tx: { id: string; tokenSymbol: string; subject: string; amount: number; type: string; description: string; timestamp: number }) {
-    const stmt = this.db.prepare('INSERT INTO treasury_transactions (id, tokenSymbol, subject, amount, type, description, timestamp) VALUES (?, ?, ?, ?, ?, ?, ?)');
-    stmt.run(tx.id, tx.tokenSymbol, tx.subject, tx.amount, tx.type, tx.description, tx.timestamp);
+  addTreasuryTransaction(tx: { id: string; tokenSymbol: string; subject: string; userId?: string | null; amount: number; type: string; description: string; timestamp: number }) {
+    const stmt = this.db.prepare('INSERT INTO treasury_transactions (id, tokenSymbol, subject, userId, amount, type, description, timestamp) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
+    stmt.run(tx.id, tx.tokenSymbol, tx.subject, tx.userId || null, tx.amount, tx.type, tx.description, tx.timestamp);
   }
 
   getTreasuryTransactions(): any[] {

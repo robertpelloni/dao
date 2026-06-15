@@ -459,8 +459,9 @@ app.post('/treasury/deposit', (req: Request, res: Response) => {
 
   const targetSubject = subject || 'General';
   const targetSymbol = tokenSymbol || 'USD';
+  const userId = (req as any).user?.userId;
 
-  crowdfunding.getTreasury().deposit(Number(amount), targetSymbol, targetSubject, description || 'Voluntary Contribution');
+  crowdfunding.getTreasury().deposit(Number(amount), targetSymbol, targetSubject, description || 'Voluntary Contribution', userId);
 
   // Notify clients about treasury update
   io.emit('TREASURY_UPDATED', { tokenSymbol: targetSymbol, subject: targetSubject });

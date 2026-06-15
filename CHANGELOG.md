@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.13] - 2026-06-15
+### Added
+- **Stake-based Reputation:** Citizens now earn 1 reputation unit per $10 USD contributed to a matching pool, directly linking financial support to governance influence.
+- **Contribution Attribution:** Treasury transactions now track the `userId` of the donor for transparent reputation rewards and auditing.
+
 ## [1.0.12] - 2026-06-15
 ### Added
 - **Targeted Voluntary Taxation:** citizens can now route their voluntary tax to specific committees (subjects).

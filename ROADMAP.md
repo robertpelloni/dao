@@ -39,6 +39,6 @@
 - [ ] Cross-platform script parity (Unix/Windows symmetry).
 
 ## Phase 8: The Voluntary State (Active)
-- [ ] **Direct-to-subject voluntary tax routing.**
-- [ ] Reputation-weighted matching pool rewards.
+- [x] **Direct-to-subject voluntary tax routing.**
+ - [x] **Reputation-weighted matching pool rewards (Stake-based Rep).**
 - [ ] Mobile-first PWA for citizen participation.

@@ -1,5 +1,6 @@
 import { Store } from '../models/Store';
 import { Proposal, Contribution } from '../models/types';
+import { globalIdentity } from './identity';
 
 /**
  * Treasury and Quadratic Funding (QF) Engine
@@ -8,8 +9,13 @@ import { Proposal, Contribution } from '../models/types';
  * using a central matching pool.
  * QF Match = (Sum(Sqrt(contributions)))^2 - Sum(contributions)
  */
+import { IdentityManager } from './identity';
+
 export class TreasuryManager {
+  private identity: IdentityManager;
+
   constructor(private store: Store) {
+    this.identity = new IdentityManager(store);
     // Ensure default USD pool exists in persistent store if not set
     if (this.store.getMatchingPool('USD', 'General') === 0) {
       this.store.setMatchingPool('USD', 'General', 0);
@@ -87,7 +93,7 @@ export class TreasuryManager {
     return this.store.getAllMatchingPools();
   }
 
-  deposit(amount: number, tokenSymbol: string = 'USD', subject: string = 'General', description: string = 'Deposit'): void {
+  deposit(amount: number, tokenSymbol: string = 'USD', subject: string = 'General', description: string = 'Deposit', userId?: string): void {
     const current = this.getPoolBalance(tokenSymbol, subject);
     this.setMatchingPool(current + amount, tokenSymbol, subject);
 
@@ -95,11 +101,21 @@ export class TreasuryManager {
       id: `tx-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
       tokenSymbol,
       subject,
+      userId: userId || null,
       amount,
       type: 'DEPOSIT',
       description,
       timestamp: Date.now()
     });
+
+    // Reward reputation for voluntary contribution (1 rep per 10 USD)
+    if (userId && amount > 0 && tokenSymbol === 'USD') {
+      const repReward = Math.floor(amount / 10);
+      if (repReward > 0) {
+        this.identity.rewardReputation(userId, subject, repReward);
+        console.log(`Rewarding user ${userId} with ${repReward} reputation in ${subject} for contribution.`);
+      }
+    }
   }
 
   getTransactions(): any[] {
