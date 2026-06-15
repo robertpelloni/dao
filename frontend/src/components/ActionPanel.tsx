@@ -250,24 +250,48 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({ proposal, user, onActi
 
                   <div className={`flex justify-between items-center mt-3 pt-2 border-t ${m.isDisputed ? 'border-red-100' : 'border-indigo-100/50'}`}>
                     <span className={`text-[10px] font-black uppercase ${m.isDisputed ? 'text-red-400' : 'text-indigo-400'}`}>
-                      Quorum: {(m as any).requiredJuryQuorum || 2}
+                      {m.isDisputed ? 'Resolution Pending' : `Quorum: ${(m as any).requiredJuryQuorum || 2}`}
                     </span>
 
                     <div className="flex gap-2">
-                      <button
-                        disabled={loading || !(m as any).assignedJury?.includes(user.id) || (m as any).juryVotes?.includes(user.id) || (m as any).rejectionVotes?.includes(user.id)}
-                        onClick={() => handleJuryVote(m.id, 'APPROVE')}
-                        className={`text-[10px] px-2 py-1 rounded font-bold transition-all disabled:opacity-30 ${m.isDisputed ? 'bg-slate-200 text-slate-400' : 'bg-indigo-600 text-white hover:bg-indigo-700'}`}
-                      >
-                         Approve
-                      </button>
-                      <button
-                        disabled={loading || !(m as any).assignedJury?.includes(user.id) || (m as any).juryVotes?.includes(user.id) || (m as any).rejectionVotes?.includes(user.id)}
-                        onClick={() => handleJuryVote(m.id, 'REJECT')}
-                        className="text-[10px] bg-red-100 text-red-600 px-2 py-1 rounded font-bold hover:bg-red-200 transition-all disabled:opacity-30"
-                      >
-                         Reject
-                      </button>
+                      {!m.isDisputed ? (
+                        <>
+                          <button
+                            disabled={loading || !(m as any).assignedJury?.includes(user.id) || (m as any).juryVotes?.includes(user.id) || (m as any).rejectionVotes?.includes(user.id)}
+                            onClick={() => handleJuryVote(m.id, 'APPROVE')}
+                            className="text-[10px] px-2 py-1 rounded font-bold transition-all disabled:opacity-30 bg-indigo-600 text-white hover:bg-indigo-700"
+                          >
+                             Approve
+                          </button>
+                          <button
+                            disabled={loading || !(m as any).assignedJury?.includes(user.id) || (m as any).juryVotes?.includes(user.id) || (m as any).rejectionVotes?.includes(user.id)}
+                            onClick={() => handleJuryVote(m.id, 'REJECT')}
+                            className="text-[10px] bg-red-100 text-red-600 px-2 py-1 rounded font-bold hover:bg-red-200 transition-all disabled:opacity-30"
+                          >
+                             Reject
+                          </button>
+                        </>
+                      ) : (
+                        <button
+                          disabled={loading}
+                          onClick={async () => {
+                             if(confirm('Resolve dispute by releasing funds? Proposer reputation will be partially restored.')) {
+                                try {
+                                   setLoading(true);
+                                   await api.post(`/proposals/${proposal.id}/milestones/${m.id}/resolve-dispute`, { resolution: 'RELEASE' });
+                                   onAction();
+                                } catch (err) {
+                                   alert('Resolution failed');
+                                } finally {
+                                   setLoading(false);
+                                }
+                             }
+                          }}
+                          className="text-[10px] bg-emerald-600 text-white px-2 py-1 rounded font-bold hover:bg-emerald-700 transition-all"
+                        >
+                           Resolve & Release
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>

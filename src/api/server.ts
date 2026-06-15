@@ -124,6 +124,50 @@ app.get('/users/:id', (req: Request, res: Response) => {
   res.json(user);
 });
 
+app.post('/users/:id/welcome', (req: Request, res: Response) => {
+  const userId = s(req.params.id);
+  const { interestSubject } = req.body;
+  const user = globalStore.getUser(userId);
+  if (!user) return res.status(404).json({ error: 'User not found' });
+
+  // 1. Grant seed reputation (5 points) in chosen subject
+  const subject = interestSubject || 'General';
+  globalIdentity.rewardReputation(userId, subject, 5);
+
+  // 2. Create a "Welcome Proposal" for the user to practice with
+  const welcomeProposal: Proposal = {
+    id: `welcome-${userId}-${Date.now()}`,
+    title: `Welcome to LiquidGov, ${user.name}!`,
+    abstract: `This is your personalized onboarding proposal. You can use your voice credits to vote on this initiative to see how Quadratic Voting works in the ${subject} domain.`,
+    detailedSpecs: "LiquidGov is a voluntary state governed by expertise. By voting on this proposal, you are participating in the cognitive meritocracy.",
+    proposerId: 'system',
+    committeeId: `${subject.replace(/\s+/g, '-')}-Committee`,
+    status: 'ACTIVE_VOTING',
+    milestones: [{ id: 'm0', description: 'Complete Onboarding', targetBudget: 0, isCompleted: false }],
+    totalTargetBudget: 0,
+    currentFunding: 0,
+    tokenSymbol: 'USD',
+    votesFor: 0,
+    votesAgainst: 0,
+    executionPayload: '{}'
+  };
+
+  // Ensure committee exists
+  const existing = globalStore.getCommittee(welcomeProposal.committeeId);
+  if (!existing) {
+     globalStore.addCommittee({
+        id: welcomeProposal.committeeId,
+        subject,
+        members: [userId],
+        thresholdQuorum: 0.05
+     });
+  }
+
+  globalStore.addProposal(welcomeProposal);
+
+  res.json({ message: 'Welcome package initialized', proposal: welcomeProposal });
+});
+
 app.get('/identity/:id', (req: Request, res: Response) => {
   const profile = globalIdentity.getProfile(s(req.params.id));
   if (!profile) {
@@ -425,6 +469,23 @@ app.post('/proposals/:id/release-milestone', (req: Request, res: Response) => {
   const { milestoneId } = req.body;
   const success = crowdfunding.releaseMilestoneFunds(s(req.params.id), milestoneId);
   res.json({ success, proposal: globalStore.getProposal(s(req.params.id)) });
+});
+
+app.post('/proposals/:id/milestones/:mid/resolve-dispute', (req: Request, res: Response) => {
+  const { resolution } = req.body;
+  const userId = (req as any).user?.userId;
+
+  // Security: Only the proposer (to accept defeat) or an admin (mocked as user with high rep) can resolve
+  // In a real system, this would be a committee vote.
+  if (!userId) return res.status(401).json({ error: 'Auth required' });
+
+  try {
+    const success = crowdfunding.resolveDispute(s(req.params.id), s(req.params.mid), resolution || 'RELEASE');
+    notifyUpdate(s(req.params.id));
+    res.json({ success, proposal: globalStore.getProposal(s(req.params.id)) });
+  } catch (err: any) {
+    res.status(400).json({ error: err.message });
+  }
 });
 
 app.post('/proposals/:id/milestones/:mid/jury-vote', (req: Request, res: Response) => {

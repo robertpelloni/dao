@@ -290,6 +290,42 @@ export class CrowdfundingEngine {
     return true;
   }
 
+  /**
+   * Resolves a disputed milestone.
+   */
+  resolveDispute(proposalId: string, milestoneId: string, resolution: 'RELEASE' | 'REJECT'): boolean {
+    const proposal = this.store.getProposal(proposalId);
+    if (!proposal) return false;
+
+    const milestones = [...proposal.milestones];
+    const index = milestones.findIndex(m => m.id === milestoneId);
+    if (index === -1) return false;
+
+    const milestone = milestones[index]!;
+    if (!milestone.isDisputed) return false;
+
+    const committee = this.store.getCommittee(proposal.committeeId);
+    const subject = committee?.subject || 'General';
+
+    if (resolution === 'RELEASE') {
+      // Transition out of dispute and release funds
+      milestones[index] = { ...milestone, isDisputed: false, juryVotes: [], rejectionVotes: [] };
+      this.store.updateProposal(proposalId, { milestones });
+
+      // Partial reputation restoration (5 points)
+      this.identity.rewardReputation(proposal.proposerId, subject, 5);
+      console.log(`[DISPUTE RESOLVED] Milestone ${milestoneId} released. Proposer reputation partially restored.`);
+
+      return this.releaseMilestoneFunds(proposalId, milestoneId);
+    } else {
+      // Permanent rejection: do not release funds, keep isDisputed but perhaps mark as terminal failure
+      milestones[index] = { ...milestone, isCompleted: false, isDisputed: true }; // Keep as record
+      this.store.updateProposal(proposalId, { status: 'REJECTED', milestones });
+      console.log(`[DISPUTE RESOLVED] Milestone ${milestoneId} permanently rejected. Proposal halted.`);
+      return true;
+    }
+  }
+
   getContributions(proposalId: string): Contribution[] {
     return this.contributions.get(proposalId) || [];
   }

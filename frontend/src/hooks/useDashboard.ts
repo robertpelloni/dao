@@ -34,6 +34,16 @@ export function useDashboard(userId: string) {
         api.get('/treasury/balance')
       ]);
       setUser(uRes.data);
+      // Automatically trigger welcome for new users if they have no reputation yet
+      if (uRes.data && Object.keys(uRes.data.reputation).length === 0 && !silent) {
+         try {
+            await api.post(`/users/${userId}/welcome`, { interestSubject: 'General' });
+            // Re-fetch to get new proposal and rep
+            const uRetry = await api.get(`/users/${userId}`);
+            setUser(uRetry.data);
+         } catch (e) { console.warn('Welcome trigger failed', e); }
+      }
+
       // Mock verification check
       setIsVerified(userId === 'dave' || userId === 'charlie' || userId === 'alice');
       setProposals(pRes.data);
