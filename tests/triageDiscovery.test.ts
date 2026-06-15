@@ -70,7 +70,7 @@ describe('TriageAgent - Reputation-based Discovery', () => {
     user = { reputation: { 'Education': 100 } };
     const suggested = triage.suggestProposalsForUser(user, proposals, committees);
     expect(suggested.length).toBe(1);
-    expect(suggested[0].id).toBe('p2');
+    expect(suggested[0]?.id).toBe('p2');
   });
 
   test('should handle partial subject matches with lower score', () => {
@@ -78,15 +78,15 @@ describe('TriageAgent - Reputation-based Discovery', () => {
     const suggested = triage.suggestProposalsForUser(user, proposals, committees);
     // 'p1' is in 'Infrastructure -> Roads' which contains 'Infrastructure'
     expect(suggested.length).toBe(1);
-    expect(suggested[0].id).toBe('p1');
+    expect(suggested[0]?.id).toBe('p1');
   });
 
   test('should sort multiple matches by score', () => {
     user = { reputation: { 'Infrastructure -> Roads': 50, 'Education': 100 } };
     const suggested = triage.suggestProposalsForUser(user, proposals, committees);
     expect(suggested.length).toBe(2);
-    expect(suggested[0].id).toBe('p2'); // Score 100
-    expect(suggested[1].id).toBe('p1'); // Score 50
+    expect(suggested[0]?.id).toBe('p2'); // Score 100
+    expect(suggested[1]?.id).toBe('p1'); // Score 50
   });
 
   test('should return empty array if user has no reputation', () => {
