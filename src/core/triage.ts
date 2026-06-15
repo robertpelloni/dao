@@ -39,11 +39,29 @@ export class TriageAgent {
 
   /**
    * Identifies potential redundancies by comparing a draft to existing proposals.
-   * (Placeholder for future NLP expansion)
+   * Uses fuzzy matching (Jaccard similarity on word sets).
    */
   detectRedundancy(title: string, existingTitles: string[]): boolean {
     const normalized = title.toLowerCase().trim();
-    return existingTitles.some(t => t.toLowerCase().trim() === normalized);
+    const words = new Set(normalized.split(/\s+/).filter(w => w.length > 2));
+
+    if (words.size === 0) return false;
+
+    return existingTitles.some(t => {
+      const otherNormalized = t.toLowerCase().trim();
+      if (normalized === otherNormalized) return true;
+
+      const otherWords = new Set(otherNormalized.split(/\s+/).filter(w => w.length > 2));
+      if (otherWords.size === 0) return false;
+
+      // Calculate Jaccard Similarity
+      const intersection = new Set([...words].filter(w => otherWords.has(w)));
+      const union = new Set([...words, ...otherWords]);
+      const similarity = intersection.size / union.size;
+
+      // Threshold of 0.6 for redundancy warning
+      return similarity > 0.6;
+    });
   }
 
   /**

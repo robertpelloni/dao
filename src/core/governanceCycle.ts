@@ -1,7 +1,8 @@
 import { Store, globalStore } from '../models/Store';
-import { GovernanceCycle, User } from '../models/types';
+import { GovernanceCycle, User, Committee } from '../models/types';
 import { SecurityEngine } from './security';
 import { globalIdentity } from './identity';
+import { TreasuryManager } from './treasury';
 
 /**
  * Governance Cycle Manager
@@ -110,6 +111,21 @@ export class GovernanceManager {
 
   private processEndOfCycle(missedCycles: number = 1) {
     const users = this.store.getUsers();
+    const committees = this.store.getCommittees();
+    const treasury = new TreasuryManager(this.store);
+
+    // 0. Committee Sunset Logic: reallocate funds from inactive committees
+    const INACTIVITY_THRESHOLD = 60 * 24 * 60 * 60 * 1000; // 60 days
+    committees.forEach(c => {
+      const lastActivity = c.lastActivityAt || 0;
+      if (Date.now() - lastActivity > INACTIVITY_THRESHOLD && c.subject !== 'General') {
+        const balance = treasury.getPoolBalance('USD', c.subject);
+        if (balance > 0) {
+          console.log(`[SUNSET] Committee ${c.id} is inactive. Reallocating $${balance} to General pool.`);
+          treasury.reallocate(balance, 'USD', c.subject, 'General', 'Committee Inactivity Sunset');
+        }
+      }
+    });
 
     // 1. Run Sybil Detection
     const flaggedSinks = this.security.detectSybilClusters();

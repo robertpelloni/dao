@@ -38,6 +38,7 @@ export interface Committee {
   subject: string; // e.g., "Infrastructure -> Roads"
   members: string[]; // user IDs
   thresholdQuorum: number; // e.g., 0.05 for 5%
+  lastActivityAt?: number; // Timestamp of last proposal or vote
 }
 
 export interface Proposal {

@@ -293,6 +293,14 @@ app.post('/proposals', (req: Request, res: Response) => {
     executionPayload: data.executionPayload || '{}'
   };
   globalStore.addProposal(proposal);
+
+  // Update committee activity
+  const committee = globalStore.getCommittee(data.committeeId);
+  if (committee) {
+    committee.lastActivityAt = Date.now();
+    globalStore.addCommittee(committee);
+  }
+
   res.status(201).json(proposal);
 });
 
@@ -384,6 +392,13 @@ app.post('/proposals/:id/vote', (req: Request, res: Response) => {
     subject: subject || 'General',
     timestamp: Date.now()
   });
+
+  // Update committee activity
+  const committee = globalStore.getCommittee(proposal.committeeId);
+  if (committee) {
+    committee.lastActivityAt = Date.now();
+    globalStore.addCommittee(committee);
+  }
 
   globalStore.updateProposal(s(req.params.id), proposal);
   notifyUpdate(s(req.params.id));

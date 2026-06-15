@@ -36,9 +36,16 @@
 - [x] **Multi-token Matching Pool support.**
 - [x] Formalized Treasury intake API.
 - [ ] Optimized client-side ZKP generation.
-- [ ] Cross-platform script parity (Unix/Windows symmetry).
+- [x] **Cross-platform script parity (Unix/Windows symmetry).**
 
-## Phase 8: The Voluntary State (Active)
+## Phase 8: The Voluntary State (Complete)
 - [x] **Direct-to-subject voluntary tax routing.**
- - [x] **Reputation-weighted matching pool rewards (Stake-based Rep).**
-- [ ] Mobile-first PWA for citizen participation.
+- [x] **Reputation-weighted matching pool rewards (Stake-based Rep).**
+- [x] **Mobile-first PWA for citizen participation.**
+- [x] **Democratic Treasury Control (Matching pool reallocation).**
+
+## Phase 9: Verifiable Payouts & Global Scaling (Planned)
+- [ ] **On-chain Action Hooks**: Integration with L2s for trustless fund distribution.
+- [ ] **Decentralized Metadata**: IPFS/Arweave storage for proposal specs and milestone proofs.
+- [ ] **Advanced Sybil Analysis**: Graph-based machine learning for identifying complex delegation attack vectors.
+- [ ] **Cross-DAO Bridge**: Liquid delegation across multiple DAO instances.

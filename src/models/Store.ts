@@ -26,7 +26,8 @@ export class Store {
         id TEXT PRIMARY KEY,
         subject TEXT,
         members TEXT,
-        thresholdQuorum REAL
+        thresholdQuorum REAL,
+        lastActivityAt INTEGER
       );
 
       CREATE TABLE IF NOT EXISTS proposals (
@@ -135,8 +136,8 @@ export class Store {
   }
 
   addCommittee(committee: Committee) {
-    const stmt = this.db.prepare('INSERT OR REPLACE INTO committees (id, subject, members, thresholdQuorum) VALUES (?, ?, ?, ?)');
-    stmt.run(committee.id, committee.subject, JSON.stringify(committee.members), committee.thresholdQuorum);
+    const stmt = this.db.prepare('INSERT OR REPLACE INTO committees (id, subject, members, thresholdQuorum, lastActivityAt) VALUES (?, ?, ?, ?, ?)');
+    stmt.run(committee.id, committee.subject, JSON.stringify(committee.members), committee.thresholdQuorum, committee.lastActivityAt || Date.now());
   }
 
   getCommittee(id: string): Committee | undefined {
