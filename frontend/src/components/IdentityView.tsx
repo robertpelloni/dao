@@ -41,8 +41,9 @@ export const IdentityView: React.FC<IdentityViewProps> = ({ currentUser, allUser
     try {
       setLoading(true);
       // In a real app, this would involve generating a Semaphore proof on the client.
-      // Here we simulate the successful verification via API.
+      // Here we simulate the successful verification via API using Demo Mode.
       const mockProof = {
+        isMock: true,
         merkleTreeRoot: '0',
         signal: '1',
         nullifierHash: '2',

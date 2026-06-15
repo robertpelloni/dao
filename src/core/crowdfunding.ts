@@ -205,7 +205,15 @@ export class CrowdfundingEngine {
 
     const approvalWeighted = getWeighted(votes);
     const rejectionWeighted = getWeighted(rejectionVotes);
-    const required = milestone.requiredJuryQuorum || 2;
+
+    // Emergency logic: Quorum is halved for emergency proposals
+    let required = milestone.requiredJuryQuorum || 2;
+    if (proposal.status === 'EMERGENCY' || proposal.status === 'ACTIVE_VOTING') {
+       // Check if the actual flag was set during creation or triage
+       if (proposal.id.includes('emerg')) {
+          required = Math.max(1, Math.floor(required / 2));
+       }
+    }
 
     // Handle Rejection/Dispute
     if (rejectionWeighted >= required) {

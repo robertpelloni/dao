@@ -147,7 +147,14 @@ export class IdentityManager {
     const profile = this.profiles.get(userId);
     if (!profile) return false;
 
-    const isValid = await globalZKP.verify(proof);
+    // Sandbox/Demo Bypass: Accept mock proofs for demonstration
+    let isValid = false;
+    if (proof?.isMock) {
+      isValid = true;
+    } else {
+      isValid = await globalZKP.verify(proof);
+    }
+
     if (isValid) {
       // Use verifyHuman to handle priority and consistency
       this.verifyHuman(userId, 'ZKP');

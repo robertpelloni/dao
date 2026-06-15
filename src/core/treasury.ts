@@ -121,4 +121,35 @@ export class TreasuryManager {
   getTransactions(): any[] {
     return this.store.getTreasuryTransactions();
   }
+
+  /**
+   * Reallocates funds between matching pools.
+   */
+  reallocate(amount: number, tokenSymbol: string, fromSubject: string, toSubject: string, description: string = 'Reallocation'): void {
+    const fromBalance = this.getPoolBalance(tokenSymbol, fromSubject);
+    if (fromBalance < amount) throw new Error(`Insufficient funds in ${fromSubject} pool.`);
+
+    this.setMatchingPool(fromBalance - amount, tokenSymbol, fromSubject);
+    this.setMatchingPool(this.getPoolBalance(tokenSymbol, toSubject) + amount, tokenSymbol, toSubject);
+
+    this.store.addTreasuryTransaction({
+      id: `realloc-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+      tokenSymbol,
+      subject: fromSubject,
+      amount: -amount,
+      type: 'REALLOCATION_OUT',
+      description: `${description} (To ${toSubject})`,
+      timestamp: Date.now()
+    });
+
+    this.store.addTreasuryTransaction({
+      id: `realloc-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+      tokenSymbol,
+      subject: toSubject,
+      amount: amount,
+      type: 'REALLOCATION_IN',
+      description: `${description} (From ${fromSubject})`,
+      timestamp: Date.now()
+    });
+  }
 }
