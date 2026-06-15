@@ -198,7 +198,20 @@ export const IdentityView: React.FC<IdentityViewProps> = ({ currentUser, allUser
                              <h4 className="font-bold text-sm">{c.id}</h4>
                              <div className="flex justify-between items-center mt-3">
                                 <span className="text-[10px] font-black">{c.members.length} Members</span>
-                                <span className="text-[10px] font-black bg-white text-blue-600 px-2 py-0.5 rounded">Join</span>
+                          <button
+                             onClick={async (e) => {
+                                e.stopPropagation();
+                                try {
+                                   await api.post(`/committees/${c.id}/join`);
+                                   onAction();
+                                } catch (err) {
+                                   alert('Join failed');
+                                }
+                             }}
+                             className="text-[10px] font-black bg-white text-blue-600 px-2 py-0.5 rounded hover:bg-blue-50 transition-colors"
+                          >
+                             Join
+                          </button>
                              </div>
                           </div>
                        ))}

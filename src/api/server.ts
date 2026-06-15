@@ -190,6 +190,32 @@ app.get('/committees', (req: Request, res: Response) => {
   res.json(Array.from(globalStore.committees.values()));
 });
 
+app.post('/committees/:id/join', (req: Request, res: Response) => {
+  const userId = (req as any).user?.userId;
+  if (!userId) return res.status(401).json({ error: 'Auth required' });
+
+  const committee = globalStore.getCommittee(s(req.params.id));
+  if (!committee) return res.status(404).json({ error: 'Committee not found' });
+
+  if (!committee.members.includes(userId)) {
+    committee.members.push(userId);
+    globalStore.addCommittee(committee);
+  }
+  res.json(committee);
+});
+
+app.post('/committees/:id/leave', (req: Request, res: Response) => {
+  const userId = (req as any).user?.userId;
+  if (!userId) return res.status(401).json({ error: 'Auth required' });
+
+  const committee = globalStore.getCommittee(s(req.params.id));
+  if (!committee) return res.status(404).json({ error: 'Committee not found' });
+
+  committee.members = committee.members.filter(id => id !== userId);
+  globalStore.addCommittee(committee);
+  res.json(committee);
+});
+
 app.post('/committees/auto-provision', (req: Request, res: Response) => {
   const activityThreshold = req.body.threshold || 2;
   const newSubjects = globalStore.getHighActivitySubjects(activityThreshold);
