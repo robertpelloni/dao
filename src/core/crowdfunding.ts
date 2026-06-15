@@ -67,9 +67,40 @@ export class CrowdfundingEngine {
     if (!proposal) return false;
 
     if (proposal.currentFunding >= proposal.totalTargetBudget) {
-      // Calculate matching funds
-      const pContributions = this.contributions.get(proposalId) || [];
+      // Calculate matching funds from persistent store
+      const pContributions = this.store.getContributionsByProposal(proposalId);
       const match = this.treasury.calculateMatch(pContributions);
+
+      // Determine subject from committee
+      const committee = this.store.getCommittee(proposal.committeeId);
+      const subject = committee?.subject || 'General';
+
+      // Deduct from matching pool if available
+      const symbol = proposal.tokenSymbol || 'USD';
+
+      // Try subject-specific pool first, then General
+      let pool = this.treasury.getPoolBalance(symbol, subject);
+      let targetSubject = subject;
+
+      if (pool <= 0 && subject !== 'General') {
+        pool = this.treasury.getPoolBalance(symbol, 'General');
+        targetSubject = 'General';
+      }
+
+      const actualMatch = Math.min(match, pool);
+
+      if (actualMatch > 0) {
+        this.treasury.setMatchingPool(pool - actualMatch, symbol, targetSubject);
+        this.store.addTreasuryTransaction({
+          id: `tx-match-${proposalId}-${Date.now()}`,
+          tokenSymbol: symbol,
+          subject: targetSubject,
+          amount: -actualMatch,
+          type: 'MATCH_ALLOCATION',
+          description: `Matching funds for proposal ${proposalId} (routed via ${targetSubject} pool)`,
+          timestamp: Date.now()
+        });
+      }
 
       // Assign random juries for all milestones
       const verifiedHumans = this.store.getUsers().filter(u => globalIdentity.isVerified(u.id)).map(u => u.id);
@@ -81,7 +112,7 @@ export class CrowdfundingEngine {
 
       this.store.updateProposal(proposalId, {
         status: 'FUNDED',
-        currentFunding: proposal.currentFunding + match,
+        currentFunding: proposal.currentFunding + actualMatch,
         milestones: updatedMilestones
       });
       return true;

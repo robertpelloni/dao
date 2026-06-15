@@ -9,19 +9,18 @@ import { Proposal, Contribution } from '../models/types';
  * QF Match = (Sum(Sqrt(contributions)))^2 - Sum(contributions)
  */
 export class TreasuryManager {
-  // Map of token symbol to matching pool amount
-  private matchingPools: Map<string, number> = new Map();
-
   constructor(private store: Store) {
-    // Initialize default USD pool
-    this.matchingPools.set('USD', 0);
+    // Ensure default USD pool exists in persistent store if not set
+    if (this.store.getMatchingPool('USD', 'General') === 0) {
+      this.store.setMatchingPool('USD', 'General', 0);
+    }
   }
 
   /**
-   * Sets the matching pool for a specific token.
+   * Sets the matching pool for a specific token and subject.
    */
-  setMatchingPool(amount: number, tokenSymbol: string = 'USD'): void {
-    this.matchingPools.set(tokenSymbol, amount);
+  setMatchingPool(amount: number, tokenSymbol: string = 'USD', subject: string = 'General'): void {
+    this.store.setMatchingPool(tokenSymbol, subject, amount);
   }
 
   /**
@@ -47,14 +46,15 @@ export class TreasuryManager {
 
   /**
    * Allocates matching funds to all funded proposals based on their QF scores.
-   * If the total matching requirement exceeds the pool for that token, it scales proportionally.
+   * If the total matching requirement exceeds the pool for that token and subject, it scales proportionally.
    */
   allocateMatchingFunds(
     proposals: Proposal[],
     allContributions: Map<string, Contribution[]>,
-    tokenSymbol: string = 'USD'
+    tokenSymbol: string = 'USD',
+    subject: string = 'General'
   ): Record<string, number> {
-    const pool = this.matchingPools.get(tokenSymbol) || 0;
+    const pool = this.store.getMatchingPool(tokenSymbol, subject);
     const matches: Record<string, number> = {};
     let totalMatchRequired = 0;
 
@@ -79,15 +79,30 @@ export class TreasuryManager {
     return matches;
   }
 
-  getPoolBalance(tokenSymbol: string = 'USD'): number {
-    return this.matchingPools.get(tokenSymbol) || 0;
+  getPoolBalance(tokenSymbol: string = 'USD', subject: string = 'General'): number {
+    return this.store.getMatchingPool(tokenSymbol, subject);
   }
 
-  getAllPools(): Record<string, number> {
-    const result: Record<string, number> = {};
-    this.matchingPools.forEach((amount, symbol) => {
-      result[symbol] = amount;
+  getAllPools(): any[] {
+    return this.store.getAllMatchingPools();
+  }
+
+  deposit(amount: number, tokenSymbol: string = 'USD', subject: string = 'General', description: string = 'Deposit'): void {
+    const current = this.getPoolBalance(tokenSymbol, subject);
+    this.setMatchingPool(current + amount, tokenSymbol, subject);
+
+    this.store.addTreasuryTransaction({
+      id: `tx-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+      tokenSymbol,
+      subject,
+      amount,
+      type: 'DEPOSIT',
+      description,
+      timestamp: Date.now()
     });
-    return result;
+  }
+
+  getTransactions(): any[] {
+    return this.store.getTreasuryTransactions();
   }
 }

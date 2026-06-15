@@ -81,6 +81,23 @@ export class Store {
         tokenSymbol TEXT,
         timestamp INTEGER
       );
+
+      CREATE TABLE IF NOT EXISTS matching_pools (
+        tokenSymbol TEXT,
+        subject TEXT,
+        amount REAL,
+        PRIMARY KEY (tokenSymbol, subject)
+      );
+
+      CREATE TABLE IF NOT EXISTS treasury_transactions (
+        id TEXT PRIMARY KEY,
+        tokenSymbol TEXT,
+        subject TEXT,
+        amount REAL,
+        type TEXT,
+        description TEXT,
+        timestamp INTEGER
+      );
     `);
   }
 
@@ -284,8 +301,39 @@ export class Store {
     return stmt.all(userId) as Contribution[];
   }
 
+  getContributionsByProposal(proposalId: string): Contribution[] {
+    const stmt = this.db.prepare('SELECT * FROM contributions WHERE proposalId = ?');
+    return stmt.all(proposalId) as Contribution[];
+  }
+
+  setMatchingPool(tokenSymbol: string, subject: string, amount: number) {
+    const stmt = this.db.prepare('INSERT OR REPLACE INTO matching_pools (tokenSymbol, subject, amount) VALUES (?, ?, ?)');
+    stmt.run(tokenSymbol, subject, amount);
+  }
+
+  getMatchingPool(tokenSymbol: string, subject: string = 'General'): number {
+    const stmt = this.db.prepare('SELECT amount FROM matching_pools WHERE tokenSymbol = ? AND subject = ?');
+    const row = stmt.get(tokenSymbol, subject) as any;
+    return row ? row.amount : 0;
+  }
+
+  getAllMatchingPools(): any[] {
+    const stmt = this.db.prepare('SELECT * FROM matching_pools');
+    return stmt.all();
+  }
+
+  addTreasuryTransaction(tx: { id: string; tokenSymbol: string; subject: string; amount: number; type: string; description: string; timestamp: number }) {
+    const stmt = this.db.prepare('INSERT INTO treasury_transactions (id, tokenSymbol, subject, amount, type, description, timestamp) VALUES (?, ?, ?, ?, ?, ?, ?)');
+    stmt.run(tx.id, tx.tokenSymbol, tx.subject, tx.amount, tx.type, tx.description, tx.timestamp);
+  }
+
+  getTreasuryTransactions(): any[] {
+    const stmt = this.db.prepare('SELECT * FROM treasury_transactions ORDER BY timestamp DESC');
+    return stmt.all();
+  }
+
   clear() {
-    this.db.exec('DELETE FROM users; DELETE FROM committees; DELETE FROM proposals; DELETE FROM governance_cycles; DELETE FROM tasks; DELETE FROM votes; DELETE FROM contributions;');
+    this.db.exec('DELETE FROM users; DELETE FROM committees; DELETE FROM proposals; DELETE FROM governance_cycles; DELETE FROM tasks; DELETE FROM votes; DELETE FROM contributions; DELETE FROM matching_pools; DELETE FROM treasury_transactions;');
   }
 }
 

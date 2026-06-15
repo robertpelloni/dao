@@ -32,8 +32,13 @@
 - [x] **Security Engine: Graph-based Sybil Detection cluster analysis.**
 - [x] Autonomous Execution Watchdog.
 
-## Phase 7: Infrastructure & Scalability (Active)
-- [ ] **Multi-token Matching Pool support.**
+## Phase 7: Infrastructure & Scalability (Complete)
+- [x] **Multi-token Matching Pool support.**
+- [x] Formalized Treasury intake API.
 - [ ] Optimized client-side ZKP generation.
-- [ ] Formalized Treasury intake API.
 - [ ] Cross-platform script parity (Unix/Windows symmetry).
+
+## Phase 8: The Voluntary State (Active)
+- [ ] **Direct-to-subject voluntary tax routing.**
+- [ ] Reputation-weighted matching pool rewards.
+- [ ] Mobile-first PWA for citizen participation.

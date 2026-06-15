@@ -41,7 +41,7 @@ app.use(express.json());
  * JWT Authentication Middleware
  */
 const authenticateToken = (req: Request, res: Response, next: any) => {
-  const skipPaths = ['/health', '/summary', '/proposals', '/committees', '/users', '/auth/login', '/governance/trends', '/governance/cycles', '/governance/cycle', '/tasks'];
+  const skipPaths = ['/health', '/summary', '/proposals', '/committees', '/users', '/auth/login', '/governance/trends', '/governance/cycles', '/governance/cycle', '/tasks', '/treasury/balance', '/treasury/transactions'];
   const publicPostPaths = ['/proposals/triage'];
 
   if (skipPaths.includes(req.path) && req.method === 'GET') return next();
@@ -433,6 +433,39 @@ app.post('/governance/transition-cycle', (req: Request, res: Response) => {
   } catch (err: any) {
     res.status(400).json({ error: err.message });
   }
+});
+
+// --- Treasury Endpoints ---
+
+app.get('/treasury/balance/:token', (req: Request, res: Response) => {
+  const subject = s(req.query.subject) || 'General';
+  const balance = crowdfunding.getTreasury().getPoolBalance(s(req.params.token), subject);
+  res.json({ token: req.params.token, subject, balance });
+});
+
+app.get('/treasury/balance', (req: Request, res: Response) => {
+  const pools = crowdfunding.getTreasury().getAllPools();
+  res.json(pools);
+});
+
+app.get('/treasury/transactions', (req: Request, res: Response) => {
+  const txs = crowdfunding.getTreasury().getTransactions();
+  res.json(txs);
+});
+
+app.post('/treasury/deposit', (req: Request, res: Response) => {
+  const { amount, tokenSymbol, subject, description } = req.body;
+  if (!amount) return res.status(400).json({ error: 'Amount required' });
+
+  const targetSubject = subject || 'General';
+  const targetSymbol = tokenSymbol || 'USD';
+
+  crowdfunding.getTreasury().deposit(Number(amount), targetSymbol, targetSubject, description || 'Voluntary Contribution');
+
+  // Notify clients about treasury update
+  io.emit('TREASURY_UPDATED', { tokenSymbol: targetSymbol, subject: targetSubject });
+
+  res.json({ message: 'Deposit successful', balance: crowdfunding.getTreasury().getPoolBalance(targetSymbol, targetSubject) });
 });
 
 // --- Task Endpoints ---

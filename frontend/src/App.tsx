@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Layout, Globe, Users, FileText, Shield, RefreshCw, ChevronLeft, Activity } from 'lucide-react'
+import { Layout, Globe, Users, FileText, Shield, RefreshCw, ChevronLeft, Activity, Landmark } from 'lucide-react'
 import { IdentityWidget } from './components/IdentityWidget.js'
 import { ProposalList } from './components/ProposalList.js'
 import { ActionPanel } from './components/ActionPanel.js'
@@ -7,6 +7,7 @@ import { ProposalForm } from './components/ProposalForm.js'
 import { CommitteeList } from './components/CommitteeList.js'
 import { IdentityView } from './components/IdentityView.js'
 import { HealthDashboard } from './components/HealthDashboard.js'
+import { TreasuryDashboard } from './components/TreasuryDashboard.js'
 import TaskMonitor from './components/TaskMonitor.js'
 import { useDashboard } from './hooks/useDashboard.js'
 import { Milestone } from '../../src/models/types.js'
@@ -89,6 +90,13 @@ function App() {
           >
             <Shield size={18} />
             <span>My Identity</span>
+          </button>
+          <button
+            onClick={() => { setActiveTab('treasury'); setShowForm(false); setIsSidebarOpen(false); }}
+            className={`flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all ${activeTab === 'treasury' ? 'bg-blue-600 text-white shadow-blue-200 shadow-lg' : 'hover:bg-gray-50 text-gray-500'}`}
+          >
+            <Landmark size={18} />
+            <span>Treasury</span>
           </button>
           <button
             onClick={() => { setActiveTab('health'); setShowForm(false); setIsSidebarOpen(false); }}
@@ -237,6 +245,8 @@ function App() {
                    <CommitteeList committees={committees} />
                 ) : activeTab === 'identity' ? (
                    <IdentityView currentUser={user} allUsers={allUsers} powerBreakdown={powerBreakdown} suggestedCommittees={suggestedCommittees} onAction={refresh} />
+                ) : activeTab === 'treasury' ? (
+                   <TreasuryDashboard onAction={refresh} />
                 ) : activeTab === 'autonomous' ? (
                    <TaskMonitor />
                 ) : (

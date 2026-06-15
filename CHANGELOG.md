@@ -1,31 +1,24 @@
-## [1.0.10] - 2026-06-07
-## [1.0.10] - 2026-06-07
-### Added
-- Automated Protocol Sync and Branch Reconciliation.
-
-## [1.0.7] - 2026-06-07
-## [1.0.7] - 2026-06-07
-### Added
-- Automated Protocol Sync and Branch Reconciliation.
-
-## [1.0.6] - 2026-06-07
-## [1.0.6] - 2026-06-07
-### Added
-- Automated Protocol Sync and Branch Reconciliation.
-
-## [1.0.5] - 2026-06-07
-## [1.0.5] - 2026-06-07
-### Added
-- Automated Protocol Sync and Branch Reconciliation.
-
-## [1.0.4] - 2026-06-07
-## [1.0.4] - 2026-06-07
-### Added
-- Automated Protocol Sync and Branch Reconciliation.
-
 # Changelog
 
 All notable changes to this project will be documented in this file.
+
+## [1.0.12] - 2026-06-15
+### Added
+- **Targeted Voluntary Taxation:** citizens can now route their voluntary tax to specific committees (subjects).
+- **Intelligent Match Routing:** `CrowdfundingEngine` automatically pulls from subject-specific pools first, falling back to 'General'.
+- **Enhanced Treasury Dashboard:** Added subject breakdown cards and transaction filtering.
+- **Subject-Aware API:** Treasury endpoints now support subject-based querying and routing.
+
+## [1.0.11] - 2026-06-07
+### Added
+- **Voluntary Tax Infrastructure:** citizens can now voluntarily fund matching pools.
+- **Treasury Dashboard:** UI for auditing multi-token matching pools and transaction history.
+- **Persistent Treasury:** Added `matching_pools` and `treasury_transactions` tables to SQLite store.
+- **Automated Match Allocation:** `CrowdfundingEngine` now automatically deducts matching funds from the treasury during proposal finalization.
+
+## [1.0.10] - 2026-06-07
+### Added
+- Automated Protocol Sync and Branch Reconciliation.
 
 ## [1.0.5] - 2026-06-05
 ### Added
