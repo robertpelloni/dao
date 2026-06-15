@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { User, Committee } from '../../../src/models/types.js';
+import { User, Committee, Proposal } from '../../../src/models/types.js';
 import { IdentityProfile } from '../../../src/core/identity.js';
 import { ShieldCheck, UserPlus, Fingerprint, Award, GitGraph, Users, UserCheck, Key } from 'lucide-react';
 import api from '../api/client.js';
@@ -10,10 +10,11 @@ interface IdentityViewProps {
   allUsers: User[];
   powerBreakdown: Record<string, number>;
   suggestedCommittees: Committee[];
+  suggestedProposals: Proposal[];
   onAction: () => void;
 }
 
-export const IdentityView: React.FC<IdentityViewProps> = ({ currentUser, allUsers, powerBreakdown, suggestedCommittees, onAction }) => {
+export const IdentityView: React.FC<IdentityViewProps> = ({ currentUser, allUsers, powerBreakdown, suggestedCommittees, suggestedProposals, onAction }) => {
   const [profiles, setProfiles] = useState<Record<string, IdentityProfile>>({});
   const [loading, setLoading] = useState(false);
 
@@ -151,27 +152,55 @@ export const IdentityView: React.FC<IdentityViewProps> = ({ currentUser, allUser
         </section>
       )}
 
-      {/* Suggested Committees */}
-      {suggestedCommittees.length > 0 && (
+      {/* Discovery Section */}
+      {(suggestedCommittees.length > 0 || suggestedProposals.length > 0) && (
         <section className="bg-blue-600 rounded-3xl p-8 shadow-xl text-white relative overflow-hidden">
            <Users className="absolute -right-8 -bottom-8 text-white/10" size={200} />
-           <div className="relative z-10">
-              <h3 className="text-xl font-black mb-6 flex items-center gap-2">
-                 <Users size={24} />
-                 Suggested Committees
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                 {suggestedCommittees.map(c => (
-                    <div key={c.id} className="bg-white/10 backdrop-blur-md border border-white/20 p-4 rounded-2xl hover:bg-white/20 transition-all cursor-pointer">
-                       <p className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-200 mb-1">{c.subject}</p>
-                       <h4 className="font-bold text-sm">{c.id}</h4>
-                       <div className="flex justify-between items-center mt-3">
-                          <span className="text-[10px] font-black">{c.members.length} Members</span>
-                          <span className="text-[10px] font-black bg-white text-blue-600 px-2 py-0.5 rounded">Join</span>
-                       </div>
+           <div className="relative z-10 space-y-8">
+              {suggestedProposals.length > 0 && (
+                 <div>
+                    <h3 className="text-xl font-black mb-6 flex items-center gap-2">
+                       <ShieldCheck size={24} />
+                       Recommended Proposals
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                       {suggestedProposals.map(p => (
+                          <div key={p.id} className="bg-white/10 backdrop-blur-md border border-white/20 p-6 rounded-2xl hover:bg-white/20 transition-all">
+                             <div className="flex justify-between items-start mb-2">
+                                <span className="text-[10px] font-black uppercase tracking-widest text-blue-200">{p.committeeId}</span>
+                                <span className="text-[10px] font-black bg-blue-400 text-white px-2 py-0.5 rounded">High Rep Match</span>
+                             </div>
+                             <h4 className="font-bold text-lg mb-2">{p.title}</h4>
+                             <p className="text-sm text-blue-100 line-clamp-2 mb-4">{p.abstract}</p>
+                             <button className="w-full bg-white text-blue-600 font-black py-2 rounded-xl text-xs uppercase tracking-widest">
+                                Review & Vote
+                             </button>
+                          </div>
+                       ))}
                     </div>
-                 ))}
-              </div>
+                 </div>
+              )}
+
+              {suggestedCommittees.length > 0 && (
+                 <div>
+                    <h3 className="text-xl font-black mb-6 flex items-center gap-2">
+                       <Users size={24} />
+                       Suggested Committees
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                       {suggestedCommittees.map(c => (
+                          <div key={c.id} className="bg-white/10 backdrop-blur-md border border-white/20 p-4 rounded-2xl hover:bg-white/20 transition-all cursor-pointer">
+                             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-200 mb-1">{c.subject}</p>
+                             <h4 className="font-bold text-sm">{c.id}</h4>
+                             <div className="flex justify-between items-center mt-3">
+                                <span className="text-[10px] font-black">{c.members.length} Members</span>
+                                <span className="text-[10px] font-black bg-white text-blue-600 px-2 py-0.5 rounded">Join</span>
+                             </div>
+                          </div>
+                       ))}
+                    </div>
+                 </div>
+              )}
            </div>
         </section>
       )}

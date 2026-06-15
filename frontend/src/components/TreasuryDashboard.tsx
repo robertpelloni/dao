@@ -86,7 +86,7 @@ export const TreasuryDashboard: React.FC<TreasuryDashboardProps> = ({ onAction }
           <div className="flex flex-col md:flex-row md:items-end gap-4 md:gap-12">
             <div>
               <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Total Voluntary Capital (USD)</p>
-              <p className="text-4xl md:text-6xl font-black">${totalUSD.toLocaleString()}</p>
+              <p className="text-5xl md:text-6xl font-black">${totalUSD.toLocaleString()}</p>
             </div>
             <div className="flex gap-8 border-l border-slate-700 pl-8 hidden md:flex">
               <div>
@@ -195,7 +195,7 @@ export const TreasuryDashboard: React.FC<TreasuryDashboardProps> = ({ onAction }
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
                   placeholder="0.00"
-                  className="w-full bg-blue-700/50 border border-blue-400/30 rounded-xl px-4 py-3 text-white placeholder-blue-300/50 font-bold focus:outline-none focus:ring-2 focus:ring-white/20 transition-all"
+                  className="w-full bg-blue-700/50 border border-blue-400/30 rounded-xl px-4 py-4 sm:py-3 text-white placeholder-blue-300/50 font-bold focus:outline-none focus:ring-2 focus:ring-white/20 transition-all text-lg sm:text-base"
                   required
                 />
               </div>

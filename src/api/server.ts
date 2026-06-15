@@ -280,13 +280,40 @@ app.get('/proposals/:id', (req: Request, res: Response) => {
   res.json(proposal);
 });
 
+app.get('/proposals/suggested/:userId', (req: Request, res: Response) => {
+  const userId = s(req.params.userId);
+  const authedId = (req as any).user?.userId;
+
+  // Security: Prevent viewing other users' suggestions unless it's a public request (optional)
+  // For now, we enforce that the requester must be the owner or we skip specific ranking.
+  if (authedId && userId !== authedId) {
+    return res.status(403).json({ error: 'Unauthorized' });
+  }
+
+  const user = globalStore.getUser(userId);
+  if (!user) return res.status(404).json({ error: 'User not found' });
+
+  const allProposals = globalStore.getProposals();
+  const committees = Array.from(globalStore.committees.values());
+  const suggested = globalTriage.suggestProposalsForUser(user, allProposals, committees);
+
+  res.json(suggested);
+});
+
 app.post('/proposals/:id/transition', (req: Request, res: Response) => {
   const { status } = req.body;
   const proposal = globalStore.getProposal(s(req.params.id));
   if (!proposal) return res.status(404).json({ error: 'Proposal not found' });
 
   try {
-    const updated = transitionProposal(proposal, status);
+    let updated = transitionProposal(proposal, status);
+
+    // Fast-track logic for Emergency proposals:
+    // Automatically transition to ACTIVE_VOTING if it hits EMERGENCY state.
+    if (status === 'EMERGENCY') {
+      updated = transitionProposal(updated, 'ACTIVE_VOTING');
+    }
+
     globalStore.updateProposal(s(req.params.id), updated);
     res.json(updated);
   } catch (err: any) {
@@ -360,7 +387,13 @@ app.post('/proposals/:id/release-milestone', (req: Request, res: Response) => {
 });
 
 app.post('/proposals/:id/milestones/:mid/jury-vote', (req: Request, res: Response) => {
-  const { userId, action } = req.body;
+  const { action } = req.body;
+  const userId = (req as any).user?.userId;
+
+  if (!userId) {
+    return res.status(401).json({ error: 'Authentication required' });
+  }
+
   try {
     crowdfunding.voteOnMilestone(s(req.params.id), s(req.params.mid), userId, action || 'APPROVE');
     notifyUpdate(s(req.params.id));

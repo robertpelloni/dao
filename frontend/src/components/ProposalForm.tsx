@@ -127,6 +127,59 @@ export const ProposalForm: React.FC<ProposalFormProps> = ({ userId, onSuccess, o
             </select>
           </div>
 
+          <div className="flex items-center gap-3 p-4 bg-red-50 border border-red-100 rounded-2xl">
+             <div className="flex-1">
+                <p className="text-[10px] font-black uppercase text-red-600 tracking-widest mb-1">Emergency Override</p>
+                <p className="text-xs font-medium text-red-800 leading-tight">Fast-track this proposal directly to active voting for critical issues.</p>
+             </div>
+             <button
+                type="button"
+                onClick={async () => {
+                   if (!title || !abstract) {
+                      alert('Title and Abstract required for emergency proposals.');
+                      return;
+                   }
+                   if (confirm('Are you sure? Emergency proposals bypass standard sponsorship and go straight to active voting.')) {
+                      setLoading(true);
+                      try {
+                        const budget = milestones.reduce((acc, m) => acc + (m.targetBudget || 0), 0);
+                        const proposal: Partial<Proposal> = {
+                          id: `prop-emerg-${Date.now()}`,
+                          title,
+                          abstract,
+                          detailedSpecs: specs,
+                          proposerId: userId,
+                          committeeId,
+                          totalTargetBudget: budget,
+                          status: 'EMERGENCY', // Will be fast-tracked by API
+                          milestones: milestones.map((m, i) => ({
+                            ...m,
+                            id: `m-${i}`,
+                            description: m.description || '',
+                            targetBudget: m.targetBudget || 0,
+                            isCompleted: false,
+                            juryVotes: [],
+                            requiredJuryQuorum: 3
+                          })) as Milestone[],
+                          executionPayload: '{}'
+                        };
+                        await api.post('/proposals', proposal);
+                        // Trigger fast-track transition
+                        await api.post(`/proposals/${proposal.id}/transition`, { status: 'EMERGENCY' });
+                        onSuccess();
+                      } catch (err) {
+                        alert('Emergency submission failed');
+                      } finally {
+                        setLoading(false);
+                      }
+                   }
+                }}
+                className="bg-red-600 text-white px-4 py-2 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-red-200 hover:bg-red-700 transition-all"
+             >
+                Activate
+             </button>
+          </div>
+
           <div className="space-y-2">
             <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Abstract Summary</label>
             {redundancyWarning && (

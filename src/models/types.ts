@@ -4,6 +4,7 @@
 
 export type ProposalStatus =
   | 'DRAFT'
+  | 'EMERGENCY'
   | 'SPONSORED'
   | 'ACTIVE_VOTING'
   | 'FUNDED'

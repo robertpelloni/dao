@@ -1,3 +1,15 @@
+## [1.0.52] - 2026-06-15
+## [1.0.52] - 2026-06-15
+### Added
+- Automated Protocol Sync and Branch Reconciliation.
+
+## [1.0.34] - 2026-06-15
+### Added
+- **Emergency Proposal System**: Added fast-track status for critical infrastructure/safety issues with immediate voting activation.
+- **Mobile PWA Support**: Enhanced frontend for mobile-first use, including offline capabilities and responsive UI refinements for smaller screens.
+- **Reputation-based Discovery**: Implemented an intelligent suggestion engine that ranks proposals for users based on their subject-specific reputation.
+- **Vite Plugin PWA**: Integrated PWA plugin for "Add to Home Screen" and persistent citizen engagement.
+
 ## [1.0.25] - 2026-06-15
 ## [1.0.25] - 2026-06-15
 ### Added

@@ -16,7 +16,7 @@ function App() {
   const [activeTab, setActiveTab] = useState('proposals')
   const [showForm, setShowForm] = useState(false)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
-  const { user, isVerified, proposals, committees, suggestedCommittees, allUsers, currentCycle, powerBreakdown, selectedProposal, setSelectedProposalId, loading, refresh } = useDashboard('alice')
+  const { user, isVerified, proposals, committees, suggestedCommittees, suggestedProposals, allUsers, currentCycle, powerBreakdown, selectedProposal, setSelectedProposalId, loading, refresh } = useDashboard('alice')
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -244,7 +244,7 @@ function App() {
                 ) : activeTab === 'committees' ? (
                    <CommitteeList committees={committees} />
                 ) : activeTab === 'identity' ? (
-                   <IdentityView currentUser={user} allUsers={allUsers} powerBreakdown={powerBreakdown} suggestedCommittees={suggestedCommittees} onAction={refresh} />
+                   <IdentityView currentUser={user} allUsers={allUsers} powerBreakdown={powerBreakdown} suggestedCommittees={suggestedCommittees} suggestedProposals={suggestedProposals} onAction={refresh} />
                 ) : activeTab === 'treasury' ? (
                    <TreasuryDashboard onAction={refresh} />
                 ) : activeTab === 'autonomous' ? (

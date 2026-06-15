@@ -105,7 +105,7 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({ proposal, user, onActi
       <div className="p-6 space-y-8">
         {/* Voting Section */}
         <section>
-          <div className="flex justify-between items-center mb-4">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-4">
             <h4 className="font-bold flex items-center gap-2 text-slate-800">
               <CheckCircle2 size={18} className="text-blue-500" />
               Quadratic Voting
@@ -120,21 +120,21 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({ proposal, user, onActi
               min="1"
               value={voteCount}
               onChange={(e) => setVoteCount(parseInt(e.target.value) || 1)}
-              className="flex-1 border rounded-xl px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
+              className="flex-1 border rounded-xl px-4 py-3 sm:py-2 text-lg sm:text-base focus:ring-2 focus:ring-blue-500 outline-none"
             />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <button
               disabled={loading}
               onClick={() => handleVote(true)}
-              className="flex items-center justify-center gap-2 bg-green-600 text-white font-bold py-2.5 rounded-xl hover:bg-green-700 transition-colors disabled:opacity-50"
+              className="flex items-center justify-center gap-2 bg-green-600 text-white font-bold py-4 sm:py-2.5 rounded-xl hover:bg-green-700 transition-colors disabled:opacity-50 text-lg sm:text-base"
             >
               <ThumbsUp size={18} /> Support
             </button>
             <button
               disabled={loading}
               onClick={() => handleVote(false)}
-              className="flex items-center justify-center gap-2 bg-red-600 text-white font-bold py-2.5 rounded-xl hover:bg-red-700 transition-colors disabled:opacity-50"
+              className="flex items-center justify-center gap-2 bg-red-600 text-white font-bold py-4 sm:py-2.5 rounded-xl hover:bg-red-700 transition-colors disabled:opacity-50 text-lg sm:text-base"
             >
               <ThumbsDown size={18} /> Oppose
             </button>
@@ -190,7 +190,7 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({ proposal, user, onActi
               min="1"
               value={contribution}
               onChange={(e) => setContribution(parseInt(e.target.value) || 1)}
-              className="flex-1 border rounded-xl px-4 py-2 focus:ring-2 focus:ring-emerald-500 outline-none"
+              className="flex-1 border rounded-xl px-4 py-3 sm:py-2 text-lg sm:text-base focus:ring-2 focus:ring-emerald-500 outline-none"
             />
           </div>
           {matchEstimate && (
@@ -209,7 +209,7 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({ proposal, user, onActi
           <button
             disabled={loading}
             onClick={handleContribute}
-            className="w-full bg-emerald-600 text-white font-bold py-2.5 rounded-xl hover:bg-emerald-700 transition-colors disabled:opacity-50"
+            className="w-full bg-emerald-600 text-white font-bold py-4 sm:py-2.5 rounded-xl hover:bg-emerald-700 transition-colors disabled:opacity-50 text-lg sm:text-base"
           >
             Contribute Funds
           </button>

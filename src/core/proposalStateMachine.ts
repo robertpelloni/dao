@@ -4,7 +4,8 @@ import { Proposal, ProposalStatus } from '../models/types';
  * Valid state transitions for a Proposal.
  */
 const VALID_TRANSITIONS: Record<ProposalStatus, ProposalStatus[]> = {
-  'DRAFT': ['SPONSORED'],
+  'DRAFT': ['SPONSORED', 'EMERGENCY'],
+  'EMERGENCY': ['ACTIVE_VOTING', 'REJECTED'],
   'SPONSORED': ['ACTIVE_VOTING', 'REJECTED'],
   'ACTIVE_VOTING': ['FUNDED', 'REJECTED'],
   'FUNDED': ['IN_PROGRESS', 'REJECTED'], // Can be rejected if found fraudulent before starting
