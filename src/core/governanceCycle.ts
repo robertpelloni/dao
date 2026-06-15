@@ -153,18 +153,28 @@ export class GovernanceManager {
     for (const user of users) {
       // 2. Reputation Decay (Use SecurityEngine for automated erosion)
       const newReputation: Record<string, number> = {};
+      let totalRep = 0;
       Object.entries(user.reputation).forEach(([subject, value]) => {
-        newReputation[subject] = this.security.calculateReputationDecay(value, missedCycles);
+        const decayed = this.security.calculateReputationDecay(value, missedCycles);
+        newReputation[subject] = decayed;
+        totalRep += decayed;
       });
 
-      // 3. Voice Credit Refresh (Refill to base 100 or matching new rules)
+      // 3. Voice Credit Refresh (Refill to base 100)
+      // 4. Meritocratic Stipend: 1 extra credit per 5 rep points, capped at 50 bonus.
+      const bonus = Math.min(50, Math.floor(totalRep / 5));
+      const refillAmount = 100 + bonus;
+
       const updatedUser: User = {
         ...user,
         reputation: newReputation,
-        voiceCredits: Math.max(user.voiceCredits, 100) // Citizens get a baseline refill
+        voiceCredits: Math.max(user.voiceCredits, refillAmount)
       };
 
       this.store.addUser(updatedUser);
+      if (bonus > 0) {
+        console.log(`[GOVERNANCE] User ${user.id} received ${bonus} bonus merit credits.`);
+      }
     }
   }
 }

@@ -236,7 +236,7 @@ export class CrowdfundingEngine {
    * Release funds for a specific milestone.
    * Only works if proposal is FUNDED or IN_PROGRESS.
    */
-  releaseMilestoneFunds(proposalId: string, milestoneId: string): boolean {
+  releaseMilestoneFunds(proposalId: string, milestoneId: string, bypassQuorum: boolean = false): boolean {
     const proposal = this.store.getProposal(proposalId);
     if (!proposal) return false;
 
@@ -248,16 +248,18 @@ export class CrowdfundingEngine {
     const subject = committee?.subject || 'General';
     const votes = milestone.juryVotes || [];
 
-    let weightedTotal = 0;
-    votes.forEach(vid => {
-      const vUser = this.store.getUser(vid);
-      const rep = vUser?.reputation[subject] || 0;
-      weightedTotal += (rep >= 10) ? 2 : 1;
-    });
+    if (!bypassQuorum) {
+      let weightedTotal = 0;
+      votes.forEach(vid => {
+        const vUser = this.store.getUser(vid);
+        const rep = vUser?.reputation[subject] || 0;
+        weightedTotal += (rep >= 10) ? 2 : 1;
+      });
 
-    const required = milestone.requiredJuryQuorum || 0;
-    if (weightedTotal < required) {
-      return false;
+      const required = milestone.requiredJuryQuorum || 0;
+      if (weightedTotal < required) {
+        return false;
+      }
     }
 
     // Mark milestone as completed
@@ -316,7 +318,7 @@ export class CrowdfundingEngine {
       this.identity.rewardReputation(proposal.proposerId, subject, 5);
       console.log(`[DISPUTE RESOLVED] Milestone ${milestoneId} released. Proposer reputation partially restored.`);
 
-      return this.releaseMilestoneFunds(proposalId, milestoneId);
+      return this.releaseMilestoneFunds(proposalId, milestoneId, true);
     } else {
       // Permanent rejection: do not release funds, keep isDisputed but perhaps mark as terminal failure
       milestones[index] = { ...milestone, isCompleted: false, isDisputed: true }; // Keep as record

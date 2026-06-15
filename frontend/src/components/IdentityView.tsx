@@ -169,6 +169,50 @@ export const IdentityView: React.FC<IdentityViewProps> = ({ currentUser, allUser
         </section>
       )}
 
+      {/* Active Delegations Management */}
+      {currentUser && Object.keys(currentUser.delegates).length > 0 && (
+        <section className="bg-white border rounded-3xl p-8 shadow-sm">
+           <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-black text-slate-800 flex items-center gap-2">
+                 <GitGraph size={24} className="text-blue-600" />
+                 Active Delegations
+              </h3>
+              <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">{Object.keys(currentUser.delegates).length} ACTIVE</span>
+           </div>
+           <div className="grid gap-3">
+              {Object.entries(currentUser.delegates).map(([subject, delegateId]) => {
+                 const delegateUser = allUsers.find(u => u.id === delegateId);
+                 return (
+                    <div key={subject} className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100 group hover:border-blue-200 transition-all">
+                       <div>
+                          <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-0.5">{subject}</p>
+                          <p className="font-bold text-slate-800">Delegated to: <span className="text-blue-600">{delegateUser?.name || delegateId}</span></p>
+                       </div>
+                       <button
+                         onClick={async () => {
+                            if(confirm(`Revoke delegation for ${subject}?`)) {
+                               try {
+                                  setLoading(true);
+                                  await api.delete(`/delegate/${currentUser.id}/${subject}`);
+                                  onAction();
+                               } catch (err) {
+                                  alert('Revocation failed');
+                               } finally {
+                                  setLoading(false);
+                               }
+                            }
+                         }}
+                         className="px-4 py-2 rounded-xl bg-white border border-red-100 text-red-600 text-[10px] font-black uppercase tracking-widest hover:bg-red-600 hover:text-white transition-all opacity-0 group-hover:opacity-100 shadow-sm"
+                       >
+                          Revoke
+                       </button>
+                    </div>
+                 );
+              })}
+           </div>
+        </section>
+      )}
+
       {/* Discovery Section */}
       {(suggestedCommittees.length > 0 || suggestedProposals.length > 0) && (
         <section className="bg-blue-600 rounded-3xl p-8 shadow-xl text-white relative overflow-hidden">

@@ -307,8 +307,32 @@ app.get('/committees/suggested/:userId', (req: Request, res: Response) => {
 
 app.post('/delegate', (req: Request, res: Response) => {
   const { userId, delegateId, subject } = req.body;
+  const authedId = (req as any).user?.userId;
+
+  if (authedId && userId !== authedId) {
+    return res.status(403).json({ error: 'Unauthorized delegation' });
+  }
+
   delegate(globalStore, userId, delegateId, subject);
   res.json({ message: `Delegated ${userId} -> ${delegateId} for ${subject}` });
+});
+
+app.delete('/delegate/:userId/:subject', (req: Request, res: Response) => {
+  const { userId, subject } = req.params;
+  const authedId = (req as any).user?.userId;
+
+  if (authedId && userId !== authedId) {
+    return res.status(403).json({ error: 'Unauthorized revocation' });
+  }
+
+  const user = globalStore.getUser(s(userId));
+  if (user) {
+    delete user.delegates[s(subject)];
+    globalStore.addUser(user);
+    res.json({ message: `Revoked delegation for ${subject}` });
+  } else {
+    res.status(404).json({ error: 'User not found' });
+  }
 });
 
 app.get('/power/:userId/:subject', (req: Request, res: Response) => {

@@ -147,9 +147,9 @@ export class IdentityManager {
     const profile = this.profiles.get(userId);
     if (!profile) return false;
 
-    // Sandbox/Demo Bypass: Accept mock proofs for demonstration
+    // Sandbox/Demo Bypass: Accept mock proofs for demonstration in non-production environments
     let isValid = false;
-    if (proof?.isMock) {
+    if (proof?.isMock && process.env.NODE_ENV !== 'production') {
       isValid = true;
     } else {
       isValid = await globalZKP.verify(proof);
