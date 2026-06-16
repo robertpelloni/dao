@@ -10,12 +10,13 @@ test('sidebar has expected items', async ({ page }) => {
   await expect(page.getByRole('button', { name: 'Proposals' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Committees' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'My Identity' })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Health Dashboard' })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Autonomous Tasks' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Treasury' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'System Governance' })).toBeVisible();
 });
 
-test('can navigate to autonomous tasks', async ({ page }) => {
+test('can navigate to system governance', async ({ page }) => {
   await page.goto('/');
-  await page.getByText('Autonomous Tasks').click();
-  await expect(page.getByText('Autonomous Protocol Tasks')).toBeVisible();
+  await page.getByRole('button', { name: 'System Governance' }).click();
+  await expect(page.getByText('Protocol Oversight')).toBeVisible();
+  await expect(page.getByText('Operational Health')).toBeVisible();
 });
