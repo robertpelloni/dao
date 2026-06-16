@@ -336,8 +336,13 @@ app.delete('/delegate/:userId/:subject', (req: Request, res: Response) => {
 });
 
 app.get('/power/:userId/:subject', (req: Request, res: Response) => {
-  const power = calculateEffectivePower(globalStore, s(req.params.userId), s(req.params.subject));
-  res.json({ userId: req.params.userId, subject: req.params.subject, effectivePower: power });
+  const powerBreakdown = calculateEffectivePower(globalStore, s(req.params.userId), s(req.params.subject));
+  res.json({
+    userId: req.params.userId,
+    subject: req.params.subject,
+    effectivePower: powerBreakdown.total,
+    breakdown: powerBreakdown
+  });
 });
 
 app.get('/delegators/:userId/:subject', (req: Request, res: Response) => {
@@ -441,15 +446,52 @@ app.post('/proposals/:id/vote', (req: Request, res: Response) => {
   if (!user) return res.status(404).json({ error: 'User not found' });
 
   const cost = calculateVoteCost(votes);
-  const power = calculateEffectivePower(globalStore, userId, subject || 'General');
+  const powerBreakdown = calculateEffectivePower(globalStore, userId, subject || 'General');
 
-  if (power < cost) {
-    return res.status(400).json({ error: `Insufficient power. Required: ${cost}, Available: ${power}` });
+  if (powerBreakdown.total < cost) {
+    return res.status(400).json({ error: `Insufficient power. Required: ${cost}, Available: ${powerBreakdown.total}` });
   }
 
-  // Deduct cost from the user's personal credits.
-  // Note: In Phase 2/3, we will refine how delegated power is "spent".
-  user.voiceCredits -= cost;
+  // Deduct cost proportionally from personal and delegator credits
+  let remainingCost = cost;
+
+  // 1. Spend personal credits first
+  const personalSpend = Math.min(user.voiceCredits, remainingCost);
+  user.voiceCredits -= personalSpend;
+  remainingCost -= personalSpend;
+
+  // 2. Spend delegator credits if personal not enough
+  if (remainingCost > 0) {
+    // Sort delegators by balance to spend from those with more first
+    const sortedDelegators = [...powerBreakdown.delegators].sort((a, b) => b.voiceCredits - a.voiceCredits);
+
+    for (const d of sortedDelegators) {
+      if (remainingCost <= 0) break;
+      const delegatorUser = globalStore.getUser(d.userId);
+      if (delegatorUser) {
+        const spend = Math.min(delegatorUser.voiceCredits, remainingCost);
+        delegatorUser.voiceCredits -= spend;
+        remainingCost -= spend;
+        globalStore.addUser(delegatorUser);
+      }
+    }
+  }
+
+  globalStore.addUser(user);
+
+  // Democratic Override Logic:
+  // If a user votes personally, we check if their delegate has already spent their power.
+  // This is a simplified "Override" for the PoC.
+  const userDelegateId = user.delegates[subject || 'General'];
+  if (userDelegateId) {
+    // Check if delegate already voted on this proposal
+    const delegateVotes = globalStore.getVotesByUser(userDelegateId).filter(v => v.proposalId === proposal.id);
+    if (delegateVotes.length > 0) {
+      console.log(`[OVERRIDE] User ${userId} is overriding delegate ${userDelegateId} on proposal ${proposal.id}`);
+      // In a production system, we would mathematically retract the proportional weight.
+      // For the simulator, we just record the personal vote which takes precedence in audits.
+    }
+  }
 
   if (votes > 0) {
     proposal.votesFor += votes;

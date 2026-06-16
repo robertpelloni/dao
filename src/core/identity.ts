@@ -59,9 +59,9 @@ export class IdentityManager {
 
     const breakdown: Record<string, number> = {};
     subjects.forEach(subject => {
-      const power = calculateEffectivePower(this.store, userId, subject);
-      if (power > 0) {
-        breakdown[subject] = power;
+      const powerBreakdown = calculateEffectivePower(this.store, userId, subject);
+      if (powerBreakdown.total > 0) {
+        breakdown[subject] = powerBreakdown.total;
       }
     });
 

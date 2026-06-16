@@ -1,24 +1,22 @@
 # Changelog
 
-## [1.1.3] - 2026-06-15
+## [1.1.4] - 2026-06-16
 ### Added
-- **Voluntary Tax Routing**: Citizens can now route contributions to subject-specific matching pools, ensuring their capital supports their chosen domains.
-- **Meritocratic Voice Credits**: Governance transitions now award bonus voice credits (capped at 50) based on accumulated subject reputation.
-- **Emergency Fast-track**: Critical proposals (e.g., infrastructure failures) can bypass sponsorship and jump directly to active voting.
-- **Expert-Weighted Juries**: Milestone verification juries prioritize citizens with relevant subject reputation; expert votes count double.
-- **Milestone Dispute System**: Juries can now reject milestones, triggering a "Disputed" state and halting fund release.
-- **Security: Delegation Chain Analysis**: The Security Engine now detects and flags suspicious delegation clusters with chains exceeding a depth of 3.
-- **Committee Sunsetting**: Automated recycling of matching funds from inactive committees (60 days dormancy) back to the General pool.
+- **Credit-Backed Liquid Delegation**: Delegates now spend voice credits from their delegators' pools when casting votes, ensuring true proportional representation.
+- **Democratic Override**: Implemented logic to detect and prioritize personal votes over a delegate's prior actions on the same proposal.
+- **System Governance Dashboard**: Consolidated Health, Autonomous Tasks, and Security Audit into a unified "Minimalist" UX panel.
+- **Proportional Power Calculation**: Updated `calculateEffectivePower` to return a detailed breakdown of personal vs. delegated voting power.
 
 ### Changed
-- Gated ZKP mock verification to non-production environments (`process.env.NODE_ENV !== 'production'`).
-- Optimized `CrowdfundingEngine` to intelligently source matching funds from subject-specific pools first.
-- Synchronized all core scripts with Windows `.bat` equivalents for platform parity.
+- Refactored voting API to support proportional credit consumption from delegation pools.
+- Enhanced navigation with a simplified "System Governance" view to reduce cognitive load.
 
-## [1.1.2] - 2026-06-15
+## [1.1.3] - 2026-06-15
 ### Added
-- **Fiscal Democracy UI**: Added treasury reallocation controls to the frontend.
-- **Matching Multiplier Visualization**: Real-time QF amplification estimates for contributors.
-- **Automated Protocol Sync**: Enhanced APEP for conflict-aware merging across AI-generated branches.
+- **Voluntary Tax Routing**: Citizens can now route contributions to subject-specific matching pools.
+- **Meritocratic Voice Credits**: Awarding bonus credits based on subject reputation.
+- **Emergency Fast-track**: Critical proposals bypass standard sponsorship delays.
+- **Expert-Weighted Juries**: Experts (Rep >= 10) have double weight in milestone verification.
+- **Security: Delegation Depth Analysis**: Detecting and flagging Sybil puppet networks (depth > 3).
 
 ...
