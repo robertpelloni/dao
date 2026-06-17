@@ -46,8 +46,13 @@
 - [x] Milestone Dispute Resolution System.
 - [x] Security: Delegation Chain Depth Analysis for Sybil resistance.
 
-## Phase 9: Global Scaling & Privacy (Active)
-- [ ] Optimized client-side ZKP generation (Semaphore v4).
-- [ ] Privacy-preserving Quadratic Funding.
-- [ ] Mobile PWA: Push notifications for critical votes.
-- [ ] Decentralized File Storage (IPFS/Arweave) for specs.
+## Phase 9: Global Scaling & Privacy (Complete)
+- [x] Optimized client-side ZKP generation: Persistent identity storage and async proof generation flow.
+- [x] Privacy-preserving Quadratic Funding: MACI-lite blinded contributions to prevent coercion.
+- [x] Mobile PWA Hardening: Valid iconography and real-time system notifications for critical events.
+- [x] Decentralized File Storage: Integration with mock IPFS for content-addressed specs and evidence.
+
+## Phase 10: The Sovereign Internet (Future)
+- [ ] Native Mobile App (iOS/Android) with biometric ZKP signers.
+- [ ] Cross-chain Treasury Routing (Bridge Integration).
+- [ ] Automated Jury Selection via On-chain VRF.

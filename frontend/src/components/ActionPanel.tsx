@@ -12,6 +12,7 @@ interface ActionPanelProps {
 export const ActionPanel: React.FC<ActionPanelProps> = ({ proposal, user, onAction }) => {
   const [voteCount, setVoteCount] = useState(1);
   const [contribution, setContribution] = useState(10);
+  const [isBlinded, setIsBlinded] = useState(false);
   const [matchEstimate, setMatchEstimate] = useState<{ delta: number, multiplier: number } | null>(null);
   const [loading, setLoading] = useState(false);
   const [proofUrls, setProofUrls] = useState<Record<string, string>>({});
@@ -72,7 +73,8 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({ proposal, user, onActi
       setLoading(true);
       await api.post(`/proposals/${proposal.id}/contribute`, {
         userId: user.id,
-        amount: contribution
+        amount: contribution,
+        isBlinded
       });
       setMatchEstimate(null);
       onAction();
@@ -222,12 +224,25 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({ proposal, user, onActi
                </div>
             </div>
           )}
+          <div className="flex items-center gap-2 mb-4">
+            <input
+              type="checkbox"
+              id="blinded"
+              checked={isBlinded}
+              onChange={(e) => setIsBlinded(e.target.checked)}
+              className="w-4 h-4 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500"
+            />
+            <label htmlFor="blinded" className="text-xs font-bold text-slate-600 uppercase tracking-tighter cursor-pointer">
+              Privacy-Preserving (MACI-lite)
+            </label>
+          </div>
+
           <button
             disabled={loading}
             onClick={handleContribute}
             className="w-full bg-emerald-600 text-white font-bold py-4 sm:py-2.5 rounded-xl hover:bg-emerald-700 transition-colors disabled:opacity-50 text-lg sm:text-base"
           >
-            Contribute Funds
+            {isBlinded ? 'Contribute Privately' : 'Contribute Funds'}
           </button>
         </section>
 
