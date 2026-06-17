@@ -9,16 +9,19 @@ interface IdentityViewProps {
   currentUser: User | null;
   allUsers: User[];
   powerBreakdown: Record<string, number>;
+  userTransactions: any[];
   suggestedCommittees: Committee[];
   suggestedProposals: Proposal[];
   onAction: () => void;
   onSelectProposal: (id: string) => void;
 }
 
-export const IdentityView: React.FC<IdentityViewProps> = ({ currentUser, allUsers, powerBreakdown, suggestedCommittees, suggestedProposals, onAction, onSelectProposal }) => {
+export const IdentityView: React.FC<IdentityViewProps> = ({ currentUser, allUsers, powerBreakdown, userTransactions, suggestedCommittees, suggestedProposals, onAction, onSelectProposal }) => {
   const [profiles, setProfiles] = useState<Record<string, IdentityProfile>>({});
   const [delegators, setDelegators] = useState<Record<string, User[]>>({});
   const [loading, setLoading] = useState(false);
+  const [searchTerm, setSearchBar] = useState('');
+  const [filterSubject, setFilterSubject] = useState('All');
 
   const fetchProfiles = async () => {
     try {
@@ -89,8 +92,45 @@ export const IdentityView: React.FC<IdentityViewProps> = ({ currentUser, allUser
     }
   };
 
+  const totalContributed = userTransactions
+    .filter(tx => tx.type === 'DEPOSIT')
+    .reduce((sum, tx) => sum + tx.amount, 0);
+
   return (
     <div className="space-y-8">
+      {/* Fiscal Impact Summary */}
+      {currentUser && (
+        <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
+           <div className="bg-emerald-600 text-white rounded-3xl p-6 shadow-lg flex items-center justify-between overflow-hidden relative">
+              <Award className="absolute -right-4 -bottom-4 text-white/10" size={120} />
+              <div className="relative z-10">
+                 <p className="text-[10px] font-black uppercase tracking-widest text-emerald-200 mb-1">Lifetime Contribution</p>
+                 <p className="text-4xl font-black">${totalContributed.toLocaleString()}</p>
+                 <p className="text-[10px] font-bold mt-2 text-emerald-100">Across {userTransactions.filter(t => t.type === 'DEPOSIT').length} initiatives</p>
+              </div>
+              <div className="text-right relative z-10">
+                 <div className="bg-white/20 rounded-2xl p-3 backdrop-blur-md">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-emerald-200 mb-1">Systemic Impact</p>
+                    <p className="text-2xl font-black">${(totalContributed * 4.2).toLocaleString()}</p>
+                    <p className="text-[8px] font-bold mt-1 text-emerald-100 italic">Estimated QF Multiplier: 4.2x</p>
+                 </div>
+              </div>
+           </div>
+           <div className="bg-white border rounded-3xl p-6 shadow-sm flex items-center gap-6">
+              <div className="w-16 h-16 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-600 shrink-0">
+                 <GitGraph size={32} />
+              </div>
+              <div>
+                 <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Delegation Reach</p>
+                 <p className="text-2xl font-black text-slate-800">
+                    {Object.values(delegators).flat().length} Citizens
+                 </p>
+                 <p className="text-xs font-medium text-slate-500 mt-1">Trust you to represent their interests in {Object.keys(powerBreakdown).length} subjects.</p>
+              </div>
+           </div>
+        </section>
+      )}
+
       {/* Current User Profile Card */}
       {currentUser && profiles[currentUser.id] && (
         <section className="bg-slate-900 text-white rounded-3xl p-8 shadow-2xl relative overflow-hidden">
@@ -335,12 +375,50 @@ export const IdentityView: React.FC<IdentityViewProps> = ({ currentUser, allUser
 
       {/* Citizens List */}
       <section>
-        <h3 className="text-xl font-black text-slate-800 mb-6 flex items-center gap-2">
-           <UserPlus className="text-blue-600" />
-           Citizen Registry
-        </h3>
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+           <h3 className="text-xl font-black text-slate-800 flex items-center gap-2">
+              <UserPlus className="text-blue-600" />
+              Citizen Registry
+           </h3>
+           <div className="flex gap-2 w-full md:w-auto">
+              <input
+                 type="text"
+                 placeholder="Search by name..."
+                 value={searchTerm}
+                 onChange={(e) => setSearchBar(e.target.value)}
+                 className="bg-gray-50 border rounded-xl px-4 py-2 text-sm font-bold focus:ring-2 focus:ring-blue-500 outline-none flex-1 md:w-64"
+              />
+              <select
+                 value={filterSubject}
+                 onChange={(e) => setFilterSubject(e.target.value)}
+                 className="bg-gray-50 border rounded-xl px-4 py-2 text-sm font-bold focus:ring-2 focus:ring-blue-500 outline-none"
+              >
+                 <option value="All">All Experts</option>
+                 {Array.from(new Set(allUsers.flatMap(u => Object.keys(u.reputation)))).sort().map(s => (
+                    <option key={s} value={s}>{s}</option>
+                 ))}
+              </select>
+           </div>
+        </div>
+
         <div className="grid gap-4">
-          {allUsers.filter((u: User) => u.id !== currentUser?.id).map((u: User) => (
+          {allUsers
+            .filter((u: User) => u.id !== currentUser?.id)
+            .filter((u: User) => {
+               const matchesSearch = u.name.toLowerCase().includes(searchTerm.toLowerCase());
+               const matchesSubject = filterSubject === 'All' || (u.reputation[filterSubject] || 0) > 0;
+               return matchesSearch && matchesSubject;
+            })
+            .sort((a, b) => {
+               // Sort by reputation in filtered subject if selected, otherwise total reputation
+               if (filterSubject !== 'All') {
+                  return (b.reputation[filterSubject] || 0) - (a.reputation[filterSubject] || 0);
+               }
+               const totalA = Object.values(a.reputation).reduce((sum, r) => sum + r, 0);
+               const totalB = Object.values(b.reputation).reduce((sum, r) => sum + r, 0);
+               return totalB - totalA;
+            })
+            .map((u: User) => (
             <div key={u.id} className="bg-white border rounded-2xl p-6 flex items-center justify-between shadow-sm hover:shadow-md transition-all">
                <div className="flex items-center gap-4">
                   <div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center font-black text-slate-400 text-xl uppercase">

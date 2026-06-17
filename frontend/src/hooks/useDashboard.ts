@@ -14,13 +14,14 @@ export function useDashboard(userId: string) {
   const [treasuryBalances, setTreasuryBalances] = useState<any[]>([]);
   const [currentCycle, setCurrentCycle] = useState<GovernanceCycle | null>(null);
   const [powerBreakdown, setPowerBreakdown] = useState<Record<string, number>>({});
+  const [userTransactions, setUserTransactions] = useState<any[]>([]);
   const [selectedProposalId, setSelectedProposalId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   const fetchData = useCallback(async (silent = false) => {
     try {
       if (!silent) setLoading(true);
-      const [uRes, pRes, cRes, usersRes, bRes, sRes, cyRes, spRes, tRes] = await Promise.all([
+      const [uRes, pRes, cRes, usersRes, bRes, sRes, cyRes, spRes, tRes, utRes] = await Promise.all([
         api.get(`/users/${userId}`),
         api.get('/proposals'),
         api.get('/committees'),
@@ -29,7 +30,8 @@ export function useDashboard(userId: string) {
         api.get(`/committees/suggested/${userId}`),
         api.get('/governance/cycle'),
         api.get(`/proposals/suggested/${userId}`),
-        api.get('/treasury/balance')
+        api.get('/treasury/balance'),
+        api.get(`/treasury/transactions?userId=${userId}`)
       ]);
       setUser(uRes.data);
       // Automatically trigger welcome for new users if they have no reputation yet
@@ -52,6 +54,7 @@ export function useDashboard(userId: string) {
       setPowerBreakdown(bRes.data);
       setCurrentCycle(cyRes.data);
       setTreasuryBalances(tRes.data);
+      setUserTransactions(utRes.data);
     } catch (err) {
       console.error('Failed to fetch dashboard data', err);
     } finally {
@@ -89,6 +92,7 @@ export function useDashboard(userId: string) {
     treasuryBalances,
     currentCycle,
     powerBreakdown,
+    userTransactions,
     selectedProposal,
     setSelectedProposalId,
     loading,

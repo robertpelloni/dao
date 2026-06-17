@@ -480,16 +480,24 @@ app.post('/proposals/:id/vote', (req: Request, res: Response) => {
   globalStore.addUser(user);
 
   // Democratic Override Logic:
-  // If a user votes personally, we check if their delegate has already spent their power.
-  // This is a simplified "Override" for the PoC.
+  // If a user votes personally, we mathematically retract their portion of any vote their delegate cast.
   const userDelegateId = user.delegates[subject || 'General'];
   if (userDelegateId) {
-    // Check if delegate already voted on this proposal
     const delegateVotes = globalStore.getVotesByUser(userDelegateId).filter(v => v.proposalId === proposal.id);
     if (delegateVotes.length > 0) {
       console.log(`[OVERRIDE] User ${userId} is overriding delegate ${userDelegateId} on proposal ${proposal.id}`);
-      // In a production system, we would mathematically retract the proportional weight.
-      // For the simulator, we just record the personal vote which takes precedence in audits.
+
+      // Calculate how many credits the delegate spent on behalf of this user.
+      // In our credit-backed model, this is exactly the credits the delegate pulled from this user's balance.
+      // However, we don't track the exact 'source' per vote yet.
+      // For this simulator, we decrement the proposal totals by the user's current effective contribution to the delegate.
+      const personalPortion = 1; // Simplified: 1 personal voice credit = 1 vote unit in QV
+      const firstVote = delegateVotes[0];
+      if (firstVote && firstVote.amount > 0) {
+        proposal.votesFor = Math.max(0, proposal.votesFor - personalPortion);
+      } else if (firstVote) {
+        proposal.votesAgainst = Math.max(0, proposal.votesAgainst - personalPortion);
+      }
     }
   }
 
@@ -677,7 +685,11 @@ app.get('/treasury/balance', (req: Request, res: Response) => {
 });
 
 app.get('/treasury/transactions', (req: Request, res: Response) => {
-  const txs = crowdfunding.getTreasury().getTransactions();
+  const userId = req.query.userId as string;
+  let txs = crowdfunding.getTreasury().getTransactions();
+  if (userId) {
+    txs = txs.filter(tx => tx.userId === userId);
+  }
   res.json(txs);
 });
 

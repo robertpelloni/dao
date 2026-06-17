@@ -16,7 +16,7 @@ function App() {
   const [activeTab, setActiveTab] = useState('proposals')
   const [showForm, setShowForm] = useState(false)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
-  const { user, isVerified, proposals, committees, suggestedCommittees, suggestedProposals, allUsers, treasuryBalances, currentCycle, powerBreakdown, selectedProposal, setSelectedProposalId, loading, refresh } = useDashboard('alice')
+  const { user, isVerified, proposals, committees, suggestedCommittees, suggestedProposals, allUsers, treasuryBalances, currentCycle, powerBreakdown, userTransactions, selectedProposal, setSelectedProposalId, loading, refresh } = useDashboard('alice')
 
   return (
     <div className="min-h-screen flex flex-col pb-[env(safe-area-inset-bottom)]">
@@ -241,6 +241,7 @@ function App() {
                     currentUser={user}
                     allUsers={allUsers}
                     powerBreakdown={powerBreakdown}
+                    userTransactions={userTransactions}
                     suggestedCommittees={suggestedCommittees}
                     suggestedProposals={suggestedProposals}
                     onAction={refresh}
