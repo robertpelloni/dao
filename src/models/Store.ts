@@ -45,6 +45,7 @@ export class Store {
         votesFor REAL,
         votesAgainst REAL,
         impactScore REAL,
+        isCritical INTEGER,
         executionPayload TEXT
       );
 
@@ -99,6 +100,12 @@ export class Store {
         type TEXT,
         description TEXT,
         timestamp INTEGER
+      );
+
+      CREATE TABLE IF NOT EXISTS notification_subscriptions (
+        userId TEXT PRIMARY KEY,
+        subscription TEXT,
+        updatedAt INTEGER
       );
     `);
   }
@@ -170,13 +177,13 @@ export class Store {
       INSERT OR REPLACE INTO proposals (
         id, title, abstract, detailedSpecs, proposerId, committeeId,
         status, milestones, totalTargetBudget, currentFunding, tokenSymbol,
-        votesFor, votesAgainst, impactScore, executionPayload
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        votesFor, votesAgainst, impactScore, isCritical, executionPayload
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
     stmt.run(
       proposal.id, proposal.title, proposal.abstract, proposal.detailedSpecs, proposal.proposerId, proposal.committeeId,
       proposal.status, JSON.stringify(proposal.milestones), proposal.totalTargetBudget, proposal.currentFunding, proposal.tokenSymbol || 'USD',
-      proposal.votesFor, proposal.votesAgainst, proposal.impactScore || 0, proposal.executionPayload
+      proposal.votesFor, proposal.votesAgainst, proposal.impactScore || 0, proposal.isCritical ? 1 : 0, proposal.executionPayload
     );
   }
 
@@ -186,7 +193,8 @@ export class Store {
     if (!row) return undefined;
     return {
       ...row,
-      milestones: JSON.parse(row.milestones)
+      milestones: JSON.parse(row.milestones),
+      isCritical: row.isCritical === 1
     };
   }
 
@@ -195,7 +203,8 @@ export class Store {
     const rows = stmt.all() as any[];
     return rows.map(row => ({
       ...row,
-      milestones: JSON.parse(row.milestones)
+      milestones: JSON.parse(row.milestones),
+      isCritical: row.isCritical === 1
     }));
   }
 
@@ -340,6 +349,26 @@ export class Store {
   getTreasuryTransactions(): any[] {
     const stmt = this.db.prepare('SELECT * FROM treasury_transactions ORDER BY timestamp DESC');
     return stmt.all();
+  }
+
+  addNotificationSubscription(userId: string, subscription: any) {
+    const stmt = this.db.prepare('INSERT OR REPLACE INTO notification_subscriptions (userId, subscription, updatedAt) VALUES (?, ?, ?)');
+    stmt.run(userId, JSON.stringify(subscription), Date.now());
+  }
+
+  getNotificationSubscription(userId: string): any | undefined {
+    const stmt = this.db.prepare('SELECT subscription FROM notification_subscriptions WHERE userId = ?');
+    const row = stmt.get(userId) as any;
+    return row ? JSON.parse(row.subscription) : undefined;
+  }
+
+  getAllNotificationSubscriptions(): { userId: string, subscription: any }[] {
+    const stmt = this.db.prepare('SELECT * FROM notification_subscriptions');
+    const rows = stmt.all() as any[];
+    return rows.map(r => ({
+      userId: r.userId,
+      subscription: JSON.parse(r.subscription)
+    }));
   }
 
   clear() {

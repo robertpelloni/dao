@@ -67,11 +67,23 @@ export function useDashboard(userId: string) {
   }, [fetchData]);
 
   useEffect(() => {
+    // Request Notification permission
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+
     const socket = io();
 
-    socket.on('PROPOSAL_UPDATED', () => {
+    socket.on('PROPOSAL_UPDATED', (data: any) => {
       console.log('Proposal updated, refreshing...');
       fetchData(true);
+
+      if (data.isCritical && Notification.permission === 'granted') {
+        new Notification('Critical Governance Event', {
+          body: `A high-priority proposal requires your attention: ${data.proposalId}`,
+          icon: '/favicon.ico'
+        });
+      }
     });
 
     return () => {

@@ -56,6 +56,7 @@ export interface Proposal {
   votesFor: number;
   votesAgainst: number;
   impactScore?: number; // Calculated by AI/Heuristics
+  isCritical?: boolean; // If true, triggers urgent notifications
   executionPayload: string; // JSON or script hash
 }
 

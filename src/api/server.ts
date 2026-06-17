@@ -95,7 +95,11 @@ io.on('connection', (socket) => {
 });
 
 const notifyUpdate = (proposalId: string) => {
-  io.emit('PROPOSAL_UPDATED', { proposalId });
+  const proposal = globalStore.getProposal(proposalId);
+  io.emit('PROPOSAL_UPDATED', {
+    proposalId,
+    isCritical: proposal?.isCritical || false
+  });
 };
 
 // Helper to ensure param is string
@@ -368,6 +372,7 @@ app.post('/proposals', (req: Request, res: Response) => {
     tokenSymbol: data.tokenSymbol || 'USD',
     votesFor: 0,
     votesAgainst: 0,
+    isCritical: !!data.isCritical,
     executionPayload: data.executionPayload || '{}'
   };
   globalStore.addProposal(proposal);
@@ -729,6 +734,19 @@ app.post('/treasury/deposit', (req: Request, res: Response) => {
   io.emit('TREASURY_UPDATED', { tokenSymbol: targetSymbol, subject: targetSubject });
 
   res.json({ message: 'Deposit successful', balance: crowdfunding.getTreasury().getPoolBalance(targetSymbol, targetSubject) });
+});
+
+// --- Notification Endpoints ---
+
+app.post('/notifications/subscribe', (req: Request, res: Response) => {
+  const { subscription } = req.body;
+  const userId = (req as any).user?.userId;
+
+  if (!userId) return res.status(401).json({ error: 'Auth required' });
+  if (!subscription) return res.status(400).json({ error: 'Subscription object required' });
+
+  globalStore.addNotificationSubscription(userId, subscription);
+  res.json({ message: 'Subscription saved successfully' });
 });
 
 // --- Task Endpoints ---
