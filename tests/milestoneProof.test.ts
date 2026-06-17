@@ -33,7 +33,8 @@ describe('Milestone Proof of Work', () => {
     engine.submitMilestoneProof('prop-1', 'm1', 'https://proof.url/123');
 
     const updated = globalStore.getProposal('prop-1');
-    expect(updated?.milestones[0].completionProof).toBe('https://proof.url/123');
+    expect(updated).toBeDefined();
+    expect(updated?.milestones[0]?.completionProof).toBe('https://proof.url/123');
   });
 
   it('should throw error if proposal not found', () => {
