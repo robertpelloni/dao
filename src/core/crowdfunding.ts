@@ -328,6 +328,21 @@ export class CrowdfundingEngine {
     }
   }
 
+  /**
+   * Submit proof of completion for a milestone.
+   */
+  submitMilestoneProof(proposalId: string, milestoneId: string, proofUrl: string): void {
+    const proposal = this.store.getProposal(proposalId);
+    if (!proposal) throw new Error('Proposal not found');
+
+    const updatedMilestones = proposal.milestones.map(m =>
+      m.id === milestoneId ? { ...m, completionProof: proofUrl } : m
+    );
+
+    this.store.updateProposal(proposalId, { milestones: updatedMilestones });
+    console.log(`Proof submitted for milestone ${milestoneId} of proposal ${proposalId}: ${proofUrl}`);
+  }
+
   getContributions(proposalId: string): Contribution[] {
     return this.contributions.get(proposalId) || [];
   }

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Proposal, User } from '../../../src/models/types.js';
-import { ThumbsUp, ThumbsDown, DollarSign, CheckCircle2, UserPlus, Info } from 'lucide-react';
+import { ThumbsUp, ThumbsDown, DollarSign, CheckCircle2, UserPlus, Info, ExternalLink } from 'lucide-react';
 import api from '../api/client.js';
 
 interface ActionPanelProps {
@@ -14,6 +14,7 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({ proposal, user, onActi
   const [contribution, setContribution] = useState(10);
   const [matchEstimate, setMatchEstimate] = useState<{ delta: number, multiplier: number } | null>(null);
   const [loading, setLoading] = useState(false);
+  const [proofUrls, setProofUrls] = useState<Record<string, string>>({});
 
   if (!user) return null;
 
@@ -28,6 +29,21 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({ proposal, user, onActi
       onAction();
     } catch (err) {
       alert('Voting failed: ' + (err as any).response?.data?.error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleProofSubmit = async (milestoneId: string) => {
+    try {
+      setLoading(true);
+      await api.post(`/proposals/${proposal.id}/milestones/${milestoneId}/proof`, {
+        proofUrl: proofUrls[milestoneId]
+      });
+      setProofUrls({ ...proofUrls, [milestoneId]: '' });
+      onAction();
+    } catch (err) {
+      alert('Proof submission failed: ' + (err as any).response?.data?.error);
     } finally {
       setLoading(false);
     }
@@ -239,6 +255,41 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({ proposal, user, onActi
                       <span className="bg-red-600 text-white text-[8px] font-black uppercase px-1.5 py-0.5 rounded animate-pulse">Disputed</span>
                     )}
                   </div>
+
+                  {m.completionProof && (
+                    <div className="mt-2 p-2 bg-white rounded border border-indigo-200 flex items-center justify-between shadow-sm">
+                       <span className="text-[10px] text-indigo-400 font-black uppercase tracking-tight">Proof Submitted</span>
+                       <a
+                        href={m.completionProof}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-indigo-600 hover:text-indigo-800 flex items-center gap-1 text-[10px] font-black underline decoration-indigo-300 decoration-2 underline-offset-2"
+                       >
+                          View Evidence <ExternalLink size={10} />
+                       </a>
+                    </div>
+                  )}
+
+                  {user.id === proposal.proposerId && !m.isCompleted && (
+                    <div className="mt-3 space-y-2">
+                       <div className="flex gap-2">
+                          <input
+                             type="text"
+                             placeholder="Evidence URL (GitHub, PDF, etc)"
+                             value={proofUrls[m.id] || ''}
+                             onChange={(e) => setProofUrls({ ...proofUrls, [m.id]: e.target.value })}
+                             className="flex-1 text-[10px] border border-indigo-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
+                          />
+                          <button
+                             disabled={loading || !proofUrls[m.id]}
+                             onClick={() => handleProofSubmit(m.id)}
+                             className="bg-indigo-600 text-white text-[10px] font-black uppercase px-3 py-2 rounded-lg hover:bg-indigo-700 disabled:opacity-50 shadow-sm"
+                          >
+                             Submit
+                          </button>
+                       </div>
+                    </div>
+                  )}
 
                   <div className="mt-2 flex flex-wrap gap-1">
                      {(m as any).assignedJury?.map((jid: string) => (

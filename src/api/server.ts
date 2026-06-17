@@ -550,6 +550,28 @@ app.post('/proposals/:id/release-milestone', (req: Request, res: Response) => {
   res.json({ success, proposal: globalStore.getProposal(s(req.params.id)) });
 });
 
+app.post('/proposals/:id/milestones/:mid/proof', (req: Request, res: Response) => {
+  const { proofUrl } = req.body;
+  const { id, mid } = req.params;
+  const userId = (req as any).user?.userId;
+
+  const proposal = globalStore.getProposal(s(id));
+  if (!proposal) return res.status(404).json({ error: 'Proposal not found' });
+
+  // Security: Only the proposer can submit proof
+  if (userId !== proposal.proposerId) {
+    return res.status(403).json({ error: 'Only the proposer can submit completion proof' });
+  }
+
+  try {
+    crowdfunding.submitMilestoneProof(s(id), s(mid), proofUrl);
+    notifyUpdate(s(id));
+    res.json({ message: 'Proof submitted successfully', proposal: globalStore.getProposal(s(id)) });
+  } catch (err: any) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
 app.post('/proposals/:id/milestones/:mid/resolve-dispute', (req: Request, res: Response) => {
   const { resolution } = req.body;
   const userId = (req as any).user?.userId;
