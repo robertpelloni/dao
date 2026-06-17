@@ -46,6 +46,7 @@ export class Store {
         votesAgainst REAL,
         impactScore REAL,
         isCritical INTEGER,
+        contentHash TEXT,
         executionPayload TEXT
       );
 
@@ -81,7 +82,9 @@ export class Store {
         proposalId TEXT,
         amount REAL,
         tokenSymbol TEXT,
-        timestamp INTEGER
+        timestamp INTEGER,
+        isBlinded INTEGER,
+        blindedCommitment TEXT
       );
 
       CREATE TABLE IF NOT EXISTS matching_pools (
@@ -177,13 +180,13 @@ export class Store {
       INSERT OR REPLACE INTO proposals (
         id, title, abstract, detailedSpecs, proposerId, committeeId,
         status, milestones, totalTargetBudget, currentFunding, tokenSymbol,
-        votesFor, votesAgainst, impactScore, isCritical, executionPayload
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        votesFor, votesAgainst, impactScore, isCritical, contentHash, executionPayload
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
     stmt.run(
       proposal.id, proposal.title, proposal.abstract, proposal.detailedSpecs, proposal.proposerId, proposal.committeeId,
       proposal.status, JSON.stringify(proposal.milestones), proposal.totalTargetBudget, proposal.currentFunding, proposal.tokenSymbol || 'USD',
-      proposal.votesFor, proposal.votesAgainst, proposal.impactScore || 0, proposal.isCritical ? 1 : 0, proposal.executionPayload
+      proposal.votesFor, proposal.votesAgainst, proposal.impactScore || 0, proposal.isCritical ? 1 : 0, proposal.contentHash || null, proposal.executionPayload
     );
   }
 
@@ -303,18 +306,29 @@ export class Store {
   }
 
   addContribution(contribution: Contribution) {
-    const stmt = this.db.prepare('INSERT INTO contributions (userId, proposalId, amount, tokenSymbol, timestamp) VALUES (?, ?, ?, ?, ?)');
-    stmt.run(contribution.userId, contribution.proposalId, contribution.amount, contribution.tokenSymbol, contribution.timestamp);
+    const stmt = this.db.prepare('INSERT INTO contributions (userId, proposalId, amount, tokenSymbol, timestamp, isBlinded, blindedCommitment) VALUES (?, ?, ?, ?, ?, ?, ?)');
+    stmt.run(
+      contribution.userId, contribution.proposalId, contribution.amount, contribution.tokenSymbol, contribution.timestamp,
+      contribution.isBlinded ? 1 : 0, contribution.blindedCommitment || null
+    );
   }
 
   getContributionsByUser(userId: string): Contribution[] {
     const stmt = this.db.prepare('SELECT * FROM contributions WHERE userId = ?');
-    return stmt.all(userId) as Contribution[];
+    const rows = stmt.all(userId) as any[];
+    return rows.map(row => ({
+      ...row,
+      isBlinded: row.isBlinded === 1
+    }));
   }
 
   getContributionsByProposal(proposalId: string): Contribution[] {
     const stmt = this.db.prepare('SELECT * FROM contributions WHERE proposalId = ?');
-    return stmt.all(proposalId) as Contribution[];
+    const rows = stmt.all(proposalId) as any[];
+    return rows.map(row => ({
+      ...row,
+      isBlinded: row.isBlinded === 1
+    }));
   }
 
   /**

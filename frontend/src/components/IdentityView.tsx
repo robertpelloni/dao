@@ -58,6 +58,17 @@ export const IdentityView: React.FC<IdentityViewProps> = ({ currentUser, allUser
     if (!currentUser) return;
     try {
       setLoading(true);
+
+      // PERSISTENT IDENTITY PATTERN:
+      // Try to load existing identity from localStorage
+      let identityString = localStorage.getItem(`lg_identity_${currentUser.id}`);
+      if (!identityString) {
+        // Generate new if not exists (simulated client-side)
+        console.log('[ZKP] Generating new Semaphore identity...');
+        identityString = `lg_id_${Math.random().toString(36).substring(7)}`;
+        localStorage.setItem(`lg_identity_${currentUser.id}`, identityString);
+      }
+
       // In a real app, this would involve generating a Semaphore proof on the client.
       // Here we simulate the successful verification via API using Demo Mode.
       const mockProof = {
@@ -68,6 +79,10 @@ export const IdentityView: React.FC<IdentityViewProps> = ({ currentUser, allUser
         externalNullifier: '3',
         proof: ['0', '1', '2', '3', '4', '5', '6', '7']
       };
+
+      // Offload proof processing simulation
+      await new Promise(resolve => setTimeout(resolve, 1500));
+
       await api.post(`/identity/${currentUser.id}/verify-zkp`, { proof: mockProof });
       await fetchProfiles();
       onAction();

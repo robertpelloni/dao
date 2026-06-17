@@ -1,6 +1,7 @@
 import { Store } from '../models/Store';
 import { TreasuryManager } from './treasury';
 import { globalIdentity } from './identity';
+import { globalStorage } from './storage';
 import { Contribution } from '../models/types';
 
 /**
@@ -30,7 +31,7 @@ export class CrowdfundingEngine {
   /**
    * Contribute funds to a proposal.
    */
-  contribute(userId: string, proposalId: string, amount: number): void {
+  contribute(userId: string, proposalId: string, amount: number, isBlinded: boolean = false): void {
     const proposal = this.store.getProposal(proposalId);
     if (!proposal) throw new Error('Proposal not found');
 
@@ -39,26 +40,28 @@ export class CrowdfundingEngine {
       proposalId,
       amount,
       tokenSymbol: proposal.tokenSymbol || 'USD',
-      timestamp: Date.now()
+      timestamp: Date.now(),
+      isBlinded
     };
+
+    // If blinded, create a simple commitment (Mock MACI)
+    if (isBlinded) {
+      contribution.blindedCommitment = `commitment-${userId}-${amount}-${Date.now()}`;
+    }
 
     const list = this.contributions.get(proposalId) || [];
     list.push(contribution);
     this.contributions.set(proposalId, list);
 
-    // Update proposal state
-    this.store.updateProposal(proposalId, {
-      currentFunding: (proposal.currentFunding || 0) + amount
-    });
+    // Update proposal state (Only if not blinded, otherwise funding is private until reveal)
+    if (!isBlinded) {
+      this.store.updateProposal(proposalId, {
+        currentFunding: (proposal.currentFunding || 0) + amount
+      });
+    }
 
     // Persist contribution for security analysis
-    this.store.addContribution({
-      userId,
-      proposalId,
-      amount,
-      tokenSymbol: contribution.tokenSymbol,
-      timestamp: contribution.timestamp
-    });
+    this.store.addContribution(contribution);
   }
 
   /**
@@ -70,9 +73,17 @@ export class CrowdfundingEngine {
     const proposal = this.store.getProposal(proposalId);
     if (!proposal) return false;
 
+    // Ensure all blinded contributions are revealed/accounted for
+    const pContributions = this.store.getContributionsByProposal(proposalId);
+    const totalActualFunding = pContributions.reduce((sum, c) => sum + c.amount, 0);
+
+    if (totalActualFunding !== proposal.currentFunding) {
+      console.log(`[MACI REVEAL] Proposal ${proposalId} revealed total funding: ${totalActualFunding}`);
+      proposal.currentFunding = totalActualFunding;
+    }
+
     if (proposal.currentFunding >= proposal.totalTargetBudget) {
       // Calculate matching funds from persistent store
-      const pContributions = this.store.getContributionsByProposal(proposalId);
       const match = this.treasury.calculateMatch(pContributions);
 
       // Determine subject from committee
@@ -331,12 +342,19 @@ export class CrowdfundingEngine {
   /**
    * Submit proof of completion for a milestone.
    */
-  submitMilestoneProof(proposalId: string, milestoneId: string, proofUrl: string): void {
+  async submitMilestoneProof(proposalId: string, milestoneId: string, proofUrl: string, evidenceData?: any): Promise<void> {
     const proposal = this.store.getProposal(proposalId);
     if (!proposal) throw new Error('Proposal not found');
 
+    // Upload evidence data to IPFS if provided
+    let finalProof = proofUrl;
+    if (evidenceData) {
+      const cid = await globalStorage.upload(evidenceData);
+      finalProof = `ipfs://${cid}`;
+    }
+
     const updatedMilestones = proposal.milestones.map(m =>
-      m.id === milestoneId ? { ...m, completionProof: proofUrl } : m
+      m.id === milestoneId ? { ...m, completionProof: finalProof } : m
     );
 
     this.store.updateProposal(proposalId, { milestones: updatedMilestones });

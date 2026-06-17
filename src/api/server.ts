@@ -6,6 +6,7 @@ import fs from 'fs';
 import path from 'path';
 import { globalStore } from '../models/Store';
 import { globalIdentity } from '../core/identity';
+import { globalStorage } from '../core/storage';
 import { calculateVoteCost } from '../core/qv';
 import { delegate, calculateEffectivePower } from '../core/delegation';
 import { transitionProposal } from '../core/proposalStateMachine';
@@ -356,8 +357,17 @@ app.get('/delegators/:userId/:subject', (req: Request, res: Response) => {
 
 // --- Proposal Endpoints ---
 
-app.post('/proposals', (req: Request, res: Response) => {
+app.post('/proposals', async (req: Request, res: Response) => {
   const data = req.body;
+
+  // Upload full proposal body to decentralized storage
+  const contentHash = await globalStorage.upload({
+    title: data.title,
+    abstract: data.abstract,
+    detailedSpecs: data.detailedSpecs,
+    milestones: data.milestones || []
+  });
+
   const proposal: Proposal = {
     id: data.id,
     title: data.title,
@@ -373,6 +383,7 @@ app.post('/proposals', (req: Request, res: Response) => {
     votesFor: 0,
     votesAgainst: 0,
     isCritical: !!data.isCritical,
+    contentHash,
     executionPayload: data.executionPayload || '{}'
   };
   globalStore.addProposal(proposal);
@@ -534,9 +545,9 @@ app.post('/proposals/:id/vote', (req: Request, res: Response) => {
 });
 
 app.post('/proposals/:id/contribute', (req: Request, res: Response) => {
-  const { userId, amount } = req.body;
+  const { userId, amount, isBlinded } = req.body;
   try {
-    crowdfunding.contribute(userId, s(req.params.id), amount);
+    crowdfunding.contribute(userId, s(req.params.id), amount, !!isBlinded);
     notifyUpdate(s(req.params.id));
     res.json({ message: 'Contribution successful', proposal: globalStore.getProposal(s(req.params.id)) });
   } catch (err: any) {
@@ -555,7 +566,7 @@ app.post('/proposals/:id/release-milestone', (req: Request, res: Response) => {
   res.json({ success, proposal: globalStore.getProposal(s(req.params.id)) });
 });
 
-app.post('/proposals/:id/milestones/:mid/proof', (req: Request, res: Response) => {
+app.post('/proposals/:id/milestones/:mid/proof', async (req: Request, res: Response) => {
   const { proofUrl } = req.body;
   const { id, mid } = req.params;
   const userId = (req as any).user?.userId;
@@ -569,7 +580,7 @@ app.post('/proposals/:id/milestones/:mid/proof', (req: Request, res: Response) =
   }
 
   try {
-    crowdfunding.submitMilestoneProof(s(id), s(mid), proofUrl);
+    await crowdfunding.submitMilestoneProof(s(id), s(mid), proofUrl);
     notifyUpdate(s(id));
     res.json({ message: 'Proof submitted successfully', proposal: globalStore.getProposal(s(id)) });
   } catch (err: any) {

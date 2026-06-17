@@ -57,6 +57,7 @@ export interface Proposal {
   votesAgainst: number;
   impactScore?: number; // Calculated by AI/Heuristics
   isCritical?: boolean; // If true, triggers urgent notifications
+  contentHash?: string; // IPFS CID for proposal body/specs
   executionPayload: string; // JSON or script hash
 }
 
@@ -97,4 +98,6 @@ export interface Contribution {
   amount: number;
   tokenSymbol: string;
   timestamp: number;
+  isBlinded?: boolean; // If true, amount is hidden until finalization
+  blindedCommitment?: string; // Commitment for privacy-preserving QF
 }
