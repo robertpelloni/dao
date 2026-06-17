@@ -21,6 +21,7 @@ export const ProposalForm: React.FC<ProposalFormProps> = ({ userId, onSuccess, o
   const [triaging, setTriaging] = useState(false);
   const [redundancyWarning, setRedundancyWarning] = useState<string | null>(null);
   const [isTreasuryProposal, setIsTreasuryProposal] = useState(false);
+  const [isCritical, setIsCritical] = useState(false);
   const [reallocData, setReallocData] = useState({ amount: 0, fromSubject: 'General', toSubject: '' });
 
   const handleTriage = async () => {
@@ -63,6 +64,7 @@ export const ProposalForm: React.FC<ProposalFormProps> = ({ userId, onSuccess, o
         proposerId: userId,
         committeeId,
         totalTargetBudget: budget,
+        isCritical,
         milestones: milestones.map((m, i) => ({
           ...m,
           id: `m-${i}`,
@@ -110,6 +112,17 @@ export const ProposalForm: React.FC<ProposalFormProps> = ({ userId, onSuccess, o
                 className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500"
               />
               <label htmlFor="treasury-check" className="text-xs font-bold text-slate-600 uppercase tracking-widest">Treasury Reallocation Proposal</label>
+           </div>
+
+           <div className="flex items-center gap-2 mb-4">
+              <input
+                type="checkbox"
+                id="critical-check"
+                checked={isCritical}
+                onChange={(e) => setIsCritical(e.target.checked)}
+                className="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500"
+              />
+              <label htmlFor="critical-check" className="text-xs font-bold text-slate-600 uppercase tracking-widest">Mark as Critical Event</label>
            </div>
 
            {isTreasuryProposal && (
@@ -204,6 +217,7 @@ export const ProposalForm: React.FC<ProposalFormProps> = ({ userId, onSuccess, o
                           committeeId,
                           totalTargetBudget: budget,
                           status: 'EMERGENCY', // Will be fast-tracked by API
+                          isCritical: true,
                           milestones: milestones.map((m, i) => ({
                             ...m,
                             id: `m-${i}`,
