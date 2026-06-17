@@ -38,8 +38,15 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({ proposal, user, onActi
   const handleProofSubmit = async (milestoneId: string) => {
     try {
       setLoading(true);
+
+      // If URL looks like a CID or special instruction, we could handle it here.
+      // For now, we allow the backend to handle the evidenceData if we were to add a file upload.
+      // Simulation: prefix with ipfs:// if it looks like a CID
+      const input = proofUrls[milestoneId];
+      const finalUrl = (input.startsWith('Qm') && input.length > 40) ? `ipfs://${input}` : input;
+
       await api.post(`/proposals/${proposal.id}/milestones/${milestoneId}/proof`, {
-        proofUrl: proofUrls[milestoneId]
+        proofUrl: finalUrl
       });
       setProofUrls({ ...proofUrls, [milestoneId]: '' });
       onAction();
@@ -272,16 +279,36 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({ proposal, user, onActi
                   </div>
 
                   {m.completionProof && (
-                    <div className="mt-2 p-2 bg-white rounded border border-indigo-200 flex items-center justify-between shadow-sm">
-                       <span className="text-[10px] text-indigo-400 font-black uppercase tracking-tight">Proof Submitted</span>
-                       <a
-                        href={m.completionProof}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-indigo-600 hover:text-indigo-800 flex items-center gap-1 text-[10px] font-black underline decoration-indigo-300 decoration-2 underline-offset-2"
-                       >
-                          View Evidence <ExternalLink size={10} />
-                       </a>
+                    <div className="mt-2 p-2 bg-white rounded border border-indigo-200 shadow-sm space-y-2">
+                       <div className="flex items-center justify-between">
+                          <span className="text-[10px] text-indigo-400 font-black uppercase tracking-tight">Proof Submitted</span>
+                          {m.completionProof.startsWith('ipfs://') ? (
+                             <button
+                                onClick={async () => {
+                                   const cid = m.completionProof?.replace('ipfs://', '');
+                                   try {
+                                      const res = await api.get(`/storage/${cid}`);
+                                      alert(JSON.stringify(res.data, null, 2));
+                                   } catch (e) { alert('Failed to fetch IPFS evidence'); }
+                                }}
+                                className="text-indigo-600 hover:text-indigo-800 flex items-center gap-1 text-[10px] font-black underline decoration-indigo-300 decoration-2 underline-offset-2"
+                             >
+                                Inspect Data <Fingerprint size={10} />
+                             </button>
+                          ) : (
+                             <a
+                              href={m.completionProof}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-indigo-600 hover:text-indigo-800 flex items-center gap-1 text-[10px] font-black underline decoration-indigo-300 decoration-2 underline-offset-2"
+                             >
+                                View Evidence <ExternalLink size={10} />
+                             </a>
+                          )}
+                       </div>
+                       {m.completionProof.startsWith('ipfs://') && (
+                          <p className="text-[8px] font-mono text-slate-400 truncate">CID: {m.completionProof.replace('ipfs://', '')}</p>
+                       )}
                     </div>
                   )}
 

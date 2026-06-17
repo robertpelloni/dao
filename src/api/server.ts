@@ -355,6 +355,18 @@ app.get('/delegators/:userId/:subject', (req: Request, res: Response) => {
   res.json(delegators);
 });
 
+// --- Storage Endpoints ---
+
+app.get('/storage/:cid', async (req: Request, res: Response) => {
+  try {
+    const data = await globalStorage.retrieve(s(req.params.cid));
+    if (!data) return res.status(404).json({ error: 'Content not found' });
+    res.json(data);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // --- Proposal Endpoints ---
 
 app.post('/proposals', async (req: Request, res: Response) => {

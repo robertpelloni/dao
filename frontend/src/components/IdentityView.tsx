@@ -205,21 +205,37 @@ export const IdentityView: React.FC<IdentityViewProps> = ({ currentUser, allUser
                  </div>
               </div>
 
-              {!profiles[currentUser.id]!.isHuman && (
-                <div className="mt-8 pt-8 border-t border-white/10">
-                  <button
-                    onClick={handleVerifyZKP}
-                    disabled={loading}
-                    className="flex items-center gap-3 px-6 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-700 transition-all font-black text-sm uppercase tracking-widest disabled:opacity-50"
-                  >
-                    <Key size={18} />
-                    {loading ? 'Verifying...' : 'Verify Human Identity (ZKP)'}
-                  </button>
-                  <p className="text-[10px] text-slate-500 font-bold mt-3 uppercase tracking-wider">
-                    Privacy-preserving proof of humanity using Semaphore.
-                  </p>
+                  <div className="mt-8 pt-8 border-t border-white/10 flex flex-wrap gap-4">
+                    {!profiles[currentUser.id]!.isHuman && (
+                      <div className="flex-1 min-w-[200px]">
+                        <button
+                          onClick={handleVerifyZKP}
+                          disabled={loading}
+                          className="w-full flex items-center justify-center gap-3 px-6 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-700 transition-all font-black text-sm uppercase tracking-widest disabled:opacity-50 shadow-lg shadow-indigo-900/20"
+                        >
+                          <Key size={18} />
+                          {loading ? 'Verifying...' : 'Verify Human Identity (ZKP)'}
+                        </button>
+                        <p className="text-[10px] text-slate-500 font-bold mt-3 uppercase tracking-wider">
+                          Privacy-preserving proof of humanity using Semaphore.
+                        </p>
+                      </div>
+                    )}
+
+                    <div className="flex-1 min-w-[200px]">
+                       <button
+                         disabled={loading}
+                         onClick={() => alert('Phase 10: Biometric ZKP Signer integration coming soon. This will allow hardware-secured governance keys.')}
+                         className="w-full flex items-center justify-center gap-3 px-6 py-3 rounded-2xl bg-slate-800 border border-white/10 hover:bg-slate-700 transition-all font-black text-sm uppercase tracking-widest disabled:opacity-50"
+                       >
+                          <Fingerprint size={18} className="text-blue-400" />
+                          Link Biometric Key
+                       </button>
+                       <p className="text-[10px] text-slate-500 font-bold mt-3 uppercase tracking-wider">
+                          Secure your voting power with device biometrics (FaceID/TouchID).
+                       </p>
                 </div>
-              )}
+                  </div>
            </div>
         </section>
       )}

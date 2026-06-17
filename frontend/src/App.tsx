@@ -17,6 +17,25 @@ function App() {
   const [showForm, setShowForm] = useState(false)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const { user, isVerified, proposals, committees, suggestedCommittees, suggestedProposals, allUsers, treasuryBalances, currentCycle, powerBreakdown, userTransactions, selectedProposal, setSelectedProposalId, loading, refresh } = useDashboard('alice')
+  const [remoteSpecs, setRemoteSpecs] = useState<any>(null)
+
+  // Fetch full proposal specs from IPFS when selected
+  React.useEffect(() => {
+     const fetchSpecs = async () => {
+        if (selectedProposal?.contentHash) {
+           try {
+              const res = await api.get(`/storage/${selectedProposal.contentHash}`);
+              setRemoteSpecs(res.data);
+           } catch (e) {
+              console.warn('Failed to fetch remote specs', e);
+              setRemoteSpecs(null);
+           }
+        } else {
+           setRemoteSpecs(null);
+        }
+     };
+     fetchSpecs();
+  }, [selectedProposal]);
 
   return (
     <div className="min-h-screen flex flex-col pb-[env(safe-area-inset-bottom)]">
@@ -144,12 +163,25 @@ function App() {
                     </header>
 
                     <section className="bg-white border rounded-3xl p-6 md:p-8 shadow-sm">
-                      <h3 className="text-lg font-black text-slate-800 mb-4 border-b pb-4 flex items-center gap-2">
-                         <FileText className="text-blue-500" size={20} />
-                         Detailed Specifications
+                      <h3 className="text-lg font-black text-slate-800 mb-4 border-b pb-4 flex items-center justify-between">
+                         <div className="flex items-center gap-2">
+                           <FileText className="text-blue-500" size={20} />
+                           Detailed Specifications
+                         </div>
+                         {selectedProposal.contentHash && (
+                            <span className="text-[8px] font-mono bg-gray-100 text-gray-400 px-2 py-1 rounded" title="IPFS Content Identifier">
+                               CID: {selectedProposal.contentHash}
+                            </span>
+                         )}
                       </h3>
                       <div className="prose prose-slate max-w-none text-slate-600 font-medium">
-                        {selectedProposal.detailedSpecs}
+                        {remoteSpecs?.detailedSpecs || selectedProposal.detailedSpecs}
+                        {remoteSpecs && (
+                          <div className="mt-4 p-4 bg-blue-50 rounded-2xl border border-blue-100">
+                             <p className="text-[10px] font-black uppercase text-blue-600 mb-1">Decentralized Metadata</p>
+                             <p className="text-xs italic text-blue-800">This specification was verified from content-addressed storage (mock IPFS).</p>
+                          </div>
+                        )}
                       </div>
                     </section>
 
