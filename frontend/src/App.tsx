@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Layout, Globe, Users, FileText, Shield, RefreshCw, ChevronLeft, Activity, Landmark } from 'lucide-react'
+import api from './api/client.js'
 import { IdentityWidget } from './components/IdentityWidget.js'
 import { ProposalList } from './components/ProposalList.js'
 import { ActionPanel } from './components/ActionPanel.js'
@@ -20,7 +21,7 @@ function App() {
   const [remoteSpecs, setRemoteSpecs] = useState<any>(null)
 
   // Fetch full proposal specs from IPFS when selected
-  React.useEffect(() => {
+  useEffect(() => {
      const fetchSpecs = async () => {
         if (selectedProposal?.contentHash) {
            try {

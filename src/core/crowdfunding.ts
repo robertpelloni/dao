@@ -77,14 +77,14 @@ export class CrowdfundingEngine {
     const pContributions = this.store.getContributionsByProposal(proposalId);
     const totalActualContributions = pContributions.reduce((sum, c) => sum + c.amount, 0);
 
-    // We only update if actual contributions differ from current (unblinded) funding.
-    // However, some tests seed 'initial' funding that isn't backed by contribution records.
-    // To support MACI while preserving legacy seeding, we check if contributions exist.
-    if (pContributions.length > 0 && totalActualContributions !== proposal.currentFunding) {
-      console.log(`[MACI REVEAL] Proposal ${proposalId} revealed total funding from contributions: ${totalActualContributions}`);
-      // NOTE: In a strictly MACI system, we would overwrite.
-      // To maintain test compatibility, we ensure we don't accidentally drop non-contribution 'seed' funds.
-      proposal.currentFunding = Math.max(proposal.currentFunding, totalActualContributions);
+    // Ensure all blinded contributions are revealed and added to the total
+    const blindedTotal = pContributions.filter(c => c.isBlinded).reduce((sum, c) => sum + c.amount, 0);
+
+    if (blindedTotal > 0) {
+      console.log(`[MACI REVEAL] Proposal ${proposalId} revealed ${blindedTotal} in blinded contributions.`);
+      // We add blinded contributions to the current funding (which already includes unblinded and seeded funds)
+      proposal.currentFunding += blindedTotal;
+      this.store.updateProposal(proposalId, { currentFunding: proposal.currentFunding });
     }
 
     if (proposal.currentFunding >= proposal.totalTargetBudget) {
