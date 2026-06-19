@@ -36,7 +36,7 @@
     "@typescript-eslint/eslint-plugin": "^8.24.1",
     "@typescript-eslint/parser": "^8.24.1",
     "eslint": "^9.21.0",
-    "jest": "^25.0.0",
+    "jest": "^30.4.2",
     "playwright": "^1.60.0",
     "ts-jest": "^29.1.2",
     "ts-node": "^10.9.2",
