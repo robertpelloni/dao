@@ -476,7 +476,15 @@ app.get('/summary', (req: Request, res: Response) => {
 app.get('/health', (req: Request, res: Response) => {
   let version = 'unknown';
   try {
-    version = fs.readFileSync(path.join(__dirname, '../../VERSION.md'), 'utf8').trim();
+    const versionPath = path.join(__dirname, '../../VERSION.md');
+    if (fs.existsSync(versionPath)) {
+      version = fs.readFileSync(versionPath, 'utf8').trim();
+    } else {
+      const parentPath = path.join(__dirname, '../../../VERSION.md');
+      if (fs.existsSync(parentPath)) {
+         version = fs.readFileSync(parentPath, 'utf8').trim();
+      }
+    }
   } catch (err) {
     console.error('Failed to read version file', err);
   }
