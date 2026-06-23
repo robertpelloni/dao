@@ -1,3 +1,5 @@
+# 🚧 UNDER CONSTRUCTION — ALPHA STATE! 🚧
+
 # dao
 
 Lightweight proof-of-concept for a distributed, voluntary governance platform (LiquidGov).
