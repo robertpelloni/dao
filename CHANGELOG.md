@@ -1,3 +1,8 @@
+## [1.0.15] - 2026-06-23
+## [1.0.15] - 2026-06-23
+### Added
+- Automated Protocol Sync and Branch Reconciliation.
+
 ## [1.0.14] - 2026-06-18
 ## [1.0.14] - 2026-06-18
 ### Added
