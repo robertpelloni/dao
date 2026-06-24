@@ -279,6 +279,16 @@ export class Store {
     stmt.run(contribution.userId, contribution.proposalId, contribution.amount, contribution.tokenSymbol, contribution.timestamp);
   }
 
+  getAllVotes(): Vote[] {
+    const stmt = this.db.prepare("SELECT * FROM votes");
+    return stmt.all() as Vote[];
+  }
+
+  getAllContributions(): Contribution[] {
+    const stmt = this.db.prepare("SELECT * FROM contributions");
+    return stmt.all() as Contribution[];
+  }
+
   getContributionsByUser(userId: string): Contribution[] {
     const stmt = this.db.prepare('SELECT * FROM contributions WHERE userId = ?');
     return stmt.all(userId) as Contribution[];

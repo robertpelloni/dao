@@ -1,4 +1,7 @@
 import express, { Request, Response } from 'express';
+import { createTreasuryRouter } from "./routes/treasury";
+import { createGovernanceRouter } from "./routes/governance";
+import { TreasuryManager } from "../core/treasury";
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import cors from 'cors';
@@ -41,7 +44,7 @@ app.use(express.json());
  * JWT Authentication Middleware
  */
 const authenticateToken = (req: Request, res: Response, next: any) => {
-  const skipPaths = ['/health', '/summary', '/proposals', '/committees', '/users', '/auth/login', '/governance/trends', '/governance/cycles', '/governance/cycle', '/tasks'];
+  const skipPaths = ['/api/governance/sybil-report', '/health', '/summary', '/proposals', '/committees', '/users', '/auth/login', '/governance/trends', '/governance/cycles', '/governance/cycle', '/tasks'];
   const publicPostPaths = ['/proposals/triage'];
 
   if (skipPaths.includes(req.path) && req.method === 'GET') return next();
@@ -410,30 +413,9 @@ app.get('/security/flagged', (req: Request, res: Response) => {
 
 // --- Governance Cycle Endpoints ---
 
-app.get('/governance/cycle', (req: Request, res: Response) => {
-  let cycle = globalStore.getCurrentCycle();
-  if (!cycle) {
-    cycle = globalGovernance.initialize();
-  }
-  res.json(cycle);
-});
 
-app.get('/governance/cycles', (req: Request, res: Response) => {
-  res.json(globalStore.getCycles());
-});
 
-app.get('/governance/trends', (req: Request, res: Response) => {
-  res.json(globalStore.getHistoricalTrends());
-});
 
-app.post('/governance/transition-cycle', (req: Request, res: Response) => {
-  try {
-    const next = globalGovernance.transitionCycle();
-    res.json({ message: 'Governance cycle transitioned successfully', next });
-  } catch (err: any) {
-    res.status(400).json({ error: err.message });
-  }
-});
 
 // --- Task Endpoints ---
 
@@ -459,6 +441,11 @@ app.post('/tasks/:id/execute', async (req: Request, res: Response) => {
 });
 
 // --- Health Check ---
+
+const treasuryManager = new TreasuryManager(globalStore);
+app.use('/api/treasury', authenticateToken, createTreasuryRouter(treasuryManager));
+app.use('/api/governance', authenticateToken, createGovernanceRouter());
+
 app.get('/summary', (req: Request, res: Response) => {
   const users = globalStore.getUsers();
   const proposals = globalStore.getProposals();
