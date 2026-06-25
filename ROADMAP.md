@@ -34,6 +34,6 @@
 
 ## Phase 7: Infrastructure & Scalability (Active)
 - [x] **Multi-token Matching Pool support.**
-- [ ] Optimized client-side ZKP generation.
+- [x] Optimized client-side ZKP generation.
 - [x] Formalized Treasury intake API.
 - [ ] Cross-platform script parity (Unix/Windows symmetry).
