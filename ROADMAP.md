@@ -36,4 +36,4 @@
 - [x] **Multi-token Matching Pool support.**
 - [x] Optimized client-side ZKP generation.
 - [x] Formalized Treasury intake API.
-- [ ] Cross-platform script parity (Unix/Windows symmetry).
+- [x] Cross-platform script parity (Unix/Windows symmetry).
