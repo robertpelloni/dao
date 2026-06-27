@@ -12,6 +12,7 @@ interface ActionPanelProps {
 export const ActionPanel: React.FC<ActionPanelProps> = ({ proposal, user, onAction }) => {
   const [voteCount, setVoteCount] = useState(1);
   const [contribution, setContribution] = useState(10);
+  const [tokenSymbol, setTokenSymbol] = useState("USD");
   const [loading, setLoading] = useState(false);
 
   if (!user) return null;
@@ -37,7 +38,8 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({ proposal, user, onActi
       setLoading(true);
       await api.post(`/proposals/${proposal.id}/contribute`, {
         userId: user.id,
-        amount: contribution
+        amount: contribution,
+        tokenSymbol
       });
       onAction();
     } catch (err) {
@@ -164,6 +166,14 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({ proposal, user, onActi
             </div>
           </div>
           <div className="flex gap-2 mb-4">
+            <select
+              value={tokenSymbol}
+              onChange={(e) => setTokenSymbol(e.target.value)}
+              className="border rounded-xl px-4 py-2 focus:ring-2 focus:ring-emerald-500 outline-none bg-white font-bold"
+            >
+              <option value="USD">USD</option>
+              <option value="GOV">GOV Token</option>
+            </select>
             <input
               type="number"
               min="1"

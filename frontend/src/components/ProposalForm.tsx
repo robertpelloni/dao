@@ -14,6 +14,7 @@ export const ProposalForm: React.FC<ProposalFormProps> = ({ userId, onSuccess, o
   const [abstract, setAbstract] = useState('');
   const [specs, setSpecs] = useState('');
   const [committeeId, setCommitteeId] = useState('Infrastructure-Committee');
+  const [tokenSymbol, setTokenSymbol] = useState('USD');
   const [milestones, setMilestones] = useState<Partial<Milestone>[]>([
     { description: '', targetBudget: 0, isCompleted: false }
   ]);
@@ -61,6 +62,7 @@ export const ProposalForm: React.FC<ProposalFormProps> = ({ userId, onSuccess, o
         proposerId: userId,
         committeeId,
         totalTargetBudget: budget,
+        tokenSymbol,
         milestones: milestones.map((m, i) => ({
           ...m,
           id: `m-${i}`,
@@ -124,6 +126,18 @@ export const ProposalForm: React.FC<ProposalFormProps> = ({ userId, onSuccess, o
               <option value="Infrastructure-Committee">Infrastructure</option>
               <option value="Education-Committee">Education</option>
               <option value="Healthcare-Committee">Healthcare</option>
+            </select>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Funding Token</label>
+            <select
+              className="w-full bg-gray-50 border-2 border-transparent focus:border-blue-600 focus:bg-white rounded-2xl px-6 py-4 outline-none font-bold transition-all appearance-none"
+              value={tokenSymbol}
+              onChange={(e) => setTokenSymbol(e.target.value)}
+            >
+              <option value="USD">USD (Stablecoin)</option>
+              <option value="GOV">GOV (Native Token)</option>
             </select>
           </div>
 
