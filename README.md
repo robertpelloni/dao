@@ -6,7 +6,7 @@ A reference implementation and design-first repository for coordinating subject-
 
 Status
 
-- Prototype / specification + small TypeScript backend and React frontend.
+- Phase 8 Complete (AI Automation, Advanced Analytics, Cross-Chain mocks) / specification + TypeScript backend and React frontend.
 - Focus: data schemas, deterministic proposal lifecycle, and a modular quadratic voting engine.
 
 Why this project

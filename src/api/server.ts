@@ -19,7 +19,7 @@ import { globalTaskManager } from '../core/tasks';
 import { globalTriage } from '../core/triage';
 import { globalWatchdog } from '../core/watchdog';
 import { User, Proposal, Committee } from '../models/types';
-import { signToken, verifyToken } from '../utils/auth';
+import { signToken, signRefreshToken, verifyToken, verifyRefreshToken } from '../utils/auth';
 
 /**
  * LiquidGov REST API Server
@@ -44,7 +44,7 @@ app.use(express.json());
  * JWT Authentication Middleware
  */
 const authenticateToken = (req: Request, res: Response, next: any) => {
-  const skipPaths = ['/api/governance/sybil-report', '/health', '/summary', '/proposals', '/committees', '/users', '/auth/login', '/governance/trends', '/governance/cycles', '/governance/cycle', '/api/governance/trends', '/api/governance/cycles', '/api/governance/cycle', '/tasks'];
+  const skipPaths = ['/api/governance/sybil-report', '/health', '/summary', '/proposals', '/committees', '/users', '/auth/login', '/auth/refresh', '/api/governance/auth-analytics', '/governance/trends', '/governance/cycles', '/governance/cycle', '/api/governance/trends', '/api/governance/cycles', '/api/governance/cycle', '/tasks'];
   const publicPostPaths = ['/proposals/triage'];
 
   const currentPath = req.originalUrl ? req.originalUrl.split('?')[0] : req.path;
@@ -62,6 +62,7 @@ const authenticateToken = (req: Request, res: Response, next: any) => {
       (req as any).user = { userId: xUserId };
       return next();
     }
+    return globalIdentity.recordLoginFailure();
     return res.status(401).json({ error: 'Missing token' });
   }
 
@@ -79,13 +80,19 @@ app.use(authenticateToken);
 /**
  * Authentication Endpoints
  */
-app.post('/auth/login', (req: Request, res: Response) => {
+
+app.get('/api/governance/auth-analytics', (req: Request, res: Response) => {
+  res.json(globalIdentity.getAuthAnalytics());
+});
+
+app.post('/auth/login', '/auth/refresh', '/api/governance/auth-analytics', (req: Request, res: Response) => {
   const { userId } = req.body;
   if (!userId) return res.status(400).json({ error: 'userId required' });
 
   const user = globalStore.getUser(userId);
   if (!user) return res.status(404).json({ error: 'User not found' });
 
+  globalIdentity.recordLoginSuccess();
   const token = signToken({ userId });
   res.json({ token, user });
 });

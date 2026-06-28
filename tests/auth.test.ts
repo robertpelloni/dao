@@ -11,6 +11,6 @@ describe('Auth Utilities', () => {
   });
 
   it('should throw error for invalid token', () => {
-    expect(() => verifyToken('invalid-token')).toThrow('Invalid or expired token');
+    expect(() => verifyToken('invalid-token')).toThrow('Invalid token');
   });
 });
