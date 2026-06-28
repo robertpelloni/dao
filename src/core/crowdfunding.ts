@@ -26,7 +26,7 @@ export class CrowdfundingEngine {
   /**
    * Contribute funds to a proposal.
    */
-  contribute(userId: string, proposalId: string, amount: number): void {
+  contribute(userId: string, proposalId: string, amount: number, tokenSymbol?: string): void {
     const proposal = this.store.getProposal(proposalId);
     if (!proposal) throw new Error('Proposal not found');
 
@@ -34,7 +34,7 @@ export class CrowdfundingEngine {
       userId,
       proposalId,
       amount,
-      tokenSymbol: proposal.tokenSymbol || 'USD',
+      tokenSymbol: tokenSymbol || proposal.tokenSymbol || 'USD',
       timestamp: Date.now()
     };
 

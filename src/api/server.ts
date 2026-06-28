@@ -44,12 +44,13 @@ app.use(express.json());
  * JWT Authentication Middleware
  */
 const authenticateToken = (req: Request, res: Response, next: any) => {
-  const skipPaths = ['/api/governance/sybil-report', '/health', '/summary', '/proposals', '/committees', '/users', '/auth/login', '/governance/trends', '/governance/cycles', '/governance/cycle', '/tasks'];
+  const skipPaths = ['/api/governance/sybil-report', '/health', '/summary', '/proposals', '/committees', '/users', '/auth/login', '/governance/trends', '/governance/cycles', '/governance/cycle', '/api/governance/trends', '/api/governance/cycles', '/api/governance/cycle', '/tasks'];
   const publicPostPaths = ['/proposals/triage'];
 
-  if (skipPaths.includes(req.path) && req.method === 'GET') return next();
-  if (publicPostPaths.includes(req.path) && req.method === 'POST') return next();
-  if (req.path === '/auth/login' && req.method === 'POST') return next();
+  const currentPath = req.originalUrl ? req.originalUrl.split('?')[0] : req.path;
+  if (currentPath && skipPaths.includes(currentPath) && req.method === 'GET') return next();
+  if (currentPath && publicPostPaths.includes(currentPath) && req.method === 'POST') return next();
+  if (currentPath === '/auth/login' && req.method === 'POST') return next();
 
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
@@ -341,9 +342,9 @@ app.post('/proposals/:id/vote', (req: Request, res: Response) => {
 });
 
 app.post('/proposals/:id/contribute', (req: Request, res: Response) => {
-  const { userId, amount } = req.body;
+  const { userId, amount, tokenSymbol } = req.body;
   try {
-    crowdfunding.contribute(userId, s(req.params.id), amount);
+    crowdfunding.contribute(userId, s(req.params.id), amount, tokenSymbol);
     notifyUpdate(s(req.params.id));
     res.json({ message: 'Contribution successful', proposal: globalStore.getProposal(s(req.params.id)) });
   } catch (err: any) {
@@ -442,8 +443,7 @@ app.post('/tasks/:id/execute', async (req: Request, res: Response) => {
 
 // --- Health Check ---
 
-const treasuryManager = new TreasuryManager(globalStore);
-app.use('/api/treasury', authenticateToken, createTreasuryRouter(treasuryManager));
+app.use('/api/treasury', authenticateToken, createTreasuryRouter(crowdfunding.getTreasury()));
 app.use('/api/governance', authenticateToken, createGovernanceRouter());
 
 app.get('/summary', (req: Request, res: Response) => {

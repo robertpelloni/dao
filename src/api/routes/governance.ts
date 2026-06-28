@@ -21,7 +21,9 @@ export function createGovernanceRouter(): Router {
   });
 
   router.get('/cycle', (req: Request, res: Response) => {
-    res.json(globalStore.getCurrentCycle());
+    let cycle = globalStore.getCurrentCycle();
+    if (!cycle) { cycle = globalGovernance.initialize(); }
+    res.json(cycle);
   });
 
   router.get('/trends', (req: Request, res: Response) => {
