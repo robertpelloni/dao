@@ -17,7 +17,7 @@ export const CycleTrends = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await axios.get('http://localhost:3000/governance/trends');
+        const res = await axios.get('http://localhost:3000/api/governance/trends');
         setData(res.data);
       } catch (err) {
         console.error('Failed to fetch trends', err);

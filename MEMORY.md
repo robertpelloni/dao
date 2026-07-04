@@ -44,3 +44,6 @@
 - **Reputation as Currency:** Reputation is now earned, not just mock-initialized. This creates a circular economy of expertise where successful delivery leads to more governance influence.
 - **Code as Law:** The autonomous execution simulation (executeAutonomousPayload) is the precursor to real smart-contract triggers.
 - **Monorepo Audit:** Conducted a deep audit of the repository for nested Git submodules. Confirmed a 100% native monorepo structure. This architecture was chosen to simplify the Autonomous Protocol's merge and sync logic.
+
+## Milestone Oracle Documentation
+- The Milestone Oracle handles consensus regarding whether funds should be released. A randomly selected jury is generated and must vote to approve releasing funds for a given proposal milestone. This documentation was incomplete but has now been clarified. It requires users to be verified before they can be added to a jury.

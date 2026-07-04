@@ -39,7 +39,7 @@ export const HealthDashboard: React.FC<HealthDashboardProps> = ({ proposals, com
     if (!confirm('Are you sure you want to transition to the next governance cycle? This will trigger reputation decay.')) return;
     try {
       setLoading(true);
-      await api.post('/governance/transition-cycle');
+      await api.post('/api/governance/transition-cycle');
       onAction();
     } catch (err) {
       alert('Transition failed');

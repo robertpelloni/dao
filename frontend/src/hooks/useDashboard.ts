@@ -27,7 +27,7 @@ export function useDashboard(userId: string) {
         api.get('/users'),
         api.get(`/identity/${userId}/breakdown`),
         api.get(`/committees/suggested/${userId}`),
-        api.get('/governance/cycle')
+        api.get('/api/governance/cycle')
       ]);
       setUser(uRes.data);
       // Mock verification check

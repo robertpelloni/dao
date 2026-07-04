@@ -12,13 +12,44 @@ export class TreasuryManager {
   // Map of token symbol to matching pool amount
   private matchingPools: Map<string, number> = new Map();
 
+  // Total funds available in the treasury mapped by token symbol
+  private treasuryBalances: Map<string, number> = new Map();
+
   constructor(private store: Store) {
     // Initialize default USD pool
     this.matchingPools.set('USD', 0);
+    this.treasuryBalances.set('USD', 0);
   }
 
   /**
-   * Sets the matching pool for a specific token.
+   * Intakes funds into the treasury for a given token.
+   */
+  intakeFunds(amount: number, tokenSymbol: string = 'USD'): void {
+    if (amount <= 0) return;
+    const currentBalance = this.treasuryBalances.get(tokenSymbol) || 0;
+    this.treasuryBalances.set(tokenSymbol, currentBalance + amount);
+  }
+
+  /**
+   * Allocates an amount from the treasury balance to the specific QF matching pool for that token.
+   */
+  allocateToMatchingPool(amount: number, tokenSymbol: string = 'USD'): boolean {
+    const currentBalance = this.treasuryBalances.get(tokenSymbol) || 0;
+    if (amount > currentBalance || amount <= 0) {
+      return false; // Insufficient funds in the treasury
+    }
+
+    // Deduct from treasury balance
+    this.treasuryBalances.set(tokenSymbol, currentBalance - amount);
+
+    // Add to matching pool
+    const currentPool = this.matchingPools.get(tokenSymbol) || 0;
+    this.matchingPools.set(tokenSymbol, currentPool + amount);
+    return true;
+  }
+
+  /**
+   * Sets the matching pool for a specific token (legacy/override usage).
    */
   setMatchingPool(amount: number, tokenSymbol: string = 'USD'): void {
     this.matchingPools.set(tokenSymbol, amount);
@@ -59,8 +90,14 @@ export class TreasuryManager {
     let totalMatchRequired = 0;
 
     proposals.forEach(p => {
+      // Only match if tokens match
+      if (p.tokenSymbol !== tokenSymbol) return;
+
       const pContributions = allContributions.get(p.id) || [];
-      const match = this.calculateMatch(pContributions);
+      // Only count contributions matching this token
+      const validContributions = pContributions.filter(c => c.tokenSymbol === tokenSymbol);
+
+      const match = this.calculateMatch(validContributions);
       matches[p.id] = match;
       totalMatchRequired += match;
     });
@@ -83,9 +120,21 @@ export class TreasuryManager {
     return this.matchingPools.get(tokenSymbol) || 0;
   }
 
+  getTreasuryBalance(tokenSymbol: string = 'USD'): number {
+    return this.treasuryBalances.get(tokenSymbol) || 0;
+  }
+
   getAllPools(): Record<string, number> {
     const result: Record<string, number> = {};
     this.matchingPools.forEach((amount, symbol) => {
+      result[symbol] = amount;
+    });
+    return result;
+  }
+
+  getAllTreasuryBalances(): Record<string, number> {
+    const result: Record<string, number> = {};
+    this.treasuryBalances.forEach((amount, symbol) => {
       result[symbol] = amount;
     });
     return result;

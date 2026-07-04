@@ -34,7 +34,7 @@ export const ProposalList: React.FC<ProposalListProps> = ({ proposals, onSelect 
             </div>
             <div className="flex items-center gap-1.5">
               <DollarSign size={16} />
-              <span>Budget: <span className="font-semibold text-gray-900">${p.totalTargetBudget}</span></span>
+              <span>Budget: <span className="font-semibold text-gray-900">{p.tokenSymbol === 'USD' ? '$' : ''}{p.totalTargetBudget} {p.tokenSymbol}</span></span>
             </div>
             <div className="flex items-center gap-1.5">
               <Clock size={16} />

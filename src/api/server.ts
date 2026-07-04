@@ -1,4 +1,7 @@
 import express, { Request, Response } from 'express';
+import { createTreasuryRouter } from "./routes/treasury";
+import { createGovernanceRouter } from "./routes/governance";
+import { TreasuryManager } from "../core/treasury";
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import cors from 'cors';
@@ -16,7 +19,7 @@ import { globalTaskManager } from '../core/tasks';
 import { globalTriage } from '../core/triage';
 import { globalWatchdog } from '../core/watchdog';
 import { User, Proposal, Committee } from '../models/types';
-import { signToken, verifyToken } from '../utils/auth';
+import { signToken, signRefreshToken, verifyToken, verifyRefreshToken } from '../utils/auth';
 
 /**
  * LiquidGov REST API Server
@@ -41,12 +44,13 @@ app.use(express.json());
  * JWT Authentication Middleware
  */
 const authenticateToken = (req: Request, res: Response, next: any) => {
-  const skipPaths = ['/health', '/summary', '/proposals', '/committees', '/users', '/auth/login', '/governance/trends', '/governance/cycles', '/governance/cycle', '/tasks'];
+  const skipPaths = ['/api/governance/sybil-report', '/health', '/summary', '/proposals', '/committees', '/users', '/auth/login', '/auth/refresh', '/api/governance/auth-analytics', '/governance/trends', '/governance/cycles', '/governance/cycle', '/api/governance/trends', '/api/governance/cycles', '/api/governance/cycle', '/tasks'];
   const publicPostPaths = ['/proposals/triage'];
 
-  if (skipPaths.includes(req.path) && req.method === 'GET') return next();
-  if (publicPostPaths.includes(req.path) && req.method === 'POST') return next();
-  if (req.path === '/auth/login' && req.method === 'POST') return next();
+  const currentPath = req.originalUrl ? req.originalUrl.split('?')[0] : req.path;
+  if (currentPath && skipPaths.includes(currentPath) && req.method === 'GET') return next();
+  if (currentPath && publicPostPaths.includes(currentPath) && req.method === 'POST') return next();
+  if (currentPath === '/auth/login' && req.method === 'POST') return next();
 
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
@@ -58,6 +62,7 @@ const authenticateToken = (req: Request, res: Response, next: any) => {
       (req as any).user = { userId: xUserId };
       return next();
     }
+    return globalIdentity.recordLoginFailure();
     return res.status(401).json({ error: 'Missing token' });
   }
 
@@ -75,13 +80,19 @@ app.use(authenticateToken);
 /**
  * Authentication Endpoints
  */
-app.post('/auth/login', (req: Request, res: Response) => {
+
+app.get('/api/governance/auth-analytics', (req: Request, res: Response) => {
+  res.json(globalIdentity.getAuthAnalytics());
+});
+
+app.post('/auth/login', '/auth/refresh', '/api/governance/auth-analytics', (req: Request, res: Response) => {
   const { userId } = req.body;
   if (!userId) return res.status(400).json({ error: 'userId required' });
 
   const user = globalStore.getUser(userId);
   if (!user) return res.status(404).json({ error: 'User not found' });
 
+  globalIdentity.recordLoginSuccess();
   const token = signToken({ userId });
   res.json({ token, user });
 });
@@ -338,9 +349,9 @@ app.post('/proposals/:id/vote', (req: Request, res: Response) => {
 });
 
 app.post('/proposals/:id/contribute', (req: Request, res: Response) => {
-  const { userId, amount } = req.body;
+  const { userId, amount, tokenSymbol } = req.body;
   try {
-    crowdfunding.contribute(userId, s(req.params.id), amount);
+    crowdfunding.contribute(userId, s(req.params.id), amount, tokenSymbol);
     notifyUpdate(s(req.params.id));
     res.json({ message: 'Contribution successful', proposal: globalStore.getProposal(s(req.params.id)) });
   } catch (err: any) {
@@ -410,30 +421,9 @@ app.get('/security/flagged', (req: Request, res: Response) => {
 
 // --- Governance Cycle Endpoints ---
 
-app.get('/governance/cycle', (req: Request, res: Response) => {
-  let cycle = globalStore.getCurrentCycle();
-  if (!cycle) {
-    cycle = globalGovernance.initialize();
-  }
-  res.json(cycle);
-});
 
-app.get('/governance/cycles', (req: Request, res: Response) => {
-  res.json(globalStore.getCycles());
-});
 
-app.get('/governance/trends', (req: Request, res: Response) => {
-  res.json(globalStore.getHistoricalTrends());
-});
 
-app.post('/governance/transition-cycle', (req: Request, res: Response) => {
-  try {
-    const next = globalGovernance.transitionCycle();
-    res.json({ message: 'Governance cycle transitioned successfully', next });
-  } catch (err: any) {
-    res.status(400).json({ error: err.message });
-  }
-});
 
 // --- Task Endpoints ---
 
@@ -459,6 +449,10 @@ app.post('/tasks/:id/execute', async (req: Request, res: Response) => {
 });
 
 // --- Health Check ---
+
+app.use('/api/treasury', authenticateToken, createTreasuryRouter(crowdfunding.getTreasury()));
+app.use('/api/governance', authenticateToken, createGovernanceRouter());
+
 app.get('/summary', (req: Request, res: Response) => {
   const users = globalStore.getUsers();
   const proposals = globalStore.getProposals();
@@ -476,7 +470,15 @@ app.get('/summary', (req: Request, res: Response) => {
 app.get('/health', (req: Request, res: Response) => {
   let version = 'unknown';
   try {
-    version = fs.readFileSync(path.join(__dirname, '../../VERSION.md'), 'utf8').trim();
+    const versionPath = path.join(__dirname, '../../VERSION.md');
+    if (fs.existsSync(versionPath)) {
+      version = fs.readFileSync(versionPath, 'utf8').trim();
+    } else {
+      const parentPath = path.join(__dirname, '../../../VERSION.md');
+      if (fs.existsSync(parentPath)) {
+         version = fs.readFileSync(parentPath, 'utf8').trim();
+      }
+    }
   } catch (err) {
     console.error('Failed to read version file', err);
   }

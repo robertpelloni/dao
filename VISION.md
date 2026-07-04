@@ -38,6 +38,6 @@ The end-user experience should feel like a hybrid between a high-end financial d
 - **AI-Augmented Deliberation:** Integrated AI (Impact Scoring) helps citizens navigate thousands of proposals by highlighting those with the highest efficiency and planning quality.
 
 ## 5. Long-Term Roadmap
-- **Phase 1-3:** Core engine, API, and Web Prototype (Completed).
+- **Phase 1-8:** Core engine, Quadratic Funding, Advanced Identity Analytics, AI Automation, and Web Prototype (Completed).
 - **Phase 4:** On-chain transition, ZKP Identity, and Oracle Network.
 - **Phase 5:** Global deployment as a recognized alternative to traditional municipal management.
