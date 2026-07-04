@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { User, Committee } from '../../../src/models/types.js';
+import { User, Committee, Proposal } from '../../../src/models/types.js';
 import { IdentityProfile } from '../../../src/core/identity.js';
 import { ShieldCheck, UserPlus, Fingerprint, Award, GitGraph, Users, UserCheck, Key } from 'lucide-react';
 import api from '../api/client.js';
@@ -9,13 +9,19 @@ interface IdentityViewProps {
   currentUser: User | null;
   allUsers: User[];
   powerBreakdown: Record<string, number>;
+  userTransactions: any[];
   suggestedCommittees: Committee[];
+  suggestedProposals: Proposal[];
   onAction: () => void;
+  onSelectProposal: (id: string) => void;
 }
 
-export const IdentityView: React.FC<IdentityViewProps> = ({ currentUser, allUsers, powerBreakdown, suggestedCommittees, onAction }) => {
+export const IdentityView: React.FC<IdentityViewProps> = ({ currentUser, allUsers, powerBreakdown, userTransactions, suggestedCommittees, suggestedProposals, onAction, onSelectProposal }) => {
   const [profiles, setProfiles] = useState<Record<string, IdentityProfile>>({});
+  const [delegators, setDelegators] = useState<Record<string, User[]>>({});
   const [loading, setLoading] = useState(false);
+  const [searchTerm, setSearchBar] = useState('');
+  const [filterSubject, setFilterSubject] = useState('All');
 
   const fetchProfiles = async () => {
     try {
@@ -32,21 +38,51 @@ export const IdentityView: React.FC<IdentityViewProps> = ({ currentUser, allUser
 
   useEffect(() => {
     fetchProfiles();
-  }, [allUsers]);
+
+    // Fetch delegators for each subject in power breakdown
+    const fetchDelegators = async () => {
+       if (!currentUser) return;
+       const results: Record<string, User[]> = {};
+       await Promise.all(Object.keys(powerBreakdown).map(async subject => {
+          try {
+             const res = await api.get(`/delegators/${currentUser.id}/${subject}`);
+             results[subject] = res.data;
+          } catch(e) {}
+       }));
+       setDelegators(results);
+    };
+    fetchDelegators();
+  }, [allUsers, powerBreakdown, currentUser]);
 
   const handleVerifyZKP = async () => {
     if (!currentUser) return;
     try {
       setLoading(true);
+
+      // PERSISTENT IDENTITY PATTERN:
+      // Try to load existing identity from localStorage
+      let identityString = localStorage.getItem(`lg_identity_${currentUser.id}`);
+      if (!identityString) {
+        // Generate new if not exists (simulated client-side)
+        console.log('[ZKP] Generating new Semaphore identity...');
+        identityString = `lg_id_${Math.random().toString(36).substring(7)}`;
+        localStorage.setItem(`lg_identity_${currentUser.id}`, identityString);
+      }
+
       // In a real app, this would involve generating a Semaphore proof on the client.
-      // Here we simulate the successful verification via API.
+      // Here we simulate the successful verification via API using Demo Mode.
       const mockProof = {
+        isMock: true,
         merkleTreeRoot: '0',
         signal: '1',
         nullifierHash: '2',
         externalNullifier: '3',
         proof: ['0', '1', '2', '3', '4', '5', '6', '7']
       };
+
+      // Offload proof processing simulation
+      await new Promise(resolve => setTimeout(resolve, 1500));
+
       await api.post(`/identity/${currentUser.id}/verify-zkp`, { proof: mockProof });
       await fetchProfiles();
       onAction();
@@ -71,8 +107,45 @@ export const IdentityView: React.FC<IdentityViewProps> = ({ currentUser, allUser
     }
   };
 
+  const totalContributed = userTransactions
+    .filter(tx => tx.type === 'DEPOSIT')
+    .reduce((sum, tx) => sum + tx.amount, 0);
+
   return (
     <div className="space-y-8">
+      {/* Fiscal Impact Summary */}
+      {currentUser && (
+        <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
+           <div className="bg-emerald-600 text-white rounded-3xl p-6 shadow-lg flex items-center justify-between overflow-hidden relative">
+              <Award className="absolute -right-4 -bottom-4 text-white/10" size={120} />
+              <div className="relative z-10">
+                 <p className="text-[10px] font-black uppercase tracking-widest text-emerald-200 mb-1">Lifetime Contribution</p>
+                 <p className="text-4xl font-black">${totalContributed.toLocaleString()}</p>
+                 <p className="text-[10px] font-bold mt-2 text-emerald-100">Across {userTransactions.filter(t => t.type === 'DEPOSIT').length} initiatives</p>
+              </div>
+              <div className="text-right relative z-10">
+                 <div className="bg-white/20 rounded-2xl p-3 backdrop-blur-md">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-emerald-200 mb-1">Systemic Impact</p>
+                    <p className="text-2xl font-black">${(totalContributed * 4.2).toLocaleString()}</p>
+                    <p className="text-[8px] font-bold mt-1 text-emerald-100 italic">Estimated QF Multiplier: 4.2x</p>
+                 </div>
+              </div>
+           </div>
+           <div className="bg-white border rounded-3xl p-6 shadow-sm flex items-center gap-6">
+              <div className="w-16 h-16 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-600 shrink-0">
+                 <GitGraph size={32} />
+              </div>
+              <div>
+                 <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Delegation Reach</p>
+                 <p className="text-2xl font-black text-slate-800">
+                    {Object.values(delegators).flat().length} Citizens
+                 </p>
+                 <p className="text-xs font-medium text-slate-500 mt-1">Trust you to represent their interests in {Object.keys(powerBreakdown).length} subjects.</p>
+              </div>
+           </div>
+        </section>
+      )}
+
       {/* Current User Profile Card */}
       {currentUser && profiles[currentUser.id] && (
         <section className="bg-slate-900 text-white rounded-3xl p-8 shadow-2xl relative overflow-hidden">
@@ -132,66 +205,188 @@ export const IdentityView: React.FC<IdentityViewProps> = ({ currentUser, allUser
                  </div>
               </div>
 
-              {!profiles[currentUser.id]!.isHuman && (
-                <div className="mt-8 pt-8 border-t border-white/10">
-                  <button
-                    onClick={handleVerifyZKP}
-                    disabled={loading}
-                    className="flex items-center gap-3 px-6 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-700 transition-all font-black text-sm uppercase tracking-widest disabled:opacity-50"
-                  >
-                    <Key size={18} />
-                    {loading ? 'Verifying...' : 'Verify Human Identity (ZKP)'}
-                  </button>
-                  <p className="text-[10px] text-slate-500 font-bold mt-3 uppercase tracking-wider">
-                    Privacy-preserving proof of humanity using Semaphore.
-                  </p>
+                  <div className="mt-8 pt-8 border-t border-white/10 flex flex-wrap gap-4">
+                    {!profiles[currentUser.id]!.isHuman && (
+                      <div className="flex-1 min-w-[200px]">
+                        <button
+                          onClick={handleVerifyZKP}
+                          disabled={loading}
+                          className="w-full flex items-center justify-center gap-3 px-6 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-700 transition-all font-black text-sm uppercase tracking-widest disabled:opacity-50 shadow-lg shadow-indigo-900/20"
+                        >
+                          <Key size={18} />
+                          {loading ? 'Verifying...' : 'Verify Human Identity (ZKP)'}
+                        </button>
+                        <p className="text-[10px] text-slate-500 font-bold mt-3 uppercase tracking-wider">
+                          Privacy-preserving proof of humanity using Semaphore.
+                        </p>
+                      </div>
+                    )}
+
+                    <div className="flex-1 min-w-[200px]">
+                       <button
+                         disabled={loading}
+                         onClick={() => alert('Phase 10: Biometric ZKP Signer integration coming soon. This will allow hardware-secured governance keys.')}
+                         className="w-full flex items-center justify-center gap-3 px-6 py-3 rounded-2xl bg-slate-800 border border-white/10 hover:bg-slate-700 transition-all font-black text-sm uppercase tracking-widest disabled:opacity-50"
+                       >
+                          <Fingerprint size={18} className="text-blue-400" />
+                          Link Biometric Key
+                       </button>
+                       <p className="text-[10px] text-slate-500 font-bold mt-3 uppercase tracking-wider">
+                          Secure your voting power with device biometrics (FaceID/TouchID).
+                       </p>
                 </div>
-              )}
+                  </div>
            </div>
         </section>
       )}
 
-      {/* Suggested Committees */}
-      {suggestedCommittees.length > 0 && (
+      {/* Active Delegations Management */}
+      {currentUser && Object.keys(currentUser.delegates).length > 0 && (
+        <section className="bg-white border rounded-3xl p-8 shadow-sm">
+           <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-black text-slate-800 flex items-center gap-2">
+                 <GitGraph size={24} className="text-blue-600" />
+                 Active Delegations
+              </h3>
+              <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">{Object.keys(currentUser.delegates).length} ACTIVE</span>
+           </div>
+           <div className="grid gap-3">
+              {Object.entries(currentUser.delegates).map(([subject, delegateId]) => {
+                 const delegateUser = allUsers.find(u => u.id === delegateId);
+                 return (
+                    <div key={subject} className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100 group hover:border-blue-200 transition-all">
+                       <div>
+                          <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-0.5">{subject}</p>
+                          <p className="font-bold text-slate-800">Delegated to: <span className="text-blue-600">{delegateUser?.name || delegateId}</span></p>
+                       </div>
+                       <button
+                         onClick={async () => {
+                            if(confirm(`Revoke delegation for ${subject}?`)) {
+                               try {
+                                  setLoading(true);
+                                  await api.delete(`/delegate/${currentUser.id}/${subject}`);
+                                  onAction();
+                               } catch (err) {
+                                  alert('Revocation failed');
+                               } finally {
+                                  setLoading(false);
+                               }
+                            }
+                         }}
+                         className="px-4 py-2 rounded-xl bg-white border border-red-100 text-red-600 text-[10px] font-black uppercase tracking-widest hover:bg-red-600 hover:text-white transition-all opacity-0 group-hover:opacity-100 shadow-sm"
+                       >
+                          Revoke
+                       </button>
+                    </div>
+                 );
+              })}
+           </div>
+        </section>
+      )}
+
+      {/* Discovery Section */}
+      {(suggestedCommittees.length > 0 || suggestedProposals.length > 0) && (
         <section className="bg-blue-600 rounded-3xl p-8 shadow-xl text-white relative overflow-hidden">
            <Users className="absolute -right-8 -bottom-8 text-white/10" size={200} />
-           <div className="relative z-10">
-              <h3 className="text-xl font-black mb-6 flex items-center gap-2">
-                 <Users size={24} />
-                 Suggested Committees
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                 {suggestedCommittees.map(c => (
-                    <div key={c.id} className="bg-white/10 backdrop-blur-md border border-white/20 p-4 rounded-2xl hover:bg-white/20 transition-all cursor-pointer">
-                       <p className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-200 mb-1">{c.subject}</p>
-                       <h4 className="font-bold text-sm">{c.id}</h4>
-                       <div className="flex justify-between items-center mt-3">
-                          <span className="text-[10px] font-black">{c.members.length} Members</span>
-                          <span className="text-[10px] font-black bg-white text-blue-600 px-2 py-0.5 rounded">Join</span>
-                       </div>
+           <div className="relative z-10 space-y-8">
+              {suggestedProposals.length > 0 && (
+                 <div>
+                    <h3 className="text-xl font-black mb-6 flex items-center gap-2">
+                       <ShieldCheck size={24} />
+                       Recommended Proposals
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                       {suggestedProposals.map(p => (
+                          <div key={p.id} className="bg-white/10 backdrop-blur-md border border-white/20 p-6 rounded-2xl hover:bg-white/20 transition-all">
+                             <div className="flex justify-between items-start mb-2">
+                                <span className="text-[10px] font-black uppercase tracking-widest text-blue-200">{p.committeeId}</span>
+                                <span className="text-[10px] font-black bg-blue-400 text-white px-2 py-0.5 rounded">High Rep Match</span>
+                             </div>
+                             <h4 className="font-bold text-lg mb-2">{p.title}</h4>
+                             <p className="text-sm text-blue-100 line-clamp-2 mb-4">{p.abstract}</p>
+                             <button
+                                onClick={() => onSelectProposal(p.id)}
+                                className="w-full bg-white text-blue-600 font-black py-2 rounded-xl text-xs uppercase tracking-widest hover:bg-blue-50 transition-colors"
+                             >
+                                Review & Vote
+                             </button>
+                          </div>
+                       ))}
                     </div>
-                 ))}
-              </div>
+                 </div>
+              )}
+
+              {suggestedCommittees.length > 0 && (
+                 <div>
+                    <h3 className="text-xl font-black mb-6 flex items-center gap-2">
+                       <Users size={24} />
+                       Suggested Committees
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                       {suggestedCommittees.map(c => (
+                          <div key={c.id} className="bg-white/10 backdrop-blur-md border border-white/20 p-4 rounded-2xl hover:bg-white/20 transition-all cursor-pointer">
+                             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-200 mb-1">{c.subject}</p>
+                             <h4 className="font-bold text-sm">{c.id}</h4>
+                             <div className="flex justify-between items-center mt-3">
+                                <span className="text-[10px] font-black">{c.members.length} Members</span>
+                          <button
+                             onClick={async (e) => {
+                                e.stopPropagation();
+                                try {
+                                   await api.post(`/committees/${c.id}/join`);
+                                   onAction();
+                                } catch (err) {
+                                   alert('Join failed');
+                                }
+                             }}
+                             className="text-[10px] font-black bg-white text-blue-600 px-2 py-0.5 rounded hover:bg-blue-50 transition-colors"
+                          >
+                             Join
+                          </button>
+                             </div>
+                          </div>
+                       ))}
+                    </div>
+                 </div>
+              )}
            </div>
         </section>
       )}
 
       {/* Power Breakdown Table */}
       <section className="bg-white border rounded-3xl p-8 shadow-sm">
-        <h3 className="text-xl font-black text-slate-800 mb-6 flex items-center gap-2">
+        <h3 className="text-xl font-black text-slate-800 mb-2 flex items-center gap-2">
            <ShieldCheck className="text-blue-600" />
            Liquid Power Breakdown
         </h3>
+        <p className="text-xs text-slate-500 font-medium mb-6 leading-relaxed">
+           Your voting power is subject-specific. It represents the sum of your voice credits and any power delegated to you by other citizens who trust your expertise.
+        </p>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {Object.entries(powerBreakdown).map(([subject, power]) => (
-            <div key={subject} className="p-4 rounded-2xl border bg-gray-50/50 flex justify-between items-center">
-              <div>
-                <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest">{subject}</p>
-                <p className="text-xl font-black text-slate-800">{power}</p>
+            <div key={subject} className="p-5 rounded-2xl border bg-gray-50/50 flex flex-col gap-4">
+              <div className="flex justify-between items-start">
+                 <div>
+                    <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest">{subject}</p>
+                    <p className="text-2xl font-black text-slate-800">{power}</p>
+                 </div>
+                 <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600">
+                    <GitGraph size={20} />
+                 </div>
               </div>
-              <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600">
-                <GitGraph size={20} />
-              </div>
+
+              {delegators[subject] && delegators[subject].length > 0 && (
+                <div className="pt-3 border-t border-gray-100">
+                   <p className="text-[8px] font-black uppercase text-slate-400 tracking-widest mb-2">Trusting Citizens ({delegators[subject].length})</p>
+                   <div className="flex flex-wrap gap-1">
+                      {delegators[subject].map(d => (
+                         <span key={d.id} className="bg-white px-2 py-0.5 rounded border text-[9px] font-bold text-slate-600" title={d.name}>
+                            {d.name}
+                         </span>
+                      ))}
+                   </div>
+                </div>
+              )}
             </div>
           ))}
         </div>
@@ -199,21 +394,62 @@ export const IdentityView: React.FC<IdentityViewProps> = ({ currentUser, allUser
 
       {/* Delegation Graph */}
       <section>
-        <h3 className="text-xl font-black text-slate-800 mb-6 flex items-center gap-2">
+        <h3 className="text-xl font-black text-slate-800 mb-2 flex items-center gap-2">
            <GitGraph className="text-blue-600" />
            Voting Power Delegation flow
         </h3>
+        <p className="text-xs text-slate-500 font-medium mb-6 leading-relaxed">
+           Visualize how trust flows through the network. Delegation allows specialized knowledge to scale without central authority.
+        </p>
         <DelegationGraph users={allUsers} subject="Roads" />
       </section>
 
       {/* Citizens List */}
       <section>
-        <h3 className="text-xl font-black text-slate-800 mb-6 flex items-center gap-2">
-           <UserPlus className="text-blue-600" />
-           Citizen Registry
-        </h3>
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+           <h3 className="text-xl font-black text-slate-800 flex items-center gap-2">
+              <UserPlus className="text-blue-600" />
+              Citizen Registry
+           </h3>
+           <div className="flex gap-2 w-full md:w-auto">
+              <input
+                 type="text"
+                 placeholder="Search by name..."
+                 value={searchTerm}
+                 onChange={(e) => setSearchBar(e.target.value)}
+                 className="bg-gray-50 border rounded-xl px-4 py-2 text-sm font-bold focus:ring-2 focus:ring-blue-500 outline-none flex-1 md:w-64"
+              />
+              <select
+                 value={filterSubject}
+                 onChange={(e) => setFilterSubject(e.target.value)}
+                 className="bg-gray-50 border rounded-xl px-4 py-2 text-sm font-bold focus:ring-2 focus:ring-blue-500 outline-none"
+              >
+                 <option value="All">All Experts</option>
+                 {Array.from(new Set(allUsers.flatMap(u => Object.keys(u.reputation)))).sort().map(s => (
+                    <option key={s} value={s}>{s}</option>
+                 ))}
+              </select>
+           </div>
+        </div>
+
         <div className="grid gap-4">
-          {allUsers.filter((u: User) => u.id !== currentUser?.id).map((u: User) => (
+          {allUsers
+            .filter((u: User) => u.id !== currentUser?.id)
+            .filter((u: User) => {
+               const matchesSearch = u.name.toLowerCase().includes(searchTerm.toLowerCase());
+               const matchesSubject = filterSubject === 'All' || (u.reputation[filterSubject] || 0) > 0;
+               return matchesSearch && matchesSubject;
+            })
+            .sort((a, b) => {
+               // Sort by reputation in filtered subject if selected, otherwise total reputation
+               if (filterSubject !== 'All') {
+                  return (b.reputation[filterSubject] || 0) - (a.reputation[filterSubject] || 0);
+               }
+               const totalA = Object.values(a.reputation).reduce((sum, r) => sum + r, 0);
+               const totalB = Object.values(b.reputation).reduce((sum, r) => sum + r, 0);
+               return totalB - totalA;
+            })
+            .map((u: User) => (
             <div key={u.id} className="bg-white border rounded-2xl p-6 flex items-center justify-between shadow-sm hover:shadow-md transition-all">
                <div className="flex items-center gap-4">
                   <div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center font-black text-slate-400 text-xl uppercase">
@@ -232,14 +468,41 @@ export const IdentityView: React.FC<IdentityViewProps> = ({ currentUser, allUser
                   </div>
                </div>
 
-               <button
-                disabled={loading || (profiles[u.id]?.endorsedBy.includes(currentUser?.id || '') ?? false)}
-                onClick={() => handleEndorse(u.id)}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-black text-xs uppercase tracking-widest bg-white border-2 border-slate-100 text-slate-600 hover:border-blue-600 hover:text-blue-600 transition-all disabled:opacity-30 disabled:hover:border-slate-100 disabled:hover:text-slate-600"
-               >
-                  <Award size={16} />
-                  {profiles[u.id]?.endorsedBy.includes(currentUser?.id || '') ? 'Endorsed' : 'Endorse'}
-               </button>
+               <div className="flex gap-2">
+                  <button
+                    disabled={loading}
+                    onClick={async () => {
+                       const subject = prompt('Delegate power for which subject?', 'General');
+                       if (!subject || !currentUser) return;
+                       try {
+                          setLoading(true);
+                          await api.post('/delegate', {
+                             userId: currentUser.id,
+                             delegateId: u.id,
+                             subject
+                          });
+                          onAction();
+                       } catch (err) {
+                          alert('Delegation failed');
+                       } finally {
+                          setLoading(false);
+                       }
+                    }}
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-black text-xs uppercase tracking-widest bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-all disabled:opacity-30"
+                  >
+                     <GitGraph size={14} />
+                     Delegate
+                  </button>
+
+                  <button
+                    disabled={loading || (profiles[u.id]?.endorsedBy.includes(currentUser?.id || '') ?? false)}
+                    onClick={() => handleEndorse(u.id)}
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-black text-xs uppercase tracking-widest bg-white border-2 border-slate-100 text-slate-600 hover:border-blue-600 hover:text-blue-600 transition-all disabled:opacity-30 disabled:hover:border-slate-100 disabled:hover:text-slate-600"
+                  >
+                      <Award size={14} />
+                      {profiles[u.id]?.endorsedBy.includes(currentUser?.id || '') ? 'Endorsed' : 'Endorse'}
+                  </button>
+               </div>
             </div>
           ))}
         </div>

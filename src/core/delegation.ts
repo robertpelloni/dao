@@ -44,6 +44,13 @@ export function resolveDelegate(
   }
 }
 
+export interface EffectivePower {
+  total: number;
+  personal: number;
+  delegated: number;
+  delegators: { userId: string, voiceCredits: number }[];
+}
+
 /**
  * Calculates the total voting power (voice credits) concentrated in a user for a subject.
  * This includes the user's own credits plus all credits delegated to them.
@@ -51,24 +58,36 @@ export function resolveDelegate(
  * @param store The data store
  * @param targetUserId The user whose power we are calculating
  * @param subject The subject node
- * @returns Total voice credits
+ * @returns An object containing the power breakdown and list of delegators.
  */
 export function calculateEffectivePower(
   store: Store,
   targetUserId: string,
   subject: string
-): number {
-  let totalCredits = 0;
+): EffectivePower {
+  let personal = 0;
+  let delegated = 0;
+  const delegators: { userId: string, voiceCredits: number }[] = [];
 
   // Iterate through all users to see who delegates to targetUserId
   const allUsers = store.getUsers();
   for (const user of allUsers) {
     if (resolveDelegate(store, user.id, subject) === targetUserId) {
-      totalCredits += user.voiceCredits;
+      if (user.id === targetUserId) {
+        personal = user.voiceCredits;
+      } else {
+        delegated += user.voiceCredits;
+        delegators.push({ userId: user.id, voiceCredits: user.voiceCredits });
+      }
     }
   }
 
-  return totalCredits;
+  return {
+    total: personal + delegated,
+    personal,
+    delegated,
+    delegators
+  };
 }
 
 /**

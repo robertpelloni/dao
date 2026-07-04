@@ -1,159 +1,22 @@
-## [1.0.26] - 2026-06-28
-## [1.0.26] - 2026-06-28
-### Added
-- Automated Protocol Sync and Branch Reconciliation.
-
-## [1.0.25] - 2026-06-28
-## [1.0.25] - 2026-06-28
-### Added
-- Automated Protocol Sync and Branch Reconciliation.
-
-## [1.0.24] - 2026-06-28
-## [1.0.24] - 2026-06-28
-### Added
-- Automated Protocol Sync and Branch Reconciliation.
-
-## [1.0.23] - 2026-06-27
-## [1.0.23] - 2026-06-27
-### Added
-- Automated Protocol Sync and Branch Reconciliation.
-
-## [1.0.22] - 2026-06-27
-## [1.0.22] - 2026-06-27
-### Added
-- Automated Protocol Sync and Branch Reconciliation.
-
-## [1.0.21] - 2026-06-27
-## [1.0.21] - 2026-06-27
-### Added
-- Automated Protocol Sync and Branch Reconciliation.
-
-## [1.0.20] - 2026-06-26
-## [1.0.20] - 2026-06-26
-### Added
-- Automated Protocol Sync and Branch Reconciliation.
-
-## [1.0.19] - 2026-06-25
-## [1.0.19] - 2026-06-25
-### Added
-- Automated Protocol Sync and Branch Reconciliation.
-
-## [1.0.18] - 2026-06-24
-## [1.0.18] - 2026-06-24
-### Added
-- Automated Protocol Sync and Branch Reconciliation.
-
-## [1.0.17] - 2026-06-24
-## [1.0.17] - 2026-06-24
-### Added
-- Automated Protocol Sync and Branch Reconciliation.
-
-## [1.0.16] - 2026-06-24
-## [1.0.16] - 2026-06-24
-### Added
-- Automated Protocol Sync and Branch Reconciliation.
-
-## [1.0.15] - 2026-06-23
-## [1.0.15] - 2026-06-23
-### Added
-- Automated Protocol Sync and Branch Reconciliation.
-
-## [1.0.14] - 2026-06-18
-## [1.0.14] - 2026-06-18
-### Added
-- Automated Protocol Sync and Branch Reconciliation.
-
-## [1.0.13] - 2026-06-18
-## [1.0.13] - 2026-06-18
-### Added
-- Automated Protocol Sync and Branch Reconciliation.
-
-## [1.0.12] - 2026-06-18
-## [1.0.12] - 2026-06-18
-### Added
-- Automated Protocol Sync and Branch Reconciliation.
-
-## [1.0.11] - 2026-06-18
-## [1.0.11] - 2026-06-18
-### Added
-- Automated Protocol Sync and Branch Reconciliation.
-
-## [1.0.10] - 2026-06-07
-## [1.0.10] - 2026-06-07
-### Added
-- Automated Protocol Sync and Branch Reconciliation.
-
-## [1.0.7] - 2026-06-07
-## [1.0.7] - 2026-06-07
-### Added
-- Automated Protocol Sync and Branch Reconciliation.
-
-## [1.0.6] - 2026-06-07
-## [1.0.6] - 2026-06-07
-### Added
-- Automated Protocol Sync and Branch Reconciliation.
-
-## [1.0.5] - 2026-06-07
-## [1.0.5] - 2026-06-07
-### Added
-- Automated Protocol Sync and Branch Reconciliation.
-
-## [1.0.4] - 2026-06-07
-## [1.0.4] - 2026-06-07
-### Added
-- Automated Protocol Sync and Branch Reconciliation.
-
 # Changelog
 
-All notable changes to this project will be documented in this file.
-
-## [1.0.5] - 2026-06-05
+## [1.1.4] - 2026-06-16
 ### Added
-- **Formalized Treasury Intake**: Added `treasury_transactions` ledger for matching pool auditing.
-- **Participation Auditing**: Persistent SQL records for all votes and contributions to support high-fidelity security analysis.
-- **Identity Prioritization**: Hierarchical Proof-of-Humanity logic to preserve the strongest citizen verification method.
-- **Integration Milestone**: Verified end-to-end stability with protocol and security regression tests.
+- **Credit-Backed Liquid Delegation**: Delegates now spend voice credits from their delegators' pools when casting votes, ensuring true proportional representation.
+- **Democratic Override**: Implemented logic to detect and prioritize personal votes over a delegate's prior actions on the same proposal.
+- **System Governance Dashboard**: Consolidated Health, Autonomous Tasks, and Security Audit into a unified "Minimalist" UX panel.
+- **Proportional Power Calculation**: Updated `calculateEffectivePower` to return a detailed breakdown of personal vs. delegated voting power.
 
-## [1.0.4] - 2026-06-05
+### Changed
+- Refactored voting API to support proportional credit consumption from delegation pools.
+- Enhanced navigation with a simplified "System Governance" view to reduce cognitive load.
+
+## [1.1.3] - 2026-06-15
 ### Added
-- **Security Engine**: Implemented `src/core/security.ts` with graph-based Sybil detection and reputation decay algorithms.
-- **Sybil Resistance**: Automated flagging of suspicious delegation clusters during governance transitions.
-- **Governance Transitions**: Enhanced `GovernanceManager` with automated security audits and standardized decay.
-- **Integration Tests**: New `tests/security.integration.test.ts` verifying the core data-processing logic.
-- **ZKP Identity Verification**: Added `POST /identity/:id/verify-zkp` endpoint and UI flow for privacy-preserving proof-of-humanity.
+- **Voluntary Tax Routing**: Citizens can now route contributions to subject-specific matching pools.
+- **Meritocratic Voice Credits**: Awarding bonus credits based on subject reputation.
+- **Emergency Fast-track**: Critical proposals bypass standard sponsorship delays.
+- **Expert-Weighted Juries**: Experts (Rep >= 10) have double weight in milestone verification.
+- **Security: Delegation Depth Analysis**: Detecting and flagging Sybil puppet networks (depth > 3).
 
-### Fixed
-- Restored missing autonomous protocol methods in `RepositoryManager`.
-- Synchronized `package-lock.json` with release version.
-- Cleaned up internal git artifacts from the test directory.
-
-## [1.0.1] - 2026-06-05
-### Added
-- Automated protocol sync and branch reconciliation.
-
-## [1.0.0] - 2026-06-04
-### Added
-- **Quadratic Funding (QF)**: Implemented matching engine in `TreasuryManager`.
-- **Reputation Economy**: Citizen rewards for subject-specific reputation.
-- **Randomized Juries**: Automated assignment of verified humans to project verification.
-- **Autonomous Execution**: State-transition hooks for simulated payload execution.
-- **AI Triage Agent**: Automated committee suggestions and redundancy detection.
-- **ZKP Identity Layer**: Foundation for privacy-preserving proof-of-humanity.
-
-## [0.8.8] - 2026-05-23
-### Added
-- Automated protocol sync and branch reconciliation.
-
-## [0.8.5] - 2026-05-23
-### Added
-- Robust implementation of the "Executive Protocol" for autonomous repository management.
-- Comprehensive integration tests for multi-branch merging and versioning.
-
-## [0.8.0] - 2025-05-22
-### Added
-- **Visual Delegation Graph**: Implemented a force-directed graph in the Identity View.
-
-## [0.7.0] - 2025-05-15
-### Added
-- Milestone Oracle System: Multi-party jury consensus for milestone fund release.
-- Real-time Updates: WebSocket integration for live dashboard updates.
+...

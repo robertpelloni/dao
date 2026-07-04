@@ -1,10 +1,13 @@
 import { Proposal, ProposalStatus } from '../models/types';
+import { globalStore } from '../models/Store';
+import { TreasuryManager } from './treasury';
 
 /**
  * Valid state transitions for a Proposal.
  */
 const VALID_TRANSITIONS: Record<ProposalStatus, ProposalStatus[]> = {
-  'DRAFT': ['SPONSORED'],
+  'DRAFT': ['SPONSORED', 'EMERGENCY'],
+  'EMERGENCY': ['ACTIVE_VOTING', 'REJECTED'],
   'SPONSORED': ['ACTIVE_VOTING', 'REJECTED'],
   'ACTIVE_VOTING': ['FUNDED', 'REJECTED'],
   'FUNDED': ['IN_PROGRESS', 'REJECTED'], // Can be rejected if found fraudulent before starting
@@ -56,6 +59,25 @@ export function transitionProposal(proposal: Proposal, newStatus: ProposalStatus
 function executeAutonomousPayload(proposal: Proposal): void {
   console.log(`[AUTONOMOUS EXECUTION] Triggering payload for Proposal: ${proposal.id}`);
   console.log(`[PAYLOAD]: ${proposal.executionPayload}`);
+
+  try {
+    const payload = JSON.parse(proposal.executionPayload);
+
+    // Handle Special Actions
+    if (payload.action === 'REALLOCATE_FUNDS') {
+      const treasury = new TreasuryManager(globalStore);
+      treasury.reallocate(
+        payload.amount,
+        payload.tokenSymbol || 'USD',
+        payload.fromSubject || 'General',
+        payload.toSubject,
+        `Proposal ${proposal.id} Reallocation`
+      );
+      console.log(`[ACTION] Funds reallocated via Proposal ${proposal.id}`);
+    }
+  } catch (err) {
+    console.warn(`[AUTONOMOUS EXECUTION] Payload parsing failed or action not found for ${proposal.id}`);
+  }
 
   // Simulated audit log
   const auditEntry = {

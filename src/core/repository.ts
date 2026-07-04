@@ -310,11 +310,13 @@ export class RepositoryManager {
       'scripts/start.bat', 'scripts/build.bat', 'scripts/sync-protocol.bat',
       'start.bat', 'build.bat'
     ];
+    const hasScriptsDir = fs.existsSync(path.join(this.rootDir, 'scripts'));
+
     for (const script of scripts) {
       const fullPath = path.join(this.rootDir, script);
       if (!fs.existsSync(fullPath)) {
-        // Check if it's a symlink or missing
-        if (script.includes('.sh') && !script.startsWith('scripts/')) {
+        // Only warn for root symlinks if the scripts directory actually exists
+        if (hasScriptsDir && script.includes('.sh') && !script.startsWith('scripts/')) {
            console.warn(`[!] Warning: Root script missing or broken symlink: ${script}`);
         }
         continue;

@@ -44,9 +44,9 @@ describe('Liquid Delegation Logic', () => {
     delegate(store, 'C', 'B', 'Roads');
 
     // B should have A's (100) + C's (100) + their own (100) = 300
-    expect(calculateEffectivePower(store, 'B', 'Roads')).toBe(300);
+    expect(calculateEffectivePower(store, 'B', 'Roads').total).toBe(300);
     // A and C should have 0 because they delegated away
-    expect(calculateEffectivePower(store, 'A', 'Roads')).toBe(0);
+    expect(calculateEffectivePower(store, 'A', 'Roads').total).toBe(0);
   });
 
   test('calculateEffectivePower should handle transitive chains (A -> B -> C)', () => {
@@ -54,18 +54,18 @@ describe('Liquid Delegation Logic', () => {
     delegate(store, 'B', 'C', 'Roads');
 
     // C should have A + B + C = 300
-    expect(calculateEffectivePower(store, 'C', 'Roads')).toBe(300);
-    expect(calculateEffectivePower(store, 'B', 'Roads')).toBe(0);
-    expect(calculateEffectivePower(store, 'A', 'Roads')).toBe(0);
+    expect(calculateEffectivePower(store, 'C', 'Roads').total).toBe(300);
+    expect(calculateEffectivePower(store, 'B', 'Roads').total).toBe(0);
+    expect(calculateEffectivePower(store, 'A', 'Roads').total).toBe(0);
   });
 
   test('revokeDelegation should restore power to the delegator', () => {
     delegate(store, 'A', 'B', 'Roads');
-    expect(calculateEffectivePower(store, 'B', 'Roads')).toBe(200);
+    expect(calculateEffectivePower(store, 'B', 'Roads').total).toBe(200);
 
     revokeDelegation(store, 'A', 'Roads');
-    expect(calculateEffectivePower(store, 'B', 'Roads')).toBe(100);
-    expect(calculateEffectivePower(store, 'A', 'Roads')).toBe(100);
+    expect(calculateEffectivePower(store, 'B', 'Roads').total).toBe(100);
+    expect(calculateEffectivePower(store, 'A', 'Roads').total).toBe(100);
   });
 
   test('delegation should be subject-specific', () => {

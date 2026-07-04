@@ -29,3 +29,6 @@ deploy-artifacts/
 *.js.map
 *.d.ts
 *.d.ts.map
+.vite/
+playwright-report/
+test-results/

@@ -1,11 +1,12 @@
 @echo off
-echo Verifying Documentation Standards...
+echo Verifying documentation standards...
+set mandatory=VISION.md MEMORY.md DEPLOY.md CHANGELOG.md ROADMAP.md TODO.md VERSION.md IDEAS.md HANDOFF.md AGENTS.md PROTOCOL_SPEC.md
 
-set docs=VISION.md MEMORY.md DEPLOY.md CHANGELOG.md ROADMAP.md TODO.md VERSION.md IDEAS.md HANDOFF.md AGENTS.md
-for %%d in (%docs%) do (
-    if not exist "%%d" (
-        echo Error: Missing mandatory document %%d
+for %%f in (%mandatory%) do (
+    if not exist "%%f" (
+        echo [!] Mandatory file missing: %%f
+        exit /b 1
     )
+    echo ✓ %%f exists
 )
-
-echo All mandatory documents are present.
+echo ✓ All mandatory documents are present.
