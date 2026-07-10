@@ -1,5 +1,6 @@
 import { Store } from '../models/Store';
 import { Proposal, Contribution } from '../models/types';
+import { globalIdentity } from './identity';
 
 /**
  * Treasury and Quadratic Funding (QF) Engine
@@ -8,20 +9,24 @@ import { Proposal, Contribution } from '../models/types';
  * using a central matching pool.
  * QF Match = (Sum(Sqrt(contributions)))^2 - Sum(contributions)
  */
+import { IdentityManager } from './identity';
+
 export class TreasuryManager {
-  // Map of token symbol to matching pool amount
-  private matchingPools: Map<string, number> = new Map();
+  private identity: IdentityManager;
 
   constructor(private store: Store) {
-    // Initialize default USD pool
-    this.matchingPools.set('USD', 0);
+    this.identity = new IdentityManager(store);
+    // Ensure default USD pool exists in persistent store if not set
+    if (this.store.getMatchingPool('USD', 'General') === 0) {
+      this.store.setMatchingPool('USD', 'General', 0);
+    }
   }
 
   /**
-   * Sets the matching pool for a specific token.
+   * Sets the matching pool for a specific token and subject.
    */
-  setMatchingPool(amount: number, tokenSymbol: string = 'USD'): void {
-    this.matchingPools.set(tokenSymbol, amount);
+  setMatchingPool(amount: number, tokenSymbol: string = 'USD', subject: string = 'General'): void {
+    this.store.setMatchingPool(tokenSymbol, subject, amount);
   }
 
   /**
@@ -47,14 +52,15 @@ export class TreasuryManager {
 
   /**
    * Allocates matching funds to all funded proposals based on their QF scores.
-   * If the total matching requirement exceeds the pool for that token, it scales proportionally.
+   * If the total matching requirement exceeds the pool for that token and subject, it scales proportionally.
    */
   allocateMatchingFunds(
     proposals: Proposal[],
     allContributions: Map<string, Contribution[]>,
-    tokenSymbol: string = 'USD'
+    tokenSymbol: string = 'USD',
+    subject: string = 'General'
   ): Record<string, number> {
-    const pool = this.matchingPools.get(tokenSymbol) || 0;
+    const pool = this.store.getMatchingPool(tokenSymbol, subject);
     const matches: Record<string, number> = {};
     let totalMatchRequired = 0;
 
@@ -79,15 +85,71 @@ export class TreasuryManager {
     return matches;
   }
 
-  getPoolBalance(tokenSymbol: string = 'USD'): number {
-    return this.matchingPools.get(tokenSymbol) || 0;
+  getPoolBalance(tokenSymbol: string = 'USD', subject: string = 'General'): number {
+    return this.store.getMatchingPool(tokenSymbol, subject);
   }
 
-  getAllPools(): Record<string, number> {
-    const result: Record<string, number> = {};
-    this.matchingPools.forEach((amount, symbol) => {
-      result[symbol] = amount;
+  getAllPools(): any[] {
+    return this.store.getAllMatchingPools();
+  }
+
+  deposit(amount: number, tokenSymbol: string = 'USD', subject: string = 'General', description: string = 'Deposit', userId?: string): void {
+    const current = this.getPoolBalance(tokenSymbol, subject);
+    this.setMatchingPool(current + amount, tokenSymbol, subject);
+
+    this.store.addTreasuryTransaction({
+      id: `tx-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+      tokenSymbol,
+      subject,
+      userId: userId || null,
+      amount,
+      type: 'DEPOSIT',
+      description,
+      timestamp: Date.now()
     });
-    return result;
+
+    // Reward reputation for voluntary contribution (1 rep per 10 USD)
+    if (userId && amount > 0 && tokenSymbol === 'USD') {
+      const repReward = Math.floor(amount / 10);
+      if (repReward > 0) {
+        this.identity.rewardReputation(userId, subject, repReward);
+        console.log(`Rewarding user ${userId} with ${repReward} reputation in ${subject} for contribution.`);
+      }
+    }
+  }
+
+  getTransactions(): any[] {
+    return this.store.getTreasuryTransactions();
+  }
+
+  /**
+   * Reallocates funds between matching pools.
+   */
+  reallocate(amount: number, tokenSymbol: string, fromSubject: string, toSubject: string, description: string = 'Reallocation'): void {
+    const fromBalance = this.getPoolBalance(tokenSymbol, fromSubject);
+    if (fromBalance < amount) throw new Error(`Insufficient funds in ${fromSubject} pool.`);
+
+    this.setMatchingPool(fromBalance - amount, tokenSymbol, fromSubject);
+    this.setMatchingPool(this.getPoolBalance(tokenSymbol, toSubject) + amount, tokenSymbol, toSubject);
+
+    this.store.addTreasuryTransaction({
+      id: `realloc-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+      tokenSymbol,
+      subject: fromSubject,
+      amount: -amount,
+      type: 'REALLOCATION_OUT',
+      description: `${description} (To ${toSubject})`,
+      timestamp: Date.now()
+    });
+
+    this.store.addTreasuryTransaction({
+      id: `realloc-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+      tokenSymbol,
+      subject: toSubject,
+      amount: amount,
+      type: 'REALLOCATION_IN',
+      description: `${description} (From ${fromSubject})`,
+      timestamp: Date.now()
+    });
   }
 }

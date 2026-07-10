@@ -26,7 +26,8 @@ export class Store {
         id TEXT PRIMARY KEY,
         subject TEXT,
         members TEXT,
-        thresholdQuorum REAL
+        thresholdQuorum REAL,
+        lastActivityAt INTEGER
       );
 
       CREATE TABLE IF NOT EXISTS proposals (
@@ -44,6 +45,8 @@ export class Store {
         votesFor REAL,
         votesAgainst REAL,
         impactScore REAL,
+        isCritical INTEGER,
+        contentHash TEXT,
         executionPayload TEXT
       );
 
@@ -79,7 +82,33 @@ export class Store {
         proposalId TEXT,
         amount REAL,
         tokenSymbol TEXT,
+        timestamp INTEGER,
+        isBlinded INTEGER,
+        blindedCommitment TEXT
+      );
+
+      CREATE TABLE IF NOT EXISTS matching_pools (
+        tokenSymbol TEXT,
+        subject TEXT,
+        amount REAL,
+        PRIMARY KEY (tokenSymbol, subject)
+      );
+
+      CREATE TABLE IF NOT EXISTS treasury_transactions (
+        id TEXT PRIMARY KEY,
+        tokenSymbol TEXT,
+        subject TEXT,
+        userId TEXT,
+        amount REAL,
+        type TEXT,
+        description TEXT,
         timestamp INTEGER
+      );
+
+      CREATE TABLE IF NOT EXISTS notification_subscriptions (
+        userId TEXT PRIMARY KEY,
+        subscription TEXT,
+        updatedAt INTEGER
       );
     `);
   }
@@ -117,8 +146,8 @@ export class Store {
   }
 
   addCommittee(committee: Committee) {
-    const stmt = this.db.prepare('INSERT OR REPLACE INTO committees (id, subject, members, thresholdQuorum) VALUES (?, ?, ?, ?)');
-    stmt.run(committee.id, committee.subject, JSON.stringify(committee.members), committee.thresholdQuorum);
+    const stmt = this.db.prepare('INSERT OR REPLACE INTO committees (id, subject, members, thresholdQuorum, lastActivityAt) VALUES (?, ?, ?, ?, ?)');
+    stmt.run(committee.id, committee.subject, JSON.stringify(committee.members), committee.thresholdQuorum, committee.lastActivityAt || Date.now());
   }
 
   getCommittee(id: string): Committee | undefined {
@@ -151,13 +180,13 @@ export class Store {
       INSERT OR REPLACE INTO proposals (
         id, title, abstract, detailedSpecs, proposerId, committeeId,
         status, milestones, totalTargetBudget, currentFunding, tokenSymbol,
-        votesFor, votesAgainst, impactScore, executionPayload
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        votesFor, votesAgainst, impactScore, isCritical, contentHash, executionPayload
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
     stmt.run(
       proposal.id, proposal.title, proposal.abstract, proposal.detailedSpecs, proposal.proposerId, proposal.committeeId,
       proposal.status, JSON.stringify(proposal.milestones), proposal.totalTargetBudget, proposal.currentFunding, proposal.tokenSymbol || 'USD',
-      proposal.votesFor, proposal.votesAgainst, proposal.impactScore || 0, proposal.executionPayload
+      proposal.votesFor, proposal.votesAgainst, proposal.impactScore || 0, proposal.isCritical ? 1 : 0, proposal.contentHash || null, proposal.executionPayload
     );
   }
 
@@ -167,7 +196,8 @@ export class Store {
     if (!row) return undefined;
     return {
       ...row,
-      milestones: JSON.parse(row.milestones)
+      milestones: JSON.parse(row.milestones),
+      isCritical: row.isCritical === 1
     };
   }
 
@@ -176,7 +206,8 @@ export class Store {
     const rows = stmt.all() as any[];
     return rows.map(row => ({
       ...row,
-      milestones: JSON.parse(row.milestones)
+      milestones: JSON.parse(row.milestones),
+      isCritical: row.isCritical === 1
     }));
   }
 
@@ -275,17 +306,97 @@ export class Store {
   }
 
   addContribution(contribution: Contribution) {
-    const stmt = this.db.prepare('INSERT INTO contributions (userId, proposalId, amount, tokenSymbol, timestamp) VALUES (?, ?, ?, ?, ?)');
-    stmt.run(contribution.userId, contribution.proposalId, contribution.amount, contribution.tokenSymbol, contribution.timestamp);
+    const stmt = this.db.prepare('INSERT INTO contributions (userId, proposalId, amount, tokenSymbol, timestamp, isBlinded, blindedCommitment) VALUES (?, ?, ?, ?, ?, ?, ?)');
+    stmt.run(
+      contribution.userId, contribution.proposalId, contribution.amount, contribution.tokenSymbol, contribution.timestamp,
+      contribution.isBlinded ? 1 : 0, contribution.blindedCommitment || null
+    );
+  }
+
+  getAllVotes(): Vote[] {
+    const stmt = this.db.prepare("SELECT * FROM votes");
+    return stmt.all() as Vote[];
+  }
+
+  getAllContributions(): Contribution[] {
+    const stmt = this.db.prepare("SELECT * FROM contributions");
+    return stmt.all() as Contribution[];
   }
 
   getContributionsByUser(userId: string): Contribution[] {
     const stmt = this.db.prepare('SELECT * FROM contributions WHERE userId = ?');
-    return stmt.all(userId) as Contribution[];
+    const rows = stmt.all(userId) as any[];
+    return rows.map(row => ({
+      ...row,
+      isBlinded: row.isBlinded === 1
+    }));
+  }
+
+  getContributionsByProposal(proposalId: string): Contribution[] {
+    const stmt = this.db.prepare('SELECT * FROM contributions WHERE proposalId = ?');
+    const rows = stmt.all(proposalId) as any[];
+    return rows.map(row => ({
+      ...row,
+      isBlinded: row.isBlinded === 1
+    }));
+  }
+
+  /**
+   * Retrieves all users who have delegated power to a specific target user for a specific subject.
+   */
+  getDelegators(targetId: string, subject: string): User[] {
+    const users = this.getUsers();
+    return users.filter(u => u.delegates[subject] === targetId);
+  }
+
+  setMatchingPool(tokenSymbol: string, subject: string, amount: number) {
+    const stmt = this.db.prepare('INSERT OR REPLACE INTO matching_pools (tokenSymbol, subject, amount) VALUES (?, ?, ?)');
+    stmt.run(tokenSymbol, subject, amount);
+  }
+
+  getMatchingPool(tokenSymbol: string, subject: string = 'General'): number {
+    const stmt = this.db.prepare('SELECT amount FROM matching_pools WHERE tokenSymbol = ? AND subject = ?');
+    const row = stmt.get(tokenSymbol, subject) as any;
+    return row ? row.amount : 0;
+  }
+
+  getAllMatchingPools(): any[] {
+    const stmt = this.db.prepare('SELECT * FROM matching_pools');
+    return stmt.all();
+  }
+
+  addTreasuryTransaction(tx: { id: string; tokenSymbol: string; subject: string; userId?: string | null; amount: number; type: string; description: string; timestamp: number }) {
+    const stmt = this.db.prepare('INSERT INTO treasury_transactions (id, tokenSymbol, subject, userId, amount, type, description, timestamp) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
+    stmt.run(tx.id, tx.tokenSymbol, tx.subject, tx.userId || null, tx.amount, tx.type, tx.description, tx.timestamp);
+  }
+
+  getTreasuryTransactions(): any[] {
+    const stmt = this.db.prepare('SELECT * FROM treasury_transactions ORDER BY timestamp DESC');
+    return stmt.all();
+  }
+
+  addNotificationSubscription(userId: string, subscription: any) {
+    const stmt = this.db.prepare('INSERT OR REPLACE INTO notification_subscriptions (userId, subscription, updatedAt) VALUES (?, ?, ?)');
+    stmt.run(userId, JSON.stringify(subscription), Date.now());
+  }
+
+  getNotificationSubscription(userId: string): any | undefined {
+    const stmt = this.db.prepare('SELECT subscription FROM notification_subscriptions WHERE userId = ?');
+    const row = stmt.get(userId) as any;
+    return row ? JSON.parse(row.subscription) : undefined;
+  }
+
+  getAllNotificationSubscriptions(): { userId: string, subscription: any }[] {
+    const stmt = this.db.prepare('SELECT * FROM notification_subscriptions');
+    const rows = stmt.all() as any[];
+    return rows.map(r => ({
+      userId: r.userId,
+      subscription: JSON.parse(r.subscription)
+    }));
   }
 
   clear() {
-    this.db.exec('DELETE FROM users; DELETE FROM committees; DELETE FROM proposals; DELETE FROM governance_cycles; DELETE FROM tasks; DELETE FROM votes; DELETE FROM contributions;');
+    this.db.exec('DELETE FROM users; DELETE FROM committees; DELETE FROM proposals; DELETE FROM governance_cycles; DELETE FROM tasks; DELETE FROM votes; DELETE FROM contributions; DELETE FROM matching_pools; DELETE FROM treasury_transactions;');
   }
 }
 

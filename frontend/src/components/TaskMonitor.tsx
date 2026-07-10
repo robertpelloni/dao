@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import api from '../api/client.js';
 
 interface AutonomousTask {
   id: string;
@@ -15,9 +16,8 @@ const TaskMonitor: React.FC = () => {
 
   const fetchTasks = async () => {
     try {
-      const res = await fetch('http://localhost:3000/tasks');
-      const data = await res.json();
-      setTasks(data);
+      const res = await api.get('/tasks');
+      setTasks(res.data);
     } catch (err) {
       console.error('Failed to fetch tasks', err);
     } finally {
@@ -33,10 +33,7 @@ const TaskMonitor: React.FC = () => {
 
   const executeTask = async (id: string) => {
     try {
-      await fetch(`http://localhost:3000/tasks/${id}/execute`, {
-        method: 'POST',
-        headers: { 'x-user-id': 'admin' }
-      });
+      await api.post(`/tasks/${id}/execute`, {}, { headers: { 'x-user-id': 'admin' } });
       fetchTasks();
     } catch (err) {
       console.error('Failed to execute task', err);
@@ -45,17 +42,10 @@ const TaskMonitor: React.FC = () => {
 
   const createSyncTask = async () => {
     try {
-      await fetch('http://localhost:3000/tasks', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-user-id': 'admin'
-        },
-        body: JSON.stringify({
-          title: 'Manual Protocol Sync',
-          description: 'Triggered from Dashboard'
-        })
-      });
+      await api.post('/tasks', {
+        title: 'Manual Protocol Sync',
+        description: 'Triggered from Dashboard'
+      }, { headers: { 'x-user-id': 'admin' } });
       fetchTasks();
     } catch (err) {
       console.error('Failed to create task', err);

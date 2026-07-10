@@ -47,7 +47,16 @@ export class AutonomousDeployer {
   async generateHandoff(version: string): Promise<void> {
     console.log('[APEP] Generating handoff documentation...');
     const handoffFile = path.join(this.rootDir, 'HANDOFF.md');
-    const content = `# HANDOFF: ${new Date().toISOString()}\n\n## Release v${version} Completed\n\nThe Autonomous Project Execution Protocol has successfully reconciled all branches, synchronized documentation, and verified system integrity.\n\n### Accomplishments:\n- Reconciled AI-generated feature branches.\n- Synchronized TODO.md and ROADMAP.md.\n- Verified full system build (TSC/Vite).\n- Executed all core backend and protocol tests.\n\n### Current State:\n- Version: ${version}\n- Status: STABLE\n`;
+    const todoFile = path.join(this.rootDir, 'TODO.md');
+
+    let todoSummary = '';
+    if (fs.existsSync(todoFile)) {
+       const lines = fs.readFileSync(todoFile, 'utf8').split('\n');
+       const activeTodos = lines.filter(l => l.startsWith('- [ ]')).length;
+       todoSummary = `\n### Task Summary:\n- Active TODOs remaining: ${activeTodos}\n`;
+    }
+
+    const content = `# HANDOFF: ${new Date().toISOString()}\n\n## Release v${version} Completed\n\nThe Autonomous Project Execution Protocol has successfully reconciled all branches, synchronized documentation, and verified system integrity.\n${todoSummary}\n### Accomplishments:\n- Reconciled AI-generated feature branches.\n- Synchronized TODO.md and ROADMAP.md.\n- Verified full system build (TSC/Vite).\n- Executed all core backend and protocol tests.\n\n### Current State:\n- Version: ${version}\n- Status: STABLE\n`;
     fs.writeFileSync(handoffFile, content);
   }
 

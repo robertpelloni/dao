@@ -6,6 +6,7 @@ import fs from 'fs';
 import path from 'path';
 import { globalStore } from '../models/Store';
 import { globalIdentity } from '../core/identity';
+import { globalStorage } from '../core/storage';
 import { calculateVoteCost } from '../core/qv';
 import { delegate, calculateEffectivePower } from '../core/delegation';
 import { transitionProposal } from '../core/proposalStateMachine';
@@ -41,7 +42,7 @@ app.use(express.json());
  * JWT Authentication Middleware
  */
 const authenticateToken = (req: Request, res: Response, next: any) => {
-  const skipPaths = ['/health', '/summary', '/proposals', '/committees', '/users', '/auth/login', '/governance/trends', '/governance/cycles', '/governance/cycle', '/tasks'];
+  const skipPaths = ['/health', '/summary', '/proposals', '/committees', '/users', '/auth/login', '/governance/trends', '/governance/cycles', '/governance/cycle', '/tasks', '/treasury/balance', '/treasury/transactions'];
   const publicPostPaths = ['/proposals/triage'];
 
   if (skipPaths.includes(req.path) && req.method === 'GET') return next();
@@ -95,7 +96,11 @@ io.on('connection', (socket) => {
 });
 
 const notifyUpdate = (proposalId: string) => {
-  io.emit('PROPOSAL_UPDATED', { proposalId });
+  const proposal = globalStore.getProposal(proposalId);
+  io.emit('PROPOSAL_UPDATED', {
+    proposalId,
+    isCritical: proposal?.isCritical || false
+  });
 };
 
 // Helper to ensure param is string
@@ -122,6 +127,50 @@ app.get('/users/:id', (req: Request, res: Response) => {
   const user = globalStore.getUser(s(req.params.id));
   if (!user) return res.status(404).json({ error: 'User not found' });
   res.json(user);
+});
+
+app.post('/users/:id/welcome', (req: Request, res: Response) => {
+  const userId = s(req.params.id);
+  const { interestSubject } = req.body;
+  const user = globalStore.getUser(userId);
+  if (!user) return res.status(404).json({ error: 'User not found' });
+
+  // 1. Grant seed reputation (5 points) in chosen subject
+  const subject = interestSubject || 'General';
+  globalIdentity.rewardReputation(userId, subject, 5);
+
+  // 2. Create a "Welcome Proposal" for the user to practice with
+  const welcomeProposal: Proposal = {
+    id: `welcome-${userId}-${Date.now()}`,
+    title: `Welcome to LiquidGov, ${user.name}!`,
+    abstract: `This is your personalized onboarding proposal. You can use your voice credits to vote on this initiative to see how Quadratic Voting works in the ${subject} domain.`,
+    detailedSpecs: "LiquidGov is a voluntary state governed by expertise. By voting on this proposal, you are participating in the cognitive meritocracy.",
+    proposerId: 'system',
+    committeeId: `${subject.replace(/\s+/g, '-')}-Committee`,
+    status: 'ACTIVE_VOTING',
+    milestones: [{ id: 'm0', description: 'Complete Onboarding', targetBudget: 0, isCompleted: false }],
+    totalTargetBudget: 0,
+    currentFunding: 0,
+    tokenSymbol: 'USD',
+    votesFor: 0,
+    votesAgainst: 0,
+    executionPayload: '{}'
+  };
+
+  // Ensure committee exists
+  const existing = globalStore.getCommittee(welcomeProposal.committeeId);
+  if (!existing) {
+     globalStore.addCommittee({
+        id: welcomeProposal.committeeId,
+        subject,
+        members: [userId],
+        thresholdQuorum: 0.05
+     });
+  }
+
+  globalStore.addProposal(welcomeProposal);
+
+  res.json({ message: 'Welcome package initialized', proposal: welcomeProposal });
 });
 
 app.get('/identity/:id', (req: Request, res: Response) => {
@@ -190,6 +239,32 @@ app.get('/committees', (req: Request, res: Response) => {
   res.json(Array.from(globalStore.committees.values()));
 });
 
+app.post('/committees/:id/join', (req: Request, res: Response) => {
+  const userId = (req as any).user?.userId;
+  if (!userId) return res.status(401).json({ error: 'Auth required' });
+
+  const committee = globalStore.getCommittee(s(req.params.id));
+  if (!committee) return res.status(404).json({ error: 'Committee not found' });
+
+  if (!committee.members.includes(userId)) {
+    committee.members.push(userId);
+    globalStore.addCommittee(committee);
+  }
+  res.json(committee);
+});
+
+app.post('/committees/:id/leave', (req: Request, res: Response) => {
+  const userId = (req as any).user?.userId;
+  if (!userId) return res.status(401).json({ error: 'Auth required' });
+
+  const committee = globalStore.getCommittee(s(req.params.id));
+  if (!committee) return res.status(404).json({ error: 'Committee not found' });
+
+  committee.members = committee.members.filter(id => id !== userId);
+  globalStore.addCommittee(committee);
+  res.json(committee);
+});
+
 app.post('/committees/auto-provision', (req: Request, res: Response) => {
   const activityThreshold = req.body.threshold || 2;
   const newSubjects = globalStore.getHighActivitySubjects(activityThreshold);
@@ -237,19 +312,74 @@ app.get('/committees/suggested/:userId', (req: Request, res: Response) => {
 
 app.post('/delegate', (req: Request, res: Response) => {
   const { userId, delegateId, subject } = req.body;
+  const authedId = (req as any).user?.userId;
+
+  if (authedId && userId !== authedId) {
+    return res.status(403).json({ error: 'Unauthorized delegation' });
+  }
+
   delegate(globalStore, userId, delegateId, subject);
   res.json({ message: `Delegated ${userId} -> ${delegateId} for ${subject}` });
 });
 
+app.delete('/delegate/:userId/:subject', (req: Request, res: Response) => {
+  const { userId, subject } = req.params;
+  const authedId = (req as any).user?.userId;
+
+  if (authedId && userId !== authedId) {
+    return res.status(403).json({ error: 'Unauthorized revocation' });
+  }
+
+  const user = globalStore.getUser(s(userId));
+  if (user) {
+    delete user.delegates[s(subject)];
+    globalStore.addUser(user);
+    res.json({ message: `Revoked delegation for ${subject}` });
+  } else {
+    res.status(404).json({ error: 'User not found' });
+  }
+});
+
 app.get('/power/:userId/:subject', (req: Request, res: Response) => {
-  const power = calculateEffectivePower(globalStore, s(req.params.userId), s(req.params.subject));
-  res.json({ userId: req.params.userId, subject: req.params.subject, effectivePower: power });
+  const powerBreakdown = calculateEffectivePower(globalStore, s(req.params.userId), s(req.params.subject));
+  res.json({
+    userId: req.params.userId,
+    subject: req.params.subject,
+    effectivePower: powerBreakdown.total,
+    breakdown: powerBreakdown
+  });
+});
+
+app.get('/delegators/:userId/:subject', (req: Request, res: Response) => {
+  const delegators = globalStore.getDelegators(s(req.params.userId), s(req.params.subject));
+  res.json(delegators);
+});
+
+// --- Storage Endpoints ---
+
+app.get('/storage/:cid', async (req: Request, res: Response) => {
+  try {
+    const data = await globalStorage.retrieve(s(req.params.cid));
+    if (!data) return res.status(404).json({ error: 'Content not found' });
+    res.json(data);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // --- Proposal Endpoints ---
 
-app.post('/proposals', (req: Request, res: Response) => {
+app.post('/proposals', async (req: Request, res: Response) => {
   const data = req.body;
+
+  // Upload full proposal body to decentralized storage
+  const contentHash = await globalStorage.upload({
+    title: data.title,
+    abstract: data.abstract,
+    detailedSpecs: data.detailedSpecs,
+    milestones: data.milestones || []
+  });
+
   const proposal: Proposal = {
     id: data.id,
     title: data.title,
@@ -264,9 +394,19 @@ app.post('/proposals', (req: Request, res: Response) => {
     tokenSymbol: data.tokenSymbol || 'USD',
     votesFor: 0,
     votesAgainst: 0,
+    isCritical: !!data.isCritical,
+    contentHash,
     executionPayload: data.executionPayload || '{}'
   };
   globalStore.addProposal(proposal);
+
+  // Update committee activity
+  const committee = globalStore.getCommittee(data.committeeId);
+  if (committee) {
+    committee.lastActivityAt = Date.now();
+    globalStore.addCommittee(committee);
+  }
+
   res.status(201).json(proposal);
 });
 
@@ -280,13 +420,40 @@ app.get('/proposals/:id', (req: Request, res: Response) => {
   res.json(proposal);
 });
 
+app.get('/proposals/suggested/:userId', (req: Request, res: Response) => {
+  const userId = s(req.params.userId);
+  const authedId = (req as any).user?.userId;
+
+  // Security: Prevent viewing other users' suggestions unless it's a public request (optional)
+  // For now, we enforce that the requester must be the owner or we skip specific ranking.
+  if (authedId && userId !== authedId) {
+    return res.status(403).json({ error: 'Unauthorized' });
+  }
+
+  const user = globalStore.getUser(userId);
+  if (!user) return res.status(404).json({ error: 'User not found' });
+
+  const allProposals = globalStore.getProposals();
+  const committees = Array.from(globalStore.committees.values());
+  const suggested = globalTriage.suggestProposalsForUser(user, allProposals, committees);
+
+  res.json(suggested);
+});
+
 app.post('/proposals/:id/transition', (req: Request, res: Response) => {
   const { status } = req.body;
   const proposal = globalStore.getProposal(s(req.params.id));
   if (!proposal) return res.status(404).json({ error: 'Proposal not found' });
 
   try {
-    const updated = transitionProposal(proposal, status);
+    let updated = transitionProposal(proposal, status);
+
+    // Fast-track logic for Emergency proposals:
+    // Automatically transition to ACTIVE_VOTING if it hits EMERGENCY state.
+    if (status === 'EMERGENCY') {
+      updated = transitionProposal(updated, 'ACTIVE_VOTING');
+    }
+
     globalStore.updateProposal(s(req.params.id), updated);
     res.json(updated);
   } catch (err: any) {
@@ -307,15 +474,60 @@ app.post('/proposals/:id/vote', (req: Request, res: Response) => {
   if (!user) return res.status(404).json({ error: 'User not found' });
 
   const cost = calculateVoteCost(votes);
-  const power = calculateEffectivePower(globalStore, userId, subject || 'General');
+  const powerBreakdown = calculateEffectivePower(globalStore, userId, subject || 'General');
 
-  if (power < cost) {
-    return res.status(400).json({ error: `Insufficient power. Required: ${cost}, Available: ${power}` });
+  if (powerBreakdown.total < cost) {
+    return res.status(400).json({ error: `Insufficient power. Required: ${cost}, Available: ${powerBreakdown.total}` });
   }
 
-  // Deduct cost from the user's personal credits.
-  // Note: In Phase 2/3, we will refine how delegated power is "spent".
-  user.voiceCredits -= cost;
+  // Deduct cost proportionally from personal and delegator credits
+  let remainingCost = cost;
+
+  // 1. Spend personal credits first
+  const personalSpend = Math.min(user.voiceCredits, remainingCost);
+  user.voiceCredits -= personalSpend;
+  remainingCost -= personalSpend;
+
+  // 2. Spend delegator credits if personal not enough
+  if (remainingCost > 0) {
+    // Sort delegators by balance to spend from those with more first
+    const sortedDelegators = [...powerBreakdown.delegators].sort((a, b) => b.voiceCredits - a.voiceCredits);
+
+    for (const d of sortedDelegators) {
+      if (remainingCost <= 0) break;
+      const delegatorUser = globalStore.getUser(d.userId);
+      if (delegatorUser) {
+        const spend = Math.min(delegatorUser.voiceCredits, remainingCost);
+        delegatorUser.voiceCredits -= spend;
+        remainingCost -= spend;
+        globalStore.addUser(delegatorUser);
+      }
+    }
+  }
+
+  globalStore.addUser(user);
+
+  // Democratic Override Logic:
+  // If a user votes personally, we mathematically retract their portion of any vote their delegate cast.
+  const userDelegateId = user.delegates[subject || 'General'];
+  if (userDelegateId) {
+    const delegateVotes = globalStore.getVotesByUser(userDelegateId).filter(v => v.proposalId === proposal.id);
+    if (delegateVotes.length > 0) {
+      console.log(`[OVERRIDE] User ${userId} is overriding delegate ${userDelegateId} on proposal ${proposal.id}`);
+
+      // Calculate how many credits the delegate spent on behalf of this user.
+      // In our credit-backed model, this is exactly the credits the delegate pulled from this user's balance.
+      // However, we don't track the exact 'source' per vote yet.
+      // For this simulator, we decrement the proposal totals by the user's current effective contribution to the delegate.
+      const personalPortion = 1; // Simplified: 1 personal voice credit = 1 vote unit in QV
+      const firstVote = delegateVotes[0];
+      if (firstVote && firstVote.amount > 0) {
+        proposal.votesFor = Math.max(0, proposal.votesFor - personalPortion);
+      } else if (firstVote) {
+        proposal.votesAgainst = Math.max(0, proposal.votesAgainst - personalPortion);
+      }
+    }
+  }
 
   if (votes > 0) {
     proposal.votesFor += votes;
@@ -332,15 +544,22 @@ app.post('/proposals/:id/vote', (req: Request, res: Response) => {
     timestamp: Date.now()
   });
 
+  // Update committee activity
+  const committee = globalStore.getCommittee(proposal.committeeId);
+  if (committee) {
+    committee.lastActivityAt = Date.now();
+    globalStore.addCommittee(committee);
+  }
+
   globalStore.updateProposal(s(req.params.id), proposal);
   notifyUpdate(s(req.params.id));
   res.json({ message: 'Vote cast successfully', proposal });
 });
 
 app.post('/proposals/:id/contribute', (req: Request, res: Response) => {
-  const { userId, amount } = req.body;
+  const { userId, amount, isBlinded } = req.body;
   try {
-    crowdfunding.contribute(userId, s(req.params.id), amount);
+    crowdfunding.contribute(userId, s(req.params.id), amount, !!isBlinded);
     notifyUpdate(s(req.params.id));
     res.json({ message: 'Contribution successful', proposal: globalStore.getProposal(s(req.params.id)) });
   } catch (err: any) {
@@ -359,10 +578,55 @@ app.post('/proposals/:id/release-milestone', (req: Request, res: Response) => {
   res.json({ success, proposal: globalStore.getProposal(s(req.params.id)) });
 });
 
-app.post('/proposals/:id/milestones/:mid/jury-vote', (req: Request, res: Response) => {
-  const { userId } = req.body;
+app.post('/proposals/:id/milestones/:mid/proof', async (req: Request, res: Response) => {
+  const { proofUrl } = req.body;
+  const { id, mid } = req.params;
+  const userId = (req as any).user?.userId;
+
+  const proposal = globalStore.getProposal(s(id));
+  if (!proposal) return res.status(404).json({ error: 'Proposal not found' });
+
+  // Security: Only the proposer can submit proof
+  if (userId !== proposal.proposerId) {
+    return res.status(403).json({ error: 'Only the proposer can submit completion proof' });
+  }
+
   try {
-    crowdfunding.voteOnMilestone(s(req.params.id), s(req.params.mid), userId);
+    await crowdfunding.submitMilestoneProof(s(id), s(mid), proofUrl);
+    notifyUpdate(s(id));
+    res.json({ message: 'Proof submitted successfully', proposal: globalStore.getProposal(s(id)) });
+  } catch (err: any) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+app.post('/proposals/:id/milestones/:mid/resolve-dispute', (req: Request, res: Response) => {
+  const { resolution } = req.body;
+  const userId = (req as any).user?.userId;
+
+  // Security: Only the proposer (to accept defeat) or an admin (mocked as user with high rep) can resolve
+  // In a real system, this would be a committee vote.
+  if (!userId) return res.status(401).json({ error: 'Auth required' });
+
+  try {
+    const success = crowdfunding.resolveDispute(s(req.params.id), s(req.params.mid), resolution || 'RELEASE');
+    notifyUpdate(s(req.params.id));
+    res.json({ success, proposal: globalStore.getProposal(s(req.params.id)) });
+  } catch (err: any) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+app.post('/proposals/:id/milestones/:mid/jury-vote', (req: Request, res: Response) => {
+  const { action } = req.body;
+  const userId = (req as any).user?.userId;
+
+  if (!userId) {
+    return res.status(401).json({ error: 'Authentication required' });
+  }
+
+  try {
+    crowdfunding.voteOnMilestone(s(req.params.id), s(req.params.mid), userId, action || 'APPROVE');
     notifyUpdate(s(req.params.id));
     res.json({ success: true, proposal: globalStore.getProposal(s(req.params.id)) });
   } catch (err: any) {
@@ -377,6 +641,28 @@ app.post('/proposals/:id/score', (req: Request, res: Response) => {
   const score = calculateImpactScore(proposal);
   globalStore.updateProposal(s(req.params.id), { impactScore: score });
   res.json({ id: proposal.id, impactScore: score });
+});
+
+app.get('/proposals/:id/estimate-match', (req: Request, res: Response) => {
+  const amount = Number(req.query.amount);
+  const userId = s(req.query.userId);
+  if (isNaN(amount) || amount <= 0) return res.status(400).json({ error: 'Valid amount required' });
+
+  const contributions = globalStore.getContributionsByProposal(s(req.params.id));
+
+  // Current match
+  const currentMatch = crowdfunding.getTreasury().calculateMatch(contributions);
+
+  // Hypothetical match
+  const hypothetical = [...contributions, { userId, amount, proposalId: s(req.params.id), tokenSymbol: 'USD', timestamp: Date.now() }];
+  const newMatch = crowdfunding.getTreasury().calculateMatch(hypothetical);
+
+  res.json({
+    currentMatch,
+    newMatch,
+    delta: newMatch - currentMatch,
+    multiplier: (amount + (newMatch - currentMatch)) / amount
+  });
 });
 
 app.post('/proposals/triage', (req: Request, res: Response) => {
@@ -433,6 +719,57 @@ app.post('/governance/transition-cycle', (req: Request, res: Response) => {
   } catch (err: any) {
     res.status(400).json({ error: err.message });
   }
+});
+
+// --- Treasury Endpoints ---
+
+app.get('/treasury/balance/:token', (req: Request, res: Response) => {
+  const subject = s(req.query.subject) || 'General';
+  const balance = crowdfunding.getTreasury().getPoolBalance(s(req.params.token), subject);
+  res.json({ token: req.params.token, subject, balance });
+});
+
+app.get('/treasury/balance', (req: Request, res: Response) => {
+  const pools = crowdfunding.getTreasury().getAllPools();
+  res.json(pools);
+});
+
+app.get('/treasury/transactions', (req: Request, res: Response) => {
+  const userId = req.query.userId as string;
+  let txs = crowdfunding.getTreasury().getTransactions();
+  if (userId) {
+    txs = txs.filter(tx => tx.userId === userId);
+  }
+  res.json(txs);
+});
+
+app.post('/treasury/deposit', (req: Request, res: Response) => {
+  const { amount, tokenSymbol, subject, description } = req.body;
+  if (!amount) return res.status(400).json({ error: 'Amount required' });
+
+  const targetSubject = subject || 'General';
+  const targetSymbol = tokenSymbol || 'USD';
+  const userId = (req as any).user?.userId;
+
+  crowdfunding.getTreasury().deposit(Number(amount), targetSymbol, targetSubject, description || 'Voluntary Contribution', userId);
+
+  // Notify clients about treasury update
+  io.emit('TREASURY_UPDATED', { tokenSymbol: targetSymbol, subject: targetSubject });
+
+  res.json({ message: 'Deposit successful', balance: crowdfunding.getTreasury().getPoolBalance(targetSymbol, targetSubject) });
+});
+
+// --- Notification Endpoints ---
+
+app.post('/notifications/subscribe', (req: Request, res: Response) => {
+  const { subscription } = req.body;
+  const userId = (req as any).user?.userId;
+
+  if (!userId) return res.status(401).json({ error: 'Auth required' });
+  if (!subscription) return res.status(400).json({ error: 'Subscription object required' });
+
+  globalStore.addNotificationSubscription(userId, subscription);
+  res.json({ message: 'Subscription saved successfully' });
 });
 
 // --- Task Endpoints ---

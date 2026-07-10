@@ -12,19 +12,16 @@ export class SecurityEngine {
   constructor(private store: Store) {}
 
   /**
-   * Identifies suspicious clusters in the delegation graph.
+   * Identifies suspicious clusters and anomalies in the delegation graph.
    *
-   * A "Sybil Cluster" is defined here as a group of accounts that have
-   * high internal delegation density but low external interaction,
-   * often funneling power to a single "sink" node.
-   *
-   * Heuristic: If a node receives delegations from > 5 accounts that have
-   * low reputation and low activity, it is flagged.
+   * 1. Sink Detection: nodes receiving delegations from many inactive/low-rep accounts.
+   * 2. Chain Depth Analysis: detecting deep nested delegations (depth > 3) often used in Sybil puppet networks.
    */
   detectSybilClusters(): string[] {
     const users = this.store.getUsers();
-    const flaggedSinks: string[] = [];
+    const flaggedSinks = new Set<string>();
 
+    // Heuristic 1: Sink Detection
     for (const user of users) {
       const incomingDelegations = users.filter(u =>
         Object.values(u.delegates).includes(user.id)
@@ -40,12 +37,46 @@ export class SecurityEngine {
         }
 
         if (suspiciousCount / incomingDelegations.length > 0.8) {
-          flaggedSinks.push(user.id);
+          flaggedSinks.add(user.id);
         }
+      }
+
+      // Heuristic 2: Chain Depth Analysis
+      // Check every subject the user has delegations for
+      const subjects = new Set<string>();
+      users.forEach(u => Object.keys(u.delegates).forEach(s => subjects.add(s)));
+
+      for (const subject of subjects) {
+         const depth = this.calculateDelegationDepth(user.id, subject);
+         if (depth > 3) {
+            flaggedSinks.add(user.id);
+            console.warn(`[SECURITY] User ${user.id} flagged for excessive delegation depth (${depth}) in ${subject}`);
+         }
       }
     }
 
-    return flaggedSinks;
+    return Array.from(flaggedSinks);
+  }
+
+  /**
+   * Calculates the maximum depth of the delegation chain leading to this user.
+   */
+  private calculateDelegationDepth(userId: string, subject: string, visited = new Set<string>()): number {
+     if (visited.has(userId)) return 0; // Prevent infinite loops
+     visited.add(userId);
+
+     const users = this.store.getUsers();
+     const directDelegators = users.filter(u => u.delegates[subject] === userId);
+
+     if (directDelegators.length === 0) return 0;
+
+     let maxChildDepth = 0;
+     for (const delegator of directDelegators) {
+        const depth = this.calculateDelegationDepth(delegator.id, subject, new Set(visited));
+        maxChildDepth = Math.max(maxChildDepth, depth);
+     }
+
+     return 1 + maxChildDepth;
   }
 
   /**

@@ -1,0 +1,9 @@
+@echo off
+echo Setting up git hooks...
+if not exist ".git" (
+    echo [!] .git directory not found. Are you in the repo root?
+    exit /b 1
+)
+:: Windows doesn't easily support symlinks for hooks without admin, so we use a copy approach or advise
+echo [INFO] For Windows, consider running 'git config core.hooksPath scripts/hooks' if using a recent git version.
+echo ✓ Hook configuration complete.

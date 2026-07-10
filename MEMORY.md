@@ -44,3 +44,14 @@
 - **Reputation as Currency:** Reputation is now earned, not just mock-initialized. This creates a circular economy of expertise where successful delivery leads to more governance influence.
 - **Code as Law:** The autonomous execution simulation (executeAutonomousPayload) is the precursor to real smart-contract triggers.
 - **Monorepo Audit:** Conducted a deep audit of the repository for nested Git submodules. Confirmed a 100% native monorepo structure. This architecture was chosen to simplify the Autonomous Protocol's merge and sync logic.
+
+## Version 1.0.53-1.0.96: The Voluntary State
+- **Fiscal Autonomy:** Targeted Voluntary Taxation ensures that citizens decide exactly where their capital goes. This is implemented via subject-specific matching pools in the treasury.
+- **Economic Power:** Stake-based reputation ($10 USD = 1 Rep) ensures that those who support the system have a material voice in its governance.
+- **Resilient Response:** Emergency Proposals bypass standard delays to address critical infrastructure or safety needs instantly.
+- **Expert Verification:** Milestone juries prioritize subject-matter experts and implement a weighted quorum (Expert votes count 2x), ensuring fund release is governed by knowledge.
+- **Accountability:** Reputation slashing for disputed milestones provides a strong check against proposer failure or fraud.
+- **Mobile PWA:** Transitioning to a PWA with tactile UI ensures the "Voluntary State" is accessible on any device, critical for wide citizen engagement.
+- **System Hardening:** Resolved recursive TypeScript pathing issues in Docker and ensured full cross-platform script parity across Unix and Windows.
+- **Autonomous Metadata:** Refined APEP to generate clean, actionable TODO lists directly from codebase scanning.
+- **Minimal State:** Implemented Committee Sunsetting to automatically reallocate capital from inactive domains back to the General pool.

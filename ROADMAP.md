@@ -32,8 +32,27 @@
 - [x] **Security Engine: Graph-based Sybil Detection cluster analysis.**
 - [x] Autonomous Execution Watchdog.
 
-## Phase 7: Infrastructure & Scalability (Active)
-- [ ] **Multi-token Matching Pool support.**
-- [ ] Optimized client-side ZKP generation.
-- [ ] Formalized Treasury intake API.
-- [ ] Cross-platform script parity (Unix/Windows symmetry).
+## Phase 7: Infrastructure & Hardening (Complete)
+- [x] Multi-token Matching Pool support.
+- [x] Formalized Treasury intake API.
+- [x] Cross-platform script parity (Unix/Windows symmetry).
+- [x] Committee Sunsetting & Resource Recycling logic.
+
+## Phase 8: The Voluntary State (Complete)
+- [x] Voluntary Tax Routing: Subject-specific matching pools.
+- [x] Meritocratic Voice Credits: Stipends based on reputation.
+- [x] Emergency Fast-track Governance.
+- [x] Expert-weighted Milestone Verification (Weighted Juries).
+- [x] Milestone Dispute Resolution System.
+- [x] Security: Delegation Chain Depth Analysis for Sybil resistance.
+
+## Phase 9: Global Scaling & Privacy (Complete)
+- [x] Optimized client-side ZKP generation: Persistent identity storage and async proof generation flow.
+- [x] Privacy-preserving Quadratic Funding: MACI-lite blinded contributions to prevent coercion.
+- [x] Mobile PWA Hardening: Valid iconography and real-time system notifications for critical events.
+- [x] Decentralized File Storage: Integration with mock IPFS for content-addressed specs and evidence.
+
+## Phase 10: The Sovereign Internet (Future)
+- [ ] Native Mobile App (iOS/Android) with biometric ZKP signers.
+- [ ] Cross-chain Treasury Routing (Bridge Integration).
+- [ ] Automated Jury Selection via On-chain VRF.

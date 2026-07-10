@@ -20,6 +20,9 @@ export const ProposalForm: React.FC<ProposalFormProps> = ({ userId, onSuccess, o
   const [loading, setLoading] = useState(false);
   const [triaging, setTriaging] = useState(false);
   const [redundancyWarning, setRedundancyWarning] = useState<string | null>(null);
+  const [isTreasuryProposal, setIsTreasuryProposal] = useState(false);
+  const [isCritical, setIsCritical] = useState(false);
+  const [reallocData, setReallocData] = useState({ amount: 0, fromSubject: 'General', toSubject: '' });
 
   const handleTriage = async () => {
     if (!title || !abstract) return;
@@ -61,6 +64,7 @@ export const ProposalForm: React.FC<ProposalFormProps> = ({ userId, onSuccess, o
         proposerId: userId,
         committeeId,
         totalTargetBudget: budget,
+        isCritical,
         milestones: milestones.map((m, i) => ({
           ...m,
           id: `m-${i}`,
@@ -70,7 +74,13 @@ export const ProposalForm: React.FC<ProposalFormProps> = ({ userId, onSuccess, o
           juryVotes: [],
           requiredJuryQuorum: 3
         })) as Milestone[],
-        executionPayload: '{}'
+        executionPayload: isTreasuryProposal ? JSON.stringify({
+          action: 'REALLOCATE_FUNDS',
+          amount: reallocData.amount,
+          fromSubject: reallocData.fromSubject,
+          toSubject: reallocData.toSubject,
+          tokenSymbol: 'USD'
+        }) : '{}'
       };
 
       await api.post('/proposals', proposal);
@@ -93,6 +103,61 @@ export const ProposalForm: React.FC<ProposalFormProps> = ({ userId, onSuccess, o
 
       <div className="grid grid-cols-2 gap-8">
         <div className="space-y-6">
+           <div className="flex items-center gap-2 mb-4">
+              <input
+                type="checkbox"
+                id="treasury-check"
+                checked={isTreasuryProposal}
+                onChange={(e) => setIsTreasuryProposal(e.target.checked)}
+                className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500"
+              />
+              <label htmlFor="treasury-check" className="text-xs font-bold text-slate-600 uppercase tracking-widest">Treasury Reallocation Proposal</label>
+           </div>
+
+           <div className="flex items-center gap-2 mb-4">
+              <input
+                type="checkbox"
+                id="critical-check"
+                checked={isCritical}
+                onChange={(e) => setIsCritical(e.target.checked)}
+                className="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500"
+              />
+              <label htmlFor="critical-check" className="text-xs font-bold text-slate-600 uppercase tracking-widest">Mark as Critical Event</label>
+           </div>
+
+           {isTreasuryProposal && (
+             <div className="p-4 bg-blue-50 border border-blue-100 rounded-2xl space-y-4 mb-4">
+                <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest">Reallocation Details</p>
+                <div className="grid grid-cols-2 gap-3">
+                   <div>
+                      <label className="text-[8px] font-black uppercase text-slate-400">From</label>
+                      <input
+                        className="w-full bg-white border rounded-xl px-3 py-2 text-xs font-bold"
+                        value={reallocData.fromSubject}
+                        onChange={(e) => setReallocData({...reallocData, fromSubject: e.target.value})}
+                      />
+                   </div>
+                   <div>
+                      <label className="text-[8px] font-black uppercase text-slate-400">To</label>
+                      <input
+                        className="w-full bg-white border rounded-xl px-3 py-2 text-xs font-bold"
+                        placeholder="Target Subject"
+                        value={reallocData.toSubject}
+                        onChange={(e) => setReallocData({...reallocData, toSubject: e.target.value})}
+                      />
+                   </div>
+                </div>
+                <div>
+                   <label className="text-[8px] font-black uppercase text-slate-400">Amount (USD)</label>
+                   <input
+                     type="number"
+                     className="w-full bg-white border rounded-xl px-3 py-2 text-xs font-bold"
+                     value={reallocData.amount}
+                     onChange={(e) => setReallocData({...reallocData, amount: parseInt(e.target.value) || 0})}
+                   />
+                </div>
+             </div>
+           )}
           <div className="space-y-2">
             <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Proposal Title</label>
             <input
@@ -125,6 +190,60 @@ export const ProposalForm: React.FC<ProposalFormProps> = ({ userId, onSuccess, o
               <option value="Education-Committee">Education</option>
               <option value="Healthcare-Committee">Healthcare</option>
             </select>
+          </div>
+
+          <div className="flex items-center gap-3 p-4 bg-red-50 border border-red-100 rounded-2xl">
+             <div className="flex-1">
+                <p className="text-[10px] font-black uppercase text-red-600 tracking-widest mb-1">Emergency Override</p>
+                <p className="text-xs font-medium text-red-800 leading-tight">Fast-track this proposal directly to active voting for critical issues.</p>
+             </div>
+             <button
+                type="button"
+                onClick={async () => {
+                   if (!title || !abstract) {
+                      alert('Title and Abstract required for emergency proposals.');
+                      return;
+                   }
+                   if (confirm('Are you sure? Emergency proposals bypass standard sponsorship and go straight to active voting.')) {
+                      setLoading(true);
+                      try {
+                        const budget = milestones.reduce((acc, m) => acc + (m.targetBudget || 0), 0);
+                        const proposal: Partial<Proposal> = {
+                          id: `prop-emerg-${Date.now()}`,
+                          title,
+                          abstract,
+                          detailedSpecs: specs,
+                          proposerId: userId,
+                          committeeId,
+                          totalTargetBudget: budget,
+                          status: 'EMERGENCY', // Will be fast-tracked by API
+                          isCritical: true,
+                          milestones: milestones.map((m, i) => ({
+                            ...m,
+                            id: `m-${i}`,
+                            description: m.description || '',
+                            targetBudget: m.targetBudget || 0,
+                            isCompleted: false,
+                            juryVotes: [],
+                            requiredJuryQuorum: 3
+                          })) as Milestone[],
+                          executionPayload: '{}'
+                        };
+                        await api.post('/proposals', proposal);
+                        // Trigger fast-track transition
+                        await api.post(`/proposals/${proposal.id}/transition`, { status: 'EMERGENCY' });
+                        onSuccess();
+                      } catch (err) {
+                        alert('Emergency submission failed');
+                      } finally {
+                        setLoading(false);
+                      }
+                   }
+                }}
+                className="bg-red-600 text-white px-4 py-2 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-red-200 hover:bg-red-700 transition-all"
+             >
+                Activate
+             </button>
           </div>
 
           <div className="space-y-2">

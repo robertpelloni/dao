@@ -1,7 +1,8 @@
 import { Store, globalStore } from '../models/Store';
-import { GovernanceCycle, User } from '../models/types';
+import { GovernanceCycle, User, Committee } from '../models/types';
 import { SecurityEngine } from './security';
 import { globalIdentity } from './identity';
+import { TreasuryManager } from './treasury';
 
 /**
  * Governance Cycle Manager
@@ -110,6 +111,21 @@ export class GovernanceManager {
 
   private processEndOfCycle(missedCycles: number = 1) {
     const users = this.store.getUsers();
+    const committees = this.store.getCommittees();
+    const treasury = new TreasuryManager(this.store);
+
+    // 0. Committee Sunset Logic: reallocate funds from inactive committees
+    const INACTIVITY_THRESHOLD = 60 * 24 * 60 * 60 * 1000; // 60 days
+    committees.forEach(c => {
+      const lastActivity = c.lastActivityAt || 0;
+      if (Date.now() - lastActivity > INACTIVITY_THRESHOLD && c.subject !== 'General') {
+        const balance = treasury.getPoolBalance('USD', c.subject);
+        if (balance > 0) {
+          console.log(`[SUNSET] Committee ${c.id} is inactive. Reallocating $${balance} to General pool.`);
+          treasury.reallocate(balance, 'USD', c.subject, 'General', 'Committee Inactivity Sunset');
+        }
+      }
+    });
 
     // 1. Run Sybil Detection
     const flaggedSinks = this.security.detectSybilClusters();
@@ -118,21 +134,47 @@ export class GovernanceManager {
       console.warn(`[SECURITY] Flagged user ${sinkId} as Sybil Sink.`);
     });
 
+    // 1.5. Auto-provision high-activity committees
+    const newSubjects = this.store.getHighActivitySubjects(5); // Threshold of 5 delegations
+    newSubjects.forEach(subject => {
+       const id = `${subject.replace(/\s+/g, '-')}-Committee`;
+       if (!this.store.getCommittee(id)) {
+          this.store.addCommittee({
+             id,
+             subject,
+             members: [],
+             thresholdQuorum: 0.05,
+             lastActivityAt: Date.now()
+          });
+          console.log(`[GOVERNANCE] Auto-provisioned committee for active subject: ${subject}`);
+       }
+    });
+
     for (const user of users) {
       // 2. Reputation Decay (Use SecurityEngine for automated erosion)
       const newReputation: Record<string, number> = {};
+      let totalRep = 0;
       Object.entries(user.reputation).forEach(([subject, value]) => {
-        newReputation[subject] = this.security.calculateReputationDecay(value, missedCycles);
+        const decayed = this.security.calculateReputationDecay(value, missedCycles);
+        newReputation[subject] = decayed;
+        totalRep += decayed;
       });
 
-      // 3. Voice Credit Refresh (Refill to base 100 or matching new rules)
+      // 3. Voice Credit Refresh (Refill to base 100)
+      // 4. Meritocratic Stipend: 1 extra credit per 5 rep points, capped at 50 bonus.
+      const bonus = Math.min(50, Math.floor(totalRep / 5));
+      const refillAmount = 100 + bonus;
+
       const updatedUser: User = {
         ...user,
         reputation: newReputation,
-        voiceCredits: Math.max(user.voiceCredits, 100) // Citizens get a baseline refill
+        voiceCredits: Math.max(user.voiceCredits, refillAmount)
       };
 
       this.store.addUser(updatedUser);
+      if (bonus > 0) {
+        console.log(`[GOVERNANCE] User ${user.id} received ${bonus} bonus merit credits.`);
+      }
     }
   }
 }

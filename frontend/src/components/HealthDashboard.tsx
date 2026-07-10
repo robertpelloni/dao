@@ -8,11 +8,12 @@ interface HealthDashboardProps {
   proposals: Proposal[];
   committees: Committee[];
   allUsers: User[];
+  treasuryBalances: any[];
   currentCycle: GovernanceCycle | null;
   onAction: () => void;
 }
 
-export const HealthDashboard: React.FC<HealthDashboardProps> = ({ proposals, committees, allUsers, currentCycle, onAction }) => {
+export const HealthDashboard: React.FC<HealthDashboardProps> = ({ proposals, committees, allUsers, treasuryBalances, currentCycle, onAction }) => {
   const [loading, setLoading] = useState(false);
   const [flaggedUsers, setFlaggedUsers] = useState<User[]>([]);
 
@@ -39,7 +40,7 @@ export const HealthDashboard: React.FC<HealthDashboardProps> = ({ proposals, com
     if (!confirm('Are you sure you want to transition to the next governance cycle? This will trigger reputation decay.')) return;
     try {
       setLoading(true);
-      await api.post('/governance/transition-cycle');
+      await api.post('/api/governance/transition-cycle');
       onAction();
     } catch (err) {
       alert('Transition failed');
@@ -50,6 +51,12 @@ export const HealthDashboard: React.FC<HealthDashboardProps> = ({ proposals, com
 
   const timeLeft = currentCycle ? Math.max(0, currentCycle.endTime - Date.now()) : 0;
   const daysLeft = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
+
+  const totalUSDMatching = treasuryBalances
+    .filter(b => b.tokenSymbol === 'USD')
+    .reduce((acc, b) => acc + b.amount, 0);
+
+  const matchingUtilization = totalFunding > 0 ? Math.min(100, Math.round((totalFunding / (totalUSDMatching || 1)) * 100)) : 0;
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
@@ -118,7 +125,7 @@ export const HealthDashboard: React.FC<HealthDashboardProps> = ({ proposals, com
             <div className="space-y-6">
                <div>
                   <p className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] mb-1">Available Matching Funds</p>
-                  <p className="text-4xl font-black text-blue-400">$25,000</p>
+                  <p className="text-4xl font-black text-blue-400">${totalUSDMatching.toLocaleString()}</p>
                </div>
                <div className="p-4 bg-white/5 rounded-2xl border border-white/10">
                   <p className="text-xs font-bold text-slate-300 leading-relaxed italic">
@@ -128,10 +135,10 @@ export const HealthDashboard: React.FC<HealthDashboardProps> = ({ proposals, com
                <div className="space-y-2">
                   <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-slate-500">
                     <span>Pool Utilization</span>
-                    <span>42%</span>
+                    <span>{matchingUtilization}%</span>
                   </div>
                   <div className="h-2 w-full bg-slate-800 rounded-full overflow-hidden">
-                    <div className="h-full bg-blue-500 shadow-[0_0_12px_rgba(59,130,246,0.5)]" style={{ width: '42%' }} />
+                    <div className="h-full bg-blue-500 shadow-[0_0_12px_rgba(59,130,246,0.5)]" style={{ width: `${matchingUtilization}%` }} />
                   </div>
                </div>
             </div>

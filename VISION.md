@@ -14,12 +14,13 @@ LiquidGov (dao) aims to pioneer a new form of social organization: a **Distribut
 ### A. The Identity Layer (Sybil Resistance)
 A digital state cannot exist without a way to distinguish unique humans from bots.
 - **Mechanism:** A hybrid of Web-of-Trust and cryptographically verified uniqueness (e.g., WorldID, Gitcoin Passport).
-- **Privacy:** Future integration of Zero-Knowledge Proofs (ZKPs) to allow participation without revealing legal identity, protecting citizens from retaliation.
+- **Privacy:** Integration of Zero-Knowledge Proofs (ZKPs) allows participation without revealing legal identity, protecting citizens from state or peer retaliation.
 
 ### B. The Committee Layer (Subject Trees)
 Governance is organized by subject, not just geography.
 - **Structure:** A nested graph of tags (e.g., `Infrastructure -> Energy -> Solar`).
 - **Dynamics:** Users join nodes where they have interest or expertise. Voting power is siloed by subject, preventing a "popularity contest" where general influencers override technical specialists.
+- **Voluntary Taxation:** The "State" is funded not by coercion, but by voluntary contributions into subject-specific matching pools. Citizens choose exactly which domains of public life (e.g., Roads, Education, AI Safety) they wish to amplify via Quadratic Funding.
 
 ### C. The Proposal Layer (Structured Execution)
 Proposals are not just "ideas"; they are executable data schemas.
@@ -38,6 +39,6 @@ The end-user experience should feel like a hybrid between a high-end financial d
 - **AI-Augmented Deliberation:** Integrated AI (Impact Scoring) helps citizens navigate thousands of proposals by highlighting those with the highest efficiency and planning quality.
 
 ## 5. Long-Term Roadmap
-- **Phase 1-3:** Core engine, API, and Web Prototype (Completed).
+- **Phase 1-8:** Core engine, Quadratic Funding, Advanced Identity Analytics, AI Automation, and Web Prototype (Completed).
 - **Phase 4:** On-chain transition, ZKP Identity, and Oracle Network.
 - **Phase 5:** Global deployment as a recognized alternative to traditional municipal management.

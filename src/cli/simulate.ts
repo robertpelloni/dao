@@ -49,7 +49,7 @@ async function runSimulation() {
   console.log("Alice and Bob delegated their 'Roads' votes to Dave.");
 
   const davePower = calculateEffectivePower(store, 'dave', 'Roads');
-  console.log(`Dave's effective power on 'Roads': ${davePower} credits.\n`);
+  console.log(`Dave's total power in Roads (should be 300): ${davePower.total}`);
 
   // 3. Create Proposal
   console.log("[3] Creating Proposal: 'Solar Roadways'...");
