@@ -19,6 +19,10 @@ export class TreasuryManager {
     // Ensure default USD pool exists in persistent store if not set
     if (this.store.getMatchingPool('USD', 'General') === 0) {
       this.store.setMatchingPool('USD', 'General', 0);
+  constructor(private store: Store) {
+    // Ensure default USD pool exists in persistent store if not set
+    if (this.store.getMatchingPool('USD') === 0) {
+      this.store.setMatchingPool('USD', 0);
     }
   }
 
@@ -27,6 +31,8 @@ export class TreasuryManager {
    */
   setMatchingPool(amount: number, tokenSymbol: string = 'USD', subject: string = 'General'): void {
     this.store.setMatchingPool(tokenSymbol, subject, amount);
+  setMatchingPool(amount: number, tokenSymbol: string = 'USD'): void {
+    this.store.setMatchingPool(tokenSymbol, amount);
   }
 
   /**
@@ -61,6 +67,7 @@ export class TreasuryManager {
     subject: string = 'General'
   ): Record<string, number> {
     const pool = this.store.getMatchingPool(tokenSymbol, subject);
+    const pool = this.store.getMatchingPool(tokenSymbol);
     const matches: Record<string, number> = {};
     let totalMatchRequired = 0;
 
@@ -96,6 +103,17 @@ export class TreasuryManager {
   deposit(amount: number, tokenSymbol: string = 'USD', subject: string = 'General', description: string = 'Deposit', userId?: string): void {
     const current = this.getPoolBalance(tokenSymbol, subject);
     this.setMatchingPool(current + amount, tokenSymbol, subject);
+  getPoolBalance(tokenSymbol: string = 'USD'): number {
+    return this.store.getMatchingPool(tokenSymbol);
+  }
+
+  getAllPools(): Record<string, number> {
+    return this.store.getAllMatchingPools();
+  }
+
+  deposit(amount: number, tokenSymbol: string = 'USD', description: string = 'Deposit'): void {
+    const current = this.getPoolBalance(tokenSymbol);
+    this.setMatchingPool(current + amount, tokenSymbol);
 
     this.store.addTreasuryTransaction({
       id: `tx-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
@@ -151,5 +169,10 @@ export class TreasuryManager {
       description: `${description} (From ${fromSubject})`,
       timestamp: Date.now()
     });
+    });
+  }
+
+  getTransactions(): any[] {
+    return this.store.getTreasuryTransactions();
   }
 }

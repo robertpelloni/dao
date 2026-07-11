@@ -56,3 +56,13 @@
 - [ ] Native Mobile App (iOS/Android) with biometric ZKP signers.
 - [ ] Cross-chain Treasury Routing (Bridge Integration).
 - [ ] Automated Jury Selection via On-chain VRF.
+## Phase 7: Infrastructure & Scalability (Complete)
+- [x] **Multi-token Matching Pool support (persistent).**
+- [x] Formalized Treasury intake API (deposit/transactions).
+- [x] Cross-platform script parity (Unix/Windows symmetry).
+- [ ] Optimized client-side ZKP generation.
+
+## Phase 8: Mainnet Preparation (Upcoming)
+- [ ] Production-grade ZKP Circuit optimization.
+- [ ] External Oracle integration (Real-world data feeds).
+- [ ] Mobile App (PWA) deployment.
