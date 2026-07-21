@@ -1,3 +1,7 @@
+<!-- [TORMENTNEXUS_AUTO_INJECTED] -->
+> [!IMPORTANT]
+> You are running within the TormentNexus environment. You MUST use your available tools frequently and proactively for researching, editing, executing, and validating your work. Always prioritize tool execution.
+
 # AGENTS: Universal LLM Instructions & Project Protocol
 
 This file serves as the "Source of Truth" for all AI agents (Claude, Gemini, GPT, Copilot, etc.) working on the LiquidGov (dao) project. Adherence to these protocols is mandatory for "Insanely Great" development.
