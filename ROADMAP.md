@@ -33,7 +33,7 @@
 - [x] Autonomous Execution Watchdog.
 
 ## Phase 7: Infrastructure & Scalability (Active)
-- [ ] **Multi-token Matching Pool support.**
-- [ ] Optimized client-side ZKP generation.
-- [ ] Formalized Treasury intake API.
-- [ ] Cross-platform script parity (Unix/Windows symmetry).
+- [x] **Multi-token Matching Pool support.**
+- [x] Optimized client-side ZKP generation.
+- [x] Formalized Treasury intake API.
+- [x] Cross-platform script parity (Unix/Windows symmetry).

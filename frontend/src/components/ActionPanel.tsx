@@ -12,6 +12,7 @@ interface ActionPanelProps {
 export const ActionPanel: React.FC<ActionPanelProps> = ({ proposal, user, onAction }) => {
   const [voteCount, setVoteCount] = useState(1);
   const [contribution, setContribution] = useState(10);
+  const [tokenSymbol, setTokenSymbol] = useState('USD');
   const [loading, setLoading] = useState(false);
 
   if (!user) return null;
@@ -37,7 +38,8 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({ proposal, user, onActi
       setLoading(true);
       await api.post(`/proposals/${proposal.id}/contribute`, {
         userId: user.id,
-        amount: contribution
+        amount: contribution,
+        tokenSymbol
       });
       onAction();
     } catch (err) {
@@ -171,6 +173,17 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({ proposal, user, onActi
               onChange={(e) => setContribution(parseInt(e.target.value) || 1)}
               className="flex-1 border rounded-xl px-4 py-2 focus:ring-2 focus:ring-emerald-500 outline-none"
             />
+            <select
+              value={tokenSymbol}
+              onChange={(e) => setTokenSymbol(e.target.value)}
+              className="w-24 border rounded-xl px-2 py-2 focus:ring-2 focus:ring-emerald-500 outline-none bg-white font-semibold text-slate-700"
+            >
+              <option value="USD">USD</option>
+              <option value="ETH">ETH</option>
+              <option value="USDC">USDC</option>
+              <option value="BTC">BTC</option>
+              <option value="DAI">DAI</option>
+            </select>
           </div>
           <button
             disabled={loading}

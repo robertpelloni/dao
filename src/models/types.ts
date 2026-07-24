@@ -2,6 +2,14 @@
  * Core Data Models for LiquidGov
  */
 
+
+export interface SyncMetadata {
+  nodeOrigin: string;
+  syncVersion: number;
+  lastModified: number;
+  stateHash: string;
+}
+
 export type ProposalStatus =
   | 'DRAFT'
   | 'SPONSORED'
@@ -28,6 +36,7 @@ export interface User {
   voiceCredits: number; // For Quadratic Voting
   reputation: Record<string, number>; // Subject-specific reputation
   delegates: Record<string, string>; // subject -> user_id
+  syncMetadata?: SyncMetadata;
 }
 
 export interface Committee {
@@ -53,6 +62,7 @@ export interface Proposal {
   votesAgainst: number;
   impactScore?: number; // Calculated by AI/Heuristics
   executionPayload: string; // JSON or script hash
+  syncMetadata?: SyncMetadata;
 }
 
 export type CycleStatus = 'ACTIVE' | 'CALIBRATION' | 'ARCHIVED';
@@ -92,4 +102,5 @@ export interface Contribution {
   amount: number;
   tokenSymbol: string;
   timestamp: number;
+  syncMetadata?: SyncMetadata;
 }

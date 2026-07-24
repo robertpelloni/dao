@@ -19,6 +19,7 @@ export const ProposalForm: React.FC<ProposalFormProps> = ({ userId, onSuccess, o
   ]);
   const [loading, setLoading] = useState(false);
   const [triaging, setTriaging] = useState(false);
+  const [tokenSymbol, setTokenSymbol] = useState('USD');
   const [redundancyWarning, setRedundancyWarning] = useState<string | null>(null);
 
   const handleTriage = async () => {
@@ -70,7 +71,8 @@ export const ProposalForm: React.FC<ProposalFormProps> = ({ userId, onSuccess, o
           juryVotes: [],
           requiredJuryQuorum: 3
         })) as Milestone[],
-        executionPayload: '{}'
+        executionPayload: '{}',
+        tokenSymbol
       };
 
       await api.post('/proposals', proposal);
@@ -93,6 +95,21 @@ export const ProposalForm: React.FC<ProposalFormProps> = ({ userId, onSuccess, o
 
       <div className="grid grid-cols-2 gap-8">
         <div className="space-y-6">
+
+          <div className="space-y-2">
+            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Native Token</label>
+            <select
+              className="w-full bg-gray-50 border-2 border-transparent focus:border-blue-600 focus:bg-white rounded-2xl px-6 py-4 outline-none font-bold transition-all appearance-none"
+              value={tokenSymbol}
+              onChange={(e) => setTokenSymbol(e.target.value)}
+            >
+              <option value="USD">USD</option>
+              <option value="ETH">ETH</option>
+              <option value="USDC">USDC</option>
+              <option value="BTC">BTC</option>
+            </select>
+          </div>
+
           <div className="space-y-2">
             <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Proposal Title</label>
             <input
@@ -211,7 +228,7 @@ export const ProposalForm: React.FC<ProposalFormProps> = ({ userId, onSuccess, o
          <div className="mr-auto">
             <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Total Requested</p>
             <p className="text-2xl font-black text-slate-800">
-               ${milestones.reduce((acc, m) => acc + (m.targetBudget || 0), 0).toLocaleString()}
+               {milestones.reduce((acc, m) => acc + (m.targetBudget || 0), 0).toLocaleString()} {tokenSymbol}
             </p>
          </div>
          <button

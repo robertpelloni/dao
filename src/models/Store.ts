@@ -19,7 +19,11 @@ export class Store {
         name TEXT,
         voiceCredits REAL,
         reputation TEXT,
-        delegates TEXT
+        delegates TEXT,
+        nodeOrigin TEXT,
+        syncVersion INTEGER,
+        lastModified INTEGER,
+        stateHash TEXT
       );
 
       CREATE TABLE IF NOT EXISTS committees (
@@ -44,7 +48,11 @@ export class Store {
         votesFor REAL,
         votesAgainst REAL,
         impactScore REAL,
-        executionPayload TEXT
+        executionPayload TEXT,
+        nodeOrigin TEXT,
+        syncVersion INTEGER,
+        lastModified INTEGER,
+        stateHash TEXT
       );
 
       CREATE TABLE IF NOT EXISTS governance_cycles (
@@ -74,40 +82,106 @@ export class Store {
         timestamp INTEGER
       );
 
-      CREATE TABLE IF NOT EXISTS contributions (
+      CREATE TABLE IF NOT EXISTS treasury_transactions (
+            id TEXT PRIMARY KEY,
+            tokenSymbol TEXT,
+            amount REAL,
+            type TEXT,
+            timestamp INTEGER
+          );
+
+          CREATE TABLE IF NOT EXISTS contributions (
         userId TEXT,
         proposalId TEXT,
         amount REAL,
         tokenSymbol TEXT,
-        timestamp INTEGER
+        timestamp INTEGER,
+        nodeOrigin TEXT,
+        syncVersion INTEGER,
+        lastModified INTEGER,
+        stateHash TEXT
       );
     `);
+
+    // Phase 9 Migration: Add SyncMetadata columns if they don't exist
+    try {
+      this.db.exec(`
+        ALTER TABLE users ADD COLUMN nodeOrigin TEXT;
+        ALTER TABLE users ADD COLUMN syncVersion INTEGER;
+        ALTER TABLE users ADD COLUMN lastModified INTEGER;
+        ALTER TABLE users ADD COLUMN stateHash TEXT;
+      `);
+    } catch (e) {
+      // Column exists, ignore
+    }
+
+    try {
+      this.db.exec(`
+        ALTER TABLE proposals ADD COLUMN nodeOrigin TEXT;
+        ALTER TABLE proposals ADD COLUMN syncVersion INTEGER;
+        ALTER TABLE proposals ADD COLUMN lastModified INTEGER;
+        ALTER TABLE proposals ADD COLUMN stateHash TEXT;
+      `);
+    } catch (e) {
+      // Column exists, ignore
+    }
+
+    try {
+      this.db.exec(`
+        ALTER TABLE contributions ADD COLUMN nodeOrigin TEXT;
+        ALTER TABLE contributions ADD COLUMN syncVersion INTEGER;
+        ALTER TABLE contributions ADD COLUMN lastModified INTEGER;
+        ALTER TABLE contributions ADD COLUMN stateHash TEXT;
+      `);
+    } catch (e) {
+      // Column exists, ignore
+    }
   }
 
   addUser(user: User) {
-    const stmt = this.db.prepare('INSERT OR REPLACE INTO users (id, name, voiceCredits, reputation, delegates) VALUES (?, ?, ?, ?, ?)');
-    stmt.run(user.id, user.name, user.voiceCredits, JSON.stringify(user.reputation), JSON.stringify(user.delegates));
+    const stmt = this.db.prepare('INSERT OR REPLACE INTO users (id, name, voiceCredits, reputation, delegates, nodeOrigin, syncVersion, lastModified, stateHash) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)');
+    stmt.run(user.id, user.name, user.voiceCredits, JSON.stringify(user.reputation), JSON.stringify(user.delegates), user.syncMetadata?.nodeOrigin || 'local', user.syncMetadata?.syncVersion || 1, user.syncMetadata?.lastModified || Date.now(), user.syncMetadata?.stateHash || '');
   }
 
   getUser(id: string): User | undefined {
     const stmt = this.db.prepare('SELECT * FROM users WHERE id = ?');
     const row = stmt.get(id) as any;
     if (!row) return undefined;
-    return {
+    const res: any = {
       ...row,
       reputation: JSON.parse(row.reputation),
       delegates: JSON.parse(row.delegates)
     };
+    if (row.nodeOrigin) {
+      res.syncMetadata = {
+        nodeOrigin: row.nodeOrigin,
+        syncVersion: row.syncVersion,
+        lastModified: row.lastModified,
+        stateHash: row.stateHash
+      };
+    }
+    return res as User;
   }
 
   getUsers(): User[] {
     const stmt = this.db.prepare('SELECT * FROM users');
     const rows = stmt.all() as any[];
-    return rows.map(row => ({
-      ...row,
-      reputation: JSON.parse(row.reputation),
-      delegates: JSON.parse(row.delegates)
-    }));
+    return rows.map((row: any) => {
+      const res: any = {
+        ...row,
+        reputation: JSON.parse(row.reputation),
+        delegates: JSON.parse(row.delegates)
+      };
+      if (row.nodeOrigin) {
+        res.syncMetadata = {
+          nodeOrigin: row.nodeOrigin,
+          syncVersion: row.syncVersion,
+          lastModified: row.lastModified,
+          stateHash: row.stateHash
+        };
+      }
+      return res as User;
+    });
   }
 
   get users() {
@@ -151,13 +225,15 @@ export class Store {
       INSERT OR REPLACE INTO proposals (
         id, title, abstract, detailedSpecs, proposerId, committeeId,
         status, milestones, totalTargetBudget, currentFunding, tokenSymbol,
-        votesFor, votesAgainst, impactScore, executionPayload
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        votesFor, votesAgainst, impactScore, executionPayload,
+        nodeOrigin, syncVersion, lastModified, stateHash
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
     stmt.run(
       proposal.id, proposal.title, proposal.abstract, proposal.detailedSpecs, proposal.proposerId, proposal.committeeId,
       proposal.status, JSON.stringify(proposal.milestones), proposal.totalTargetBudget, proposal.currentFunding, proposal.tokenSymbol || 'USD',
-      proposal.votesFor, proposal.votesAgainst, proposal.impactScore || 0, proposal.executionPayload
+      proposal.votesFor, proposal.votesAgainst, proposal.impactScore || 0, proposal.executionPayload,
+      proposal.syncMetadata?.nodeOrigin || 'local', proposal.syncMetadata?.syncVersion || 1, proposal.syncMetadata?.lastModified || Date.now(), proposal.syncMetadata?.stateHash || ''
     );
   }
 
@@ -165,19 +241,39 @@ export class Store {
     const stmt = this.db.prepare('SELECT * FROM proposals WHERE id = ?');
     const row = stmt.get(id) as any;
     if (!row) return undefined;
-    return {
+    const res: any = {
       ...row,
       milestones: JSON.parse(row.milestones)
     };
+    if (row.nodeOrigin) {
+      res.syncMetadata = {
+        nodeOrigin: row.nodeOrigin,
+        syncVersion: row.syncVersion,
+        lastModified: row.lastModified,
+        stateHash: row.stateHash
+      };
+    }
+    return res as Proposal;
   }
 
   getProposals(): Proposal[] {
     const stmt = this.db.prepare('SELECT * FROM proposals');
     const rows = stmt.all() as any[];
-    return rows.map(row => ({
-      ...row,
-      milestones: JSON.parse(row.milestones)
-    }));
+    return rows.map((row: any) => {
+      const res: any = {
+        ...row,
+        milestones: JSON.parse(row.milestones)
+      };
+      if (row.nodeOrigin) {
+        res.syncMetadata = {
+          nodeOrigin: row.nodeOrigin,
+          syncVersion: row.syncVersion,
+          lastModified: row.lastModified,
+          stateHash: row.stateHash
+        };
+      }
+      return res as Proposal;
+    });
   }
 
   get proposals() {
@@ -275,17 +371,56 @@ export class Store {
   }
 
   addContribution(contribution: Contribution) {
-    const stmt = this.db.prepare('INSERT INTO contributions (userId, proposalId, amount, tokenSymbol, timestamp) VALUES (?, ?, ?, ?, ?)');
-    stmt.run(contribution.userId, contribution.proposalId, contribution.amount, contribution.tokenSymbol, contribution.timestamp);
+    const stmt = this.db.prepare('INSERT INTO contributions (userId, proposalId, amount, tokenSymbol, timestamp, nodeOrigin, syncVersion, lastModified, stateHash) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)');
+    stmt.run(contribution.userId, contribution.proposalId, contribution.amount, contribution.tokenSymbol, contribution.timestamp, contribution.syncMetadata?.nodeOrigin || 'local', contribution.syncMetadata?.syncVersion || 1, contribution.syncMetadata?.lastModified || Date.now(), contribution.syncMetadata?.stateHash || '');
   }
 
   getContributionsByUser(userId: string): Contribution[] {
     const stmt = this.db.prepare('SELECT * FROM contributions WHERE userId = ?');
-    return stmt.all(userId) as Contribution[];
+    const rows = stmt.all(userId) as any[];
+    return rows.map((row: any) => {
+      const res: any = {
+        userId: row.userId,
+        proposalId: row.proposalId,
+        amount: row.amount,
+        tokenSymbol: row.tokenSymbol,
+        timestamp: row.timestamp
+      };
+      if (row.nodeOrigin) {
+        res.syncMetadata = {
+          nodeOrigin: row.nodeOrigin,
+          syncVersion: row.syncVersion,
+          lastModified: row.lastModified,
+          stateHash: row.stateHash
+        };
+      }
+      return res as Contribution;
+    });
   }
 
+
+      addTreasuryTransaction(tx: { id: string, tokenSymbol: string, amount: number, type: 'DEPOSIT' | 'WITHDRAWAL', timestamp: number }) {
+        const stmt = this.db.prepare('INSERT INTO treasury_transactions (id, tokenSymbol, amount, type, timestamp) VALUES (?, ?, ?, ?, ?)');
+        stmt.run(tx.id, tx.tokenSymbol, tx.amount, tx.type, tx.timestamp);
+      }
+
+      getTreasuryBalances(): Record<string, number> {
+        const stmt = this.db.prepare('SELECT tokenSymbol, amount, type FROM treasury_transactions');
+        const rows = stmt.all() as { tokenSymbol: string, amount: number, type: string }[];
+        const balances: Record<string, number> = {};
+        for (const row of rows) {
+          if (!balances[row.tokenSymbol]) balances[row.tokenSymbol] = 0;
+          if (row.type === 'DEPOSIT') {
+            balances[row.tokenSymbol] = (balances[row.tokenSymbol] || 0) + row.amount;
+          } else {
+            balances[row.tokenSymbol] = (balances[row.tokenSymbol] || 0) - row.amount;
+          }
+        }
+        return balances;
+      }
+
   clear() {
-    this.db.exec('DELETE FROM users; DELETE FROM committees; DELETE FROM proposals; DELETE FROM governance_cycles; DELETE FROM tasks; DELETE FROM votes; DELETE FROM contributions;');
+    this.db.exec('DELETE FROM users; DELETE FROM committees; DELETE FROM proposals; DELETE FROM governance_cycles; DELETE FROM tasks; DELETE FROM votes; DELETE FROM contributions; DELETE FROM treasury_transactions;');
   }
 }
 

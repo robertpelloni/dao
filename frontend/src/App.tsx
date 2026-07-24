@@ -1,7 +1,8 @@
 import { useState } from 'react'
-import { Layout, Globe, Users, FileText, Shield, RefreshCw, ChevronLeft, Activity } from 'lucide-react'
+import { Layout, Globe, Users, FileText, Shield, RefreshCw, ChevronLeft, Activity, Plus, X, Info } from 'lucide-react'
 import { IdentityWidget } from './components/IdentityWidget.js'
 import { ProposalList } from './components/ProposalList.js'
+import { TreasuryDashboard } from './components/TreasuryDashboard'
 import { ActionPanel } from './components/ActionPanel.js'
 import { ProposalForm } from './components/ProposalForm.js'
 import { CommitteeList } from './components/CommitteeList.js'
@@ -59,50 +60,30 @@ function App() {
       <div className="flex flex-1 relative">
         {/* Sidebar */}
         <aside className={`
-          fixed inset-y-0 left-0 z-30 w-64 bg-white border-r p-4 flex flex-col gap-1 transition-transform duration-300 transform md:sticky md:top-[73px] md:h-[calc(100vh-73px)] md:translate-x-0
-          ${isSidebarOpen ? 'translate-x-0 shadow-2xl shadow-blue-900/10' : 'translate-x-[-100%] md:translate-x-0'}
+          ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+          md:translate-x-0 fixed md:relative z-30 w-64 h-full bg-white border-r flex flex-col gap-2 p-4 transition-transform duration-300 ease-in-out
         `}>
-          <div className="flex items-center justify-between md:hidden mb-4 px-4">
-             <p className="text-[10px] font-black uppercase text-gray-400 tracking-[0.2em]">Navigation</p>
-             <button onClick={() => setIsSidebarOpen(false)} className="p-1 hover:bg-gray-100 rounded-lg">
-                <ChevronLeft size={18} />
-             </button>
+          <div className="flex items-center justify-between mb-8 px-2 mt-2">
+            <h1 className="font-black text-2xl tracking-tighter bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">LiquidGov</h1>
+            <button className="md:hidden text-gray-400 hover:text-gray-600" onClick={() => setIsSidebarOpen(false)}>
+              <X size={24} />
+            </button>
           </div>
-          <p className="px-4 py-2 text-[10px] font-black uppercase text-gray-400 tracking-[0.2em] mb-2 hidden md:block">Navigation</p>
+
           <button
-            onClick={() => { setActiveTab('proposals'); setSelectedProposalId(null); setShowForm(false); setIsSidebarOpen(false); }}
-            className={`flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all ${activeTab === 'proposals' ? 'bg-blue-600 text-white shadow-blue-200 shadow-lg' : 'hover:bg-gray-50 text-gray-500'}`}
+            onClick={() => { setShowForm(false); setIsSidebarOpen(false); }}
+            className={`flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all bg-blue-600 text-white shadow-blue-200 shadow-lg`}
           >
-            <FileText size={18} />
-            <span>Proposals</span>
+            <Layout size={18} />
+            <span>Dashboard</span>
           </button>
+
           <button
-            onClick={() => { setActiveTab('committees'); setShowForm(false); setIsSidebarOpen(false); }}
-            className={`flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all ${activeTab === 'committees' ? 'bg-blue-600 text-white shadow-blue-200 shadow-lg' : 'hover:bg-gray-50 text-gray-500'}`}
+            onClick={() => { setShowForm(true); setIsSidebarOpen(false); }}
+            className={`flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all hover:bg-gray-50 text-gray-500`}
           >
-            <Users size={18} />
-            <span>Committees</span>
-          </button>
-          <button
-            onClick={() => { setActiveTab('identity'); setShowForm(false); setIsSidebarOpen(false); }}
-            className={`flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all ${activeTab === 'identity' ? 'bg-blue-600 text-white shadow-blue-200 shadow-lg' : 'hover:bg-gray-50 text-gray-500'}`}
-          >
-            <Shield size={18} />
-            <span>My Identity</span>
-          </button>
-          <button
-            onClick={() => { setActiveTab('health'); setShowForm(false); setIsSidebarOpen(false); }}
-            className={`flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all ${activeTab === 'health' ? 'bg-blue-600 text-white shadow-blue-200 shadow-lg' : 'hover:bg-gray-50 text-gray-500'}`}
-          >
-            <Activity size={18} />
-            <span>Health Dashboard</span>
-          </button>
-          <button
-            onClick={() => { setActiveTab('autonomous'); setShowForm(false); setIsSidebarOpen(false); }}
-            className={`flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all ${activeTab === 'autonomous' ? 'bg-blue-600 text-white shadow-blue-200 shadow-lg' : 'hover:bg-gray-50 text-gray-500'}`}
-          >
-            <RefreshCw size={18} />
-            <span>Autonomous Tasks</span>
+            <Plus size={18} />
+            <span>Create Proposal</span>
           </button>
         </aside>
 
@@ -214,7 +195,7 @@ function App() {
 
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 border-b border-gray-100 pb-8 gap-4">
                   <div>
-                    <h2 className="text-3xl md:text-4xl font-black text-slate-800 capitalize tracking-tight">{activeTab}</h2>
+                    <h2 className="text-3xl md:text-4xl font-black text-slate-800 capitalize tracking-tight">Global Dashboard</h2>
                     <p className="text-slate-500 mt-2 font-medium">Manage and participate in distributed governance.</p>
                   </div>
                   {activeTab === 'proposals' && (
@@ -231,16 +212,60 @@ function App() {
                   <div className="grid gap-6 opacity-50">
                     {[1,2,3].map(i => <div key={i} className="h-44 bg-gray-200 animate-pulse rounded-3xl" />)}
                   </div>
-                ) : activeTab === 'proposals' ? (
-                  <ProposalList proposals={proposals} onSelect={setSelectedProposalId} />
-                ) : activeTab === 'committees' ? (
-                   <CommitteeList committees={committees} />
-                ) : activeTab === 'identity' ? (
-                   <IdentityView currentUser={user} allUsers={allUsers} powerBreakdown={powerBreakdown} suggestedCommittees={suggestedCommittees} onAction={refresh} />
-                ) : activeTab === 'autonomous' ? (
-                   <TaskMonitor />
                 ) : (
-                   <HealthDashboard proposals={proposals} committees={committees} allUsers={allUsers} currentCycle={currentCycle} onAction={refresh} />
+                  <div className="space-y-16">
+                     <section>
+                       <HealthDashboard proposals={proposals} committees={committees} allUsers={allUsers} currentCycle={currentCycle} onAction={refresh} />
+                     </section>
+
+                     <section>
+                       <TreasuryDashboard />
+                     </section>
+
+                     <section>
+                       <div className="flex justify-between items-center mb-6">
+                         <h3 className="text-2xl font-black text-slate-800 flex items-center gap-2">
+                            My Identity & Power
+                            <div className="group relative inline-block">
+                              <Info size={16} className="text-slate-300 cursor-help" />
+                              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-2 bg-slate-800 text-white text-[10px] rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                                This section displays your verification status and total voting power, including delegated voice credits.
+                              </div>
+                            </div>
+                         </h3>
+                       </div>
+                       <IdentityView currentUser={user} allUsers={allUsers} powerBreakdown={powerBreakdown} suggestedCommittees={suggestedCommittees} onAction={refresh} />
+                     </section>
+
+                     <section>
+                       <div className="flex justify-between items-center mb-6">
+                         <h3 className="text-2xl font-black text-slate-800 flex items-center gap-2">
+                            Active Proposals
+                            <div className="group relative inline-block">
+                              <Info size={16} className="text-slate-300 cursor-help" />
+                              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-2 bg-slate-800 text-white text-[10px] rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                                View and interact with currently active governance proposals.
+                              </div>
+                            </div>
+                         </h3>
+                       </div>
+                       <ProposalList proposals={proposals} onSelect={setSelectedProposalId} />
+                     </section>
+
+                     <section>
+                       <div className="flex justify-between items-center mb-6">
+                         <h3 className="text-2xl font-black text-slate-800">Committees</h3>
+                       </div>
+                       <CommitteeList committees={committees} />
+                     </section>
+
+                     <section>
+                       <div className="flex justify-between items-center mb-6">
+                         <h3 className="text-2xl font-black text-slate-800">Autonomous Tasks</h3>
+                       </div>
+                       <TaskMonitor />
+                     </section>
+                  </div>
                 )}
               </div>
             )}

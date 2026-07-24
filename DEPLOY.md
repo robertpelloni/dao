@@ -18,5 +18,30 @@
 - `POST /proposals/:id/vote`: Cast QV vote.
 - `POST /proposals/:id/contribute`: Crowdfund contribution.
 
-## Production Deployment
-(To be determined as the architecture evolves)
+## Production Deployment (Phase 9: Global Scaling)
+The LiquidGov architecture is designed for multi-region high availability and cross-border redundancy to ensure censorship resistance and fast identity bridging.
+
+### Terraform & Kubernetes (Multi-Region Mesh)
+To spin up the foundational jurisdiction-agnostic governance mesh, a standard Terraform configuration applies to AWS/GCP:
+
+```hcl
+module "liquidgov_mesh" {
+  source = "./terraform/modules/mesh"
+
+  regions = ["us-east-1", "eu-central-1", "ap-southeast-1"]
+  instance_type = "t3.xlarge"
+
+  # ZKP Verifier Scaling
+  enable_zkp_auto_scaling = true
+  max_zkp_replicas = 50
+
+  # Cross-chain Bridge Relayers
+  enable_bridge_relayers = true
+}
+```
+
+### Deployment Execution
+1. Configure credentials in `.env.prod`
+2. Initialize Terraform: `terraform init`
+3. Apply cross-region state: `terraform apply -auto-approve`
+4. Trigger the Autonomous Deployer via Executive Protocol: `npm run protocol:deploy`
