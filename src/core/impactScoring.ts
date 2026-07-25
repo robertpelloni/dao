@@ -39,3 +39,30 @@ export function calculateImpactScore(proposal: Proposal): number {
 export function sortByImpact(proposals: Proposal[]): Proposal[] {
   return [...proposals].sort((a, b) => (b.impactScore || 0) - (a.impactScore || 0));
 }
+
+/**
+ * Advanced Oracle Assessment
+ * Incorporates identity confidence (Sybil resistance) and engagement trends.
+ */
+export function synthesizeOracleAssessment(
+  proposal: Proposal,
+  engagementVelocity: number,
+  sybilThreatLevel: number,
+  proposerReputation: number
+): number {
+  let baseImpact = calculateImpactScore(proposal);
+
+  // Confidence modifiers
+  // High Sybil threat degrades the score severely
+  const sybilPenalty = sybilThreatLevel > 0 ? (sybilThreatLevel * 10) : 0;
+
+  // High engagement velocity acts as a force multiplier
+  const engagementBonus = Math.min(engagementVelocity / 2, 30); // Max +30
+
+  // Proven actors get a slight boost
+  const repBonus = proposerReputation > 50 ? 10 : 0;
+
+  const finalScore = baseImpact - sybilPenalty + engagementBonus + repBonus;
+
+  return Math.max(0, Math.min(100, finalScore));
+}

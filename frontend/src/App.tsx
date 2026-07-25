@@ -1,15 +1,14 @@
-import React, { useState, useEffect } from 'react'
-import { Layout, Globe, Users, FileText, Shield, RefreshCw, ChevronLeft, Activity, Landmark } from 'lucide-react'
-import api from './api/client.js'
+import { useState } from 'react'
+import { Layout, Globe, Users, FileText, Shield, RefreshCw, ChevronLeft, Activity, Plus, X, Info } from 'lucide-react'
 import { IdentityWidget } from './components/IdentityWidget.js'
 import { ProposalList } from './components/ProposalList.js'
+import { TreasuryDashboard } from './components/TreasuryDashboard'
 import { ActionPanel } from './components/ActionPanel.js'
 import { ProposalForm } from './components/ProposalForm.js'
 import { CommitteeList } from './components/CommitteeList.js'
 import { IdentityView } from './components/IdentityView.js'
 import { HealthDashboard } from './components/HealthDashboard.js'
-import { TreasuryDashboard } from './components/TreasuryDashboard.js'
-import { SystemGovernance } from './components/SystemGovernance.js'
+import TaskMonitor from './components/TaskMonitor.js'
 import { useDashboard } from './hooks/useDashboard.js'
 import { Milestone } from '../../src/models/types.js'
 
@@ -17,29 +16,10 @@ function App() {
   const [activeTab, setActiveTab] = useState('proposals')
   const [showForm, setShowForm] = useState(false)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
-  const { user, isVerified, proposals, committees, suggestedCommittees, suggestedProposals, allUsers, treasuryBalances, currentCycle, powerBreakdown, userTransactions, selectedProposal, setSelectedProposalId, loading, refresh } = useDashboard('alice')
-  const [remoteSpecs, setRemoteSpecs] = useState<any>(null)
-
-  // Fetch full proposal specs from IPFS when selected
-  useEffect(() => {
-     const fetchSpecs = async () => {
-        if (selectedProposal?.contentHash) {
-           try {
-              const res = await api.get(`/storage/${selectedProposal.contentHash}`);
-              setRemoteSpecs(res.data);
-           } catch (e) {
-              console.warn('Failed to fetch remote specs', e);
-              setRemoteSpecs(null);
-           }
-        } else {
-           setRemoteSpecs(null);
-        }
-     };
-     fetchSpecs();
-  }, [selectedProposal]);
+  const { user, isVerified, proposals, committees, suggestedCommittees, allUsers, currentCycle, powerBreakdown, selectedProposal, setSelectedProposalId, loading, refresh } = useDashboard('alice')
 
   return (
-    <div className="min-h-screen flex flex-col pb-[env(safe-area-inset-bottom)]">
+    <div className="min-h-screen flex flex-col">
       {/* Header */}
       <header className="bg-white border-b px-4 md:px-6 py-4 flex justify-between items-center sticky top-0 z-20 shadow-sm">
         <div className="flex items-center gap-2">
@@ -80,50 +60,30 @@ function App() {
       <div className="flex flex-1 relative">
         {/* Sidebar */}
         <aside className={`
-          fixed inset-y-0 left-0 z-30 w-64 bg-white border-r p-4 flex flex-col gap-1 transition-transform duration-300 transform md:sticky md:top-[73px] md:h-[calc(100vh-73px)] md:translate-x-0
-          ${isSidebarOpen ? 'translate-x-0 shadow-2xl shadow-blue-900/10' : 'translate-x-[-100%] md:translate-x-0'}
+          ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+          md:translate-x-0 fixed md:relative z-30 w-64 h-full bg-white border-r flex flex-col gap-2 p-4 transition-transform duration-300 ease-in-out
         `}>
-          <div className="flex items-center justify-between md:hidden mb-4 px-4">
-             <p className="text-[10px] font-black uppercase text-gray-400 tracking-[0.2em]">Navigation</p>
-             <button onClick={() => setIsSidebarOpen(false)} className="p-1 hover:bg-gray-100 rounded-lg">
-                <ChevronLeft size={18} />
-             </button>
+          <div className="flex items-center justify-between mb-8 px-2 mt-2">
+            <h1 className="font-black text-2xl tracking-tighter bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">LiquidGov</h1>
+            <button className="md:hidden text-gray-400 hover:text-gray-600" onClick={() => setIsSidebarOpen(false)}>
+              <X size={24} />
+            </button>
           </div>
-          <p className="px-4 py-2 text-[10px] font-black uppercase text-gray-400 tracking-[0.2em] mb-2 hidden md:block">Navigation</p>
+
           <button
-            onClick={() => { setActiveTab('proposals'); setSelectedProposalId(null); setShowForm(false); setIsSidebarOpen(false); window.scrollTo(0,0); }}
-            className={`flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all active:scale-95 ${activeTab === 'proposals' ? 'bg-blue-600 text-white shadow-blue-200 shadow-lg' : 'hover:bg-gray-50 text-gray-500'}`}
+            onClick={() => { setShowForm(false); setIsSidebarOpen(false); }}
+            className={`flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all bg-blue-600 text-white shadow-blue-200 shadow-lg`}
           >
-            <FileText size={18} />
-            <span>Proposals</span>
+            <Layout size={18} />
+            <span>Dashboard</span>
           </button>
+
           <button
-            onClick={() => { setActiveTab('committees'); setShowForm(false); setIsSidebarOpen(false); window.scrollTo(0,0); }}
-            className={`flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all active:scale-95 ${activeTab === 'committees' ? 'bg-blue-600 text-white shadow-blue-200 shadow-lg' : 'hover:bg-gray-50 text-gray-500'}`}
+            onClick={() => { setShowForm(true); setIsSidebarOpen(false); }}
+            className={`flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all hover:bg-gray-50 text-gray-500`}
           >
-            <Users size={18} />
-            <span>Committees</span>
-          </button>
-          <button
-            onClick={() => { setActiveTab('identity'); setShowForm(false); setIsSidebarOpen(false); window.scrollTo(0,0); }}
-            className={`flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all active:scale-95 ${activeTab === 'identity' ? 'bg-blue-600 text-white shadow-blue-200 shadow-lg' : 'hover:bg-gray-50 text-gray-500'}`}
-          >
-            <Shield size={18} />
-            <span>My Identity</span>
-          </button>
-          <button
-            onClick={() => { setActiveTab('treasury'); setShowForm(false); setIsSidebarOpen(false); window.scrollTo(0,0); }}
-            className={`flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all active:scale-95 ${activeTab === 'treasury' ? 'bg-blue-600 text-white shadow-blue-200 shadow-lg' : 'hover:bg-gray-50 text-gray-500'}`}
-          >
-            <Landmark size={18} />
-            <span>Treasury</span>
-          </button>
-          <button
-            onClick={() => { setActiveTab('system'); setShowForm(false); setIsSidebarOpen(false); }}
-            className={`flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all ${activeTab === 'system' ? 'bg-blue-600 text-white shadow-blue-200 shadow-lg' : 'hover:bg-gray-50 text-gray-500'}`}
-          >
-            <Activity size={18} />
-            <span>System Governance</span>
+            <Plus size={18} />
+            <span>Create Proposal</span>
           </button>
         </aside>
 
@@ -164,25 +124,12 @@ function App() {
                     </header>
 
                     <section className="bg-white border rounded-3xl p-6 md:p-8 shadow-sm">
-                      <h3 className="text-lg font-black text-slate-800 mb-4 border-b pb-4 flex items-center justify-between">
-                         <div className="flex items-center gap-2">
-                           <FileText className="text-blue-500" size={20} />
-                           Detailed Specifications
-                         </div>
-                         {selectedProposal.contentHash && (
-                            <span className="text-[8px] font-mono bg-gray-100 text-gray-400 px-2 py-1 rounded" title="IPFS Content Identifier">
-                               CID: {selectedProposal.contentHash}
-                            </span>
-                         )}
+                      <h3 className="text-lg font-black text-slate-800 mb-4 border-b pb-4 flex items-center gap-2">
+                         <FileText className="text-blue-500" size={20} />
+                         Detailed Specifications
                       </h3>
                       <div className="prose prose-slate max-w-none text-slate-600 font-medium">
-                        {remoteSpecs?.detailedSpecs || selectedProposal.detailedSpecs}
-                        {remoteSpecs && (
-                          <div className="mt-4 p-4 bg-blue-50 rounded-2xl border border-blue-100">
-                             <p className="text-[10px] font-black uppercase text-blue-600 mb-1">Decentralized Metadata</p>
-                             <p className="text-xs italic text-blue-800">This specification was verified from content-addressed storage (mock IPFS).</p>
-                          </div>
-                        )}
+                        {selectedProposal.detailedSpecs}
                       </div>
                     </section>
 
@@ -248,7 +195,7 @@ function App() {
 
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 border-b border-gray-100 pb-8 gap-4">
                   <div>
-                    <h2 className="text-3xl md:text-4xl font-black text-slate-800 capitalize tracking-tight">{activeTab}</h2>
+                    <h2 className="text-3xl md:text-4xl font-black text-slate-800 capitalize tracking-tight">Global Dashboard</h2>
                     <p className="text-slate-500 mt-2 font-medium">Manage and participate in distributed governance.</p>
                   </div>
                   {activeTab === 'proposals' && (
@@ -265,35 +212,60 @@ function App() {
                   <div className="grid gap-6 opacity-50">
                     {[1,2,3].map(i => <div key={i} className="h-44 bg-gray-200 animate-pulse rounded-3xl" />)}
                   </div>
-                ) : activeTab === 'proposals' ? (
-                  <ProposalList proposals={proposals} onSelect={setSelectedProposalId} />
-                ) : activeTab === 'committees' ? (
-                   <CommitteeList committees={committees} />
-                ) : activeTab === 'identity' ? (
-                   <IdentityView
-                    currentUser={user}
-                    allUsers={allUsers}
-                    powerBreakdown={powerBreakdown}
-                    userTransactions={userTransactions}
-                    suggestedCommittees={suggestedCommittees}
-                    suggestedProposals={suggestedProposals}
-                    onAction={refresh}
-                    onSelectProposal={(id) => {
-                      setSelectedProposalId(id);
-                      setActiveTab('proposals');
-                    }}
-                  />
-                ) : activeTab === 'treasury' ? (
-                   <TreasuryDashboard onAction={refresh} />
                 ) : (
-                   <SystemGovernance
-                    proposals={proposals}
-                    committees={committees}
-                    allUsers={allUsers}
-                    treasuryBalances={treasuryBalances}
-                    currentCycle={currentCycle}
-                    onAction={refresh}
-                  />
+                  <div className="space-y-16">
+                     <section>
+                       <HealthDashboard proposals={proposals} committees={committees} allUsers={allUsers} currentCycle={currentCycle} onAction={refresh} />
+                     </section>
+
+                     <section>
+                       <TreasuryDashboard />
+                     </section>
+
+                     <section>
+                       <div className="flex justify-between items-center mb-6">
+                         <h3 className="text-2xl font-black text-slate-800 flex items-center gap-2">
+                            My Identity & Power
+                            <div className="group relative inline-block">
+                              <Info size={16} className="text-slate-300 cursor-help" />
+                              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-2 bg-slate-800 text-white text-[10px] rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                                This section displays your verification status and total voting power, including delegated voice credits.
+                              </div>
+                            </div>
+                         </h3>
+                       </div>
+                       <IdentityView currentUser={user} allUsers={allUsers} powerBreakdown={powerBreakdown} suggestedCommittees={suggestedCommittees} onAction={refresh} />
+                     </section>
+
+                     <section>
+                       <div className="flex justify-between items-center mb-6">
+                         <h3 className="text-2xl font-black text-slate-800 flex items-center gap-2">
+                            Active Proposals
+                            <div className="group relative inline-block">
+                              <Info size={16} className="text-slate-300 cursor-help" />
+                              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-2 bg-slate-800 text-white text-[10px] rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                                View and interact with currently active governance proposals.
+                              </div>
+                            </div>
+                         </h3>
+                       </div>
+                       <ProposalList proposals={proposals} onSelect={setSelectedProposalId} />
+                     </section>
+
+                     <section>
+                       <div className="flex justify-between items-center mb-6">
+                         <h3 className="text-2xl font-black text-slate-800">Committees</h3>
+                       </div>
+                       <CommitteeList committees={committees} />
+                     </section>
+
+                     <section>
+                       <div className="flex justify-between items-center mb-6">
+                         <h3 className="text-2xl font-black text-slate-800">Autonomous Tasks</h3>
+                       </div>
+                       <TaskMonitor />
+                     </section>
+                  </div>
                 )}
               </div>
             )}

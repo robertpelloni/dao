@@ -2,9 +2,16 @@
  * Core Data Models for LiquidGov
  */
 
+
+export interface SyncMetadata {
+  nodeOrigin: string;
+  syncVersion: number;
+  lastModified: number;
+  stateHash: string;
+}
+
 export type ProposalStatus =
   | 'DRAFT'
-  | 'EMERGENCY'
   | 'SPONSORED'
   | 'ACTIVE_VOTING'
   | 'FUNDED'
@@ -19,8 +26,6 @@ export interface Milestone {
   isCompleted: boolean;
   completionProof?: string; // URL or hash
   juryVotes?: string[]; // IDs of users who verified this milestone
-  rejectionVotes?: string[]; // IDs of users who rejected this milestone
-  isDisputed?: boolean; // True if the milestone is currently under dispute/rejected
   assignedJury?: string[]; // IDs of users randomly selected to verify this milestone
   requiredJuryQuorum?: number; // Number of jury votes needed to release funds
 }
@@ -31,6 +36,7 @@ export interface User {
   voiceCredits: number; // For Quadratic Voting
   reputation: Record<string, number>; // Subject-specific reputation
   delegates: Record<string, string>; // subject -> user_id
+  syncMetadata?: SyncMetadata;
 }
 
 export interface Committee {
@@ -38,7 +44,6 @@ export interface Committee {
   subject: string; // e.g., "Infrastructure -> Roads"
   members: string[]; // user IDs
   thresholdQuorum: number; // e.g., 0.05 for 5%
-  lastActivityAt?: number; // Timestamp of last proposal or vote
 }
 
 export interface Proposal {
@@ -56,9 +61,8 @@ export interface Proposal {
   votesFor: number;
   votesAgainst: number;
   impactScore?: number; // Calculated by AI/Heuristics
-  isCritical?: boolean; // If true, triggers urgent notifications
-  contentHash?: string; // IPFS CID for proposal body/specs
   executionPayload: string; // JSON or script hash
+  syncMetadata?: SyncMetadata;
 }
 
 export type CycleStatus = 'ACTIVE' | 'CALIBRATION' | 'ARCHIVED';
@@ -98,6 +102,5 @@ export interface Contribution {
   amount: number;
   tokenSymbol: string;
   timestamp: number;
-  isBlinded?: boolean; // If true, amount is hidden until finalization
-  blindedCommitment?: string; // Commitment for privacy-preserving QF
+  syncMetadata?: SyncMetadata;
 }
