@@ -1,134 +1,53 @@
-╔══════════════════════════════════════════════════════════════════════════════╗
-║                                                                              ║
-║                     ██╗   ██╗███╗   ██╗██████╗ ███████╗██████╗              ║
-║                     ██║   ██║████╗  ██║██╔══██╗██╔════╝██╔══██╗             ║
-║                     ██║   ██║██╔██╗ ██║██║  ██║█████╗  ██████╔╝             ║
-║                     ██║   ██║██║╚██╗██║██║  ██║██╔══╝  ██╔══██╗             ║
-║                     ╚██████╔╝██║ ╚████║██████╔╝███████╗██║  ██║             ║
-║                      ╚═════╝ ╚═╝  ╚═══╝╚═════╝ ╚══════╝╚═╝  ╚═╝             ║
-║                                                                              ║
-║                     ██████╗ ██████╗ ███╗   ██╗███████╗████████╗██████╗      ║
-║                    ██╔════╝██╔═══██╗████╗  ██║██╔════╝╚══██╔══╝██╔══██╗     ║
-║                    ██║     ██║   ██║██╔██╗ ██║███████╗   ██║   ██████╔╝     ║
-║                    ██║     ██║   ██║██║╚██╗██║╚════██║   ██║   ██╔══██╗     ║
-║                    ╚██████╗╚██████╔╝██║ ╚████║███████║   ██║   ██║  ██║     ║
-║                     ╚═════╝ ╚═════╝ ╚═╝  ╚═══╝╚══════╝   ╚═╝   ╚═╝  ╚═╝     ║
-║                                                                              ║
-║                     █████╗ ██╗     ██████╗ ██╗  ██╗ █████╗                  ║
-║                    ██╔══██╗██║     ██╔══██╗██║  ██║██╔══██╗                 ║
-║                    ███████║██║     ██████╔╝███████║███████║                 ║
-║                    ██╔══██║██║     ██╔═══╝ ██╔══██║██╔══██║                 ║
-║                    ██║  ██║███████╗██║     ██║  ██║██║  ██║                 ║
-║                    ╚═╝  ╚═╝╚══════╝╚═╝     ╚═╝  ╚═╝╚═╝  ╚═╝                 ║
-║                                                                              ║
-║                    ╔══════════════════════════════════════╗                  ║
-║                    ║     ⚠️  ALPHA SOFTWARE  ⚠️           ║                  ║
-║                    ║  EXPECT BREAKING CHANGES & BUGS     ║                  ║
-║                    ║  NOT READY FOR PRODUCTION USE       ║                  ║
-║                    ╚══════════════════════════════════════╝                  ║
-║                                                                              ║
-╚══════════════════════════════════════════════════════════════════════════════╝
+# dao — "LiquidGov"
 
-# dao
+A proof-of-concept for a distributed, voluntary governance platform:
+people form topic committees, draft structured proposals, vote with
+quadratic voting, and crowdfund the work with assurance-style escrow and
+milestone releases. Design-first, with a real TypeScript codebase
+underneath the design docs.
 
-Lightweight proof-of-concept for a distributed, voluntary governance platform (LiquidGov).
+## What's here
 
-A reference implementation and design-first repository for coordinating subject-specific committees, structured proposals, and a crowdfunding + voting engine (quadratic voting / quadratic funding / assurance-style escrow).
+- **`src/` (TypeScript)** — the backend: `api/`, `core/` (proposal
+  lifecycle state machine: DRAFT → SPONSORED → ACTIVE_VOTING → FUNDED /
+  REJECTED → IN_PROGRESS → COMPLETED; quadratic voting module; escrow
+  simulation), `models/`, `chains/` (cross-chain mocks), `bridge/`,
+  `cli/`, `utils/`. Express + sockets for realtime updates.
+- **`frontend/`** — React + Vite + TypeScript UI for browsing subjects,
+  drafting proposals, delegating, and contributing funds.
+- **`tests/`** — Jest, including `tests/protocol.integration.test.ts`.
+- **`CONSTITUTION.md`, `PROTOCOL.md`, `PROTOCOL_SPEC.md`, `VISION.md`** —
+  the governance design itself; `populate_delegations.ts` seeds
+  delegation data. `Dockerfile`, `docker-compose.yml`, and `helm/` cover
+  deployment. Identity/Sybil resistance is designed around Semaphore-style
+  uniqueness proofs (see the core concepts in `VISION.md`).
 
-Status
+Note on structure: the old README described a `backend/` directory; the
+backend actually lives in `src/` at the root — there is no `backend/`
+folder. It also declared "Phase 8 Complete"; the phases are this project's
+own internal numbering in its roadmap docs, and "cross-chain" support is,
+by its own wording, mocks.
 
-- Phase 8 Complete (AI Automation, Advanced Analytics, Cross-Chain mocks) / specification + TypeScript backend and React frontend.
-- Focus: data schemas, deterministic proposal lifecycle, and a modular quadratic voting engine.
+Housekeeping worth knowing: the root carries ~25 one-shot `patch_*.py`
+scripts (`patch_auth_server.py`, `patch_proposalGenerator_test3.py`,
+`fix_conflict.py`, …) — leftovers of the agent workflow that edited this
+repo by generating patch scripts — plus both `package-lock.json` and
+`pnpm-lock.yaml`. They are not part of the application.
 
-Why this project
+## Quick start
 
-Large public problems require coordinated, accountable, and incentive-aligned decision-making. This repo captures a pragmatic blueprint and an initial codebase for a decentralized, voluntary governance system where people form committees, draft structured proposals, vote, and crowdfund work.
+```bash
+npm install
+cd frontend && npm install && cd ..
+npm run build:backend   # tsc
+node ./dist/index.js
+npm test                # jest (backend)
+npm run test:all        # backend tests + frontend build
+```
 
-Core concepts
+## Status
 
-- Identity: Sybil resistance / proof-of-unique-human is required. This repo integrates identity tooling (Semaphore libraries) to support privacy-preserving uniqueness checks and future DID integrations.
-- Committees: Topic-specific, dynamic groups that manage deliberation for a subject node.
-- Proposals: Structured JSON-based objects with milestones, budgets, and execution hooks. Proposals move through a deterministic lifecycle (DRAFT → SPONSORED → ACTIVE_VOTING → FUNDED / REJECTED → IN_PROGRESS → COMPLETED).
-- Voting & Treasury: Quadratic voting for voice allocation, and crowdfunding with dominant-assurance-style escrow and milestone-based releases.
-
-What’s included
-
-- backend/ (TypeScript + Express): core API, state machines for committees & proposals, quadratic voting module, escrow simulation, and sockets for realtime updates.
-- frontend/ (React + Vite + TypeScript): lightweight UI for browsing subjects, drafting proposals, delegating, and contributing funds.
-- scripts/: utility and CI helpers (build, sync-protocol, verify-docs).
-- package.json & frontend/package.json: build, test, and protocol scripts.
-
-Quick start (development)
-
-Prerequisites:
-- Node.js (18+ recommended)
-- npm or yarn
-
-Install and run backend + frontend locally:
-
-1. Clone
-
-   git clone https://github.com/robertpelloni/dao.git
-   cd dao
-
-2. Install dependencies
-
-   npm install
-   cd frontend && npm install
-   cd ..
-
-3. Start backend (from repo root)
-
-   # compile and run the TypeScript backend
-   npm run build:backend
-   node ./dist/index.js
-
-   Or use the combined build script:
-   npm run build
-
-4. Start frontend (in a separate terminal)
-
-   cd frontend
-   npm run dev
-
-Key scripts
-
-- npm run build:backend — compile TypeScript backend
-- npm run build — run repository build script (scripts/build.sh)
-- npm run protocol — run repo sync protocol (scripts/sync-protocol.sh)
-- npm test — runs Jest tests (integration/unit)
-- frontend: npm run build — build the frontend site
-
-Developer notes
-
-- Data schemas: Proposals are serialized JSON objects with required fields: title, abstract, detailed_specs, milestones (array of {title, description, amount, release_condition}), target_budget, and execution_payload (optional hook/address).
-- Voting engine: Quadratic voting implemented as a pure module. The cost to cast n votes is n^2 voice credits. The module is designed for unit testing and isolated validation.
-- Escrow: Dominant assurance pattern — funds are held until target is met. If the campaign expires underfunded, contributions are refunded. When milestones are reached, funds are released to the proposer via a multi-party verification flow.
-- Identity integration: Semaphore libraries are included in package.json to support proof-of-unique-human primitives. Replace or extend with WorldID, Gitcoin Passport, or a custom DID flow as needed.
-
-Testing
-
-- Unit tests: npm test
-- Frontend tests: cd frontend && npm run test:frontend (playwright)
-- Protocol integration: npm run test:protocol
-
-Architecture & next steps
-
-The repository is intentionally modular to let teams adopt one piece at a time:
-
-1. Tighten the identity layer (pick a Sybil-resistance provider and wire ZKPs or blinded tokens).
-2. Harden the proposal lifecycle and milestone oracle (multi-sig + randomized jury for milestone verification).
-3. Deploy a simple onchain or offchain escrow implementation for real funds.
-
-Contributing
-
-Contributions are welcome. Please open issues for proposed features or design changes. For code contributions, follow the standard fork → branch → PR workflow. If you plan to implement large features (identity, on-chain escrow, or production voting), open an issue first to coordinate.
-
-License
-
-This project is released under the ISC license. See LICENSE for details.
-
-Contact
-
-Repo: https://github.com/robertpelloni/dao
-
+Working proof-of-concept (v1.0.13 per package.json), built May–July 2026;
+recent commits are dependabot bumps and automated checkpoints. Not a
+deployed governance system — a reference implementation and design
+repository, as its own docs say.
