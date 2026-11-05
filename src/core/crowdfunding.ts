@@ -130,7 +130,7 @@ export class CrowdfundingEngine {
     this.store.updateProposal(proposalId, { currentFunding: 0 });
   }
 
-  voteOnMilestone(proposalId: string, milestoneId: string, userId: string): void {
+  voteOnMilestone(proposalId: string, milestoneId: string, userId: string, action: 'APPROVE' | 'REJECT' = 'APPROVE'): void {
     const proposal = this.store.getProposal(proposalId);
     if (!proposal) throw new Error('Proposal not found');
 
@@ -150,9 +150,42 @@ export class CrowdfundingEngine {
       throw new Error('User already voted on this milestone');
     }
 
+    const rejectionVotes = [...(milestone.rejectionVotes || [])];
+    const committee = this.store.getCommittee(proposal.committeeId);
+    const subject = committee?.subject || 'General';
+
+    if (action === 'REJECT') {
+      rejectionVotes.push(userId);
+      milestone.rejectionVotes = rejectionVotes;
+      milestones[index] = milestone;
+      this.store.updateProposal(proposalId, { milestones });
+
+      const getWeighted = (vids: string[]) => {
+        return vids.reduce((total, vid) => {
+          const vUser = this.store.getUser(vid);
+          const rep = vUser?.reputation[subject] || 0;
+          return total + (rep >= 10 ? 2 : 1);
+        }, 0);
+      };
+
+      const rejectionWeighted = getWeighted(rejectionVotes);
+      const required = milestone.requiredJuryQuorum || 2;
+      if (rejectionWeighted >= required) {
+        milestones[index] = { ...milestone, isDisputed: true, isCompleted: false, juryVotes: [], rejectionVotes: [] };
+        this.store.updateProposal(proposalId, { milestones });
+        const user = this.store.getUser(proposal.proposerId);
+        if (user) {
+          user.reputation[subject] = (user.reputation[subject] || 0) - 10;
+          this.store.addUser(user);
+        }
+        globalIdentity.rewardReputation(proposal.proposerId, subject, -10);
+        return;
+      }
+      return;
+    }
+
     votes.push(userId);
     milestones[index] = { ...milestone, juryVotes: votes };
-
     this.store.updateProposal(proposalId, { milestones });
 
     // Weighted Jury voting evaluation
@@ -218,6 +251,18 @@ export class CrowdfundingEngine {
     }
 
     return true;
+  }
+
+  async submitMilestoneProof(proposalId: string, milestoneId: string, proofUrl: string): Promise<void> {
+    const proposal = this.store.getProposal(proposalId);
+    if (!proposal) throw new Error('Proposal not found');
+
+    const updatedMilestones = proposal.milestones.map(m =>
+      m.id === milestoneId ? { ...m, completionProof: proofUrl } : m
+    );
+
+    this.store.updateProposal(proposalId, { milestones: updatedMilestones });
+    console.log();
   }
 
   getContributions(proposalId: string): Contribution[] {

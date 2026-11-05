@@ -12,6 +12,8 @@ export interface SyncMetadata {
 
 export type ProposalStatus =
   | 'DRAFT'
+  | 'EMERGENCY'
+  | 'FAST_TRACKED'
   | 'SPONSORED'
   | 'ACTIVE_VOTING'
   | 'FUNDED'
@@ -26,6 +28,8 @@ export interface Milestone {
   isCompleted: boolean;
   completionProof?: string; // URL or hash
   juryVotes?: string[]; // IDs of users who verified this milestone
+  rejectionVotes?: string[];
+  isDisputed?: boolean;
   assignedJury?: string[]; // IDs of users randomly selected to verify this milestone
   requiredJuryQuorum?: number; // Number of jury votes needed to release funds
 }
@@ -44,6 +48,7 @@ export interface Committee {
   subject: string; // e.g., "Infrastructure -> Roads"
   members: string[]; // user IDs
   thresholdQuorum: number; // e.g., 0.05 for 5%
+  lastActivityAt?: number;
 }
 
 export interface Proposal {

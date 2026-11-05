@@ -16,7 +16,23 @@ function App() {
   const [activeTab, setActiveTab] = useState('proposals')
   const [showForm, setShowForm] = useState(false)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
-  const { user, isVerified, proposals, committees, suggestedCommittees, allUsers, currentCycle, powerBreakdown, selectedProposal, setSelectedProposalId, loading, refresh } = useDashboard('alice')
+  const {
+    user,
+    isVerified,
+    proposals,
+    committees,
+    suggestedCommittees,
+    suggestedProposals,
+    allUsers,
+    treasuryBalances,
+    currentCycle,
+    powerBreakdown,
+    userTransactions,
+    selectedProposal,
+    setSelectedProposalId,
+    loading,
+    refresh
+  } = useDashboard('alice')
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -215,7 +231,7 @@ function App() {
                 ) : (
                   <div className="space-y-16">
                      <section>
-                       <HealthDashboard proposals={proposals} committees={committees} allUsers={allUsers} currentCycle={currentCycle} onAction={refresh} />
+                       <HealthDashboard proposals={proposals} committees={committees} allUsers={allUsers} treasuryBalances={treasuryBalances} currentCycle={currentCycle} onAction={refresh} />
                      </section>
 
                      <section>
@@ -234,7 +250,16 @@ function App() {
                             </div>
                          </h3>
                        </div>
-                       <IdentityView currentUser={user} allUsers={allUsers} powerBreakdown={powerBreakdown} suggestedCommittees={suggestedCommittees} onAction={refresh} />
+                       <IdentityView
+                         currentUser={user}
+                         allUsers={allUsers}
+                         powerBreakdown={powerBreakdown}
+                         suggestedCommittees={suggestedCommittees}
+                         suggestedProposals={suggestedProposals}
+                         userTransactions={userTransactions}
+                         onSelectProposal={setSelectedProposalId}
+                         onAction={refresh}
+                       />
                      </section>
 
                      <section>
