@@ -87,7 +87,10 @@ export class Store {
             tokenSymbol TEXT,
             amount REAL,
             type TEXT,
-            timestamp INTEGER
+            timestamp INTEGER,
+            subject TEXT,
+            userId TEXT,
+            description TEXT
           );
 
           CREATE TABLE IF NOT EXISTS contributions (
@@ -370,9 +373,26 @@ export class Store {
     return stmt.all(userId) as Vote[];
   }
 
+  getAllVotes(): Vote[] {
+    const stmt = this.db.prepare('SELECT * FROM votes');
+    return stmt.all() as Vote[];
+  }
+
   addContribution(contribution: Contribution) {
     const stmt = this.db.prepare('INSERT INTO contributions (userId, proposalId, amount, tokenSymbol, timestamp, nodeOrigin, syncVersion, lastModified, stateHash) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)');
     stmt.run(contribution.userId, contribution.proposalId, contribution.amount, contribution.tokenSymbol, contribution.timestamp, contribution.syncMetadata?.nodeOrigin || 'local', contribution.syncMetadata?.syncVersion || 1, contribution.syncMetadata?.lastModified || Date.now(), contribution.syncMetadata?.stateHash || '');
+  }
+
+  getAllContributions(): Contribution[] {
+    const stmt = this.db.prepare('SELECT * FROM contributions');
+    const rows = stmt.all() as any[];
+    return rows.map((row: any) => ({
+      userId: row.userId,
+      proposalId: row.proposalId,
+      amount: row.amount,
+      tokenSymbol: row.tokenSymbol,
+      timestamp: row.timestamp
+    }));
   }
 
   getContributionsByUser(userId: string): Contribution[] {
@@ -399,10 +419,26 @@ export class Store {
   }
 
 
-      addTreasuryTransaction(tx: { id: string, tokenSymbol: string, amount: number, type: 'DEPOSIT' | 'WITHDRAWAL', timestamp: number }) {
-        const stmt = this.db.prepare('INSERT INTO treasury_transactions (id, tokenSymbol, amount, type, timestamp) VALUES (?, ?, ?, ?, ?)');
-        stmt.run(tx.id, tx.tokenSymbol, tx.amount, tx.type, tx.timestamp);
-      }
+  addTreasuryTransaction(tx: { id: string; tokenSymbol: string; amount: number; type: string; subject?: string; userId?: string | null; description?: string; timestamp: number }) {
+    try {
+      this.db.exec(`
+        ALTER TABLE treasury_transactions ADD COLUMN subject TEXT;
+        ALTER TABLE treasury_transactions ADD COLUMN userId TEXT;
+        ALTER TABLE treasury_transactions ADD COLUMN description TEXT;
+      `);
+    } catch {}
+    const stmt = this.db.prepare('INSERT INTO treasury_transactions (id, tokenSymbol, amount, type, timestamp, subject, userId, description) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
+    stmt.run(tx.id, tx.tokenSymbol, tx.amount, tx.type, tx.timestamp, tx.subject || 'General', tx.userId || null, tx.description || null);
+  }
+
+  getTreasuryTransactions(): any[] {
+    try {
+      const stmt = this.db.prepare('SELECT * FROM treasury_transactions ORDER BY timestamp DESC');
+      return stmt.all();
+    } catch {
+      return [];
+    }
+  }
 
       getTreasuryBalances(): Record<string, number> {
         const stmt = this.db.prepare('SELECT tokenSymbol, amount, type FROM treasury_transactions');

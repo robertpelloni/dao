@@ -42,7 +42,7 @@ app.use(express.json());
  * JWT Authentication Middleware
  */
 const authenticateToken = (req: Request, res: Response, next: any) => {
-  const skipPaths = ['/health', '/summary', '/proposals', '/committees', '/users', '/auth/login', '/governance/trends', '/governance/cycles', '/governance/cycle', '/tasks'];
+  const skipPaths = ['/health', '/summary', '/proposals', '/committees', '/users', '/auth/login', '/governance/trends', '/governance/cycles', '/governance/cycle', '/tasks', '/treasury/balance', '/treasury/transactions'];
   const publicPostPaths = ['/proposals/triage', '/proposals'];
 
   if (skipPaths.includes(req.path) && req.method === 'GET') return next();
@@ -117,6 +117,47 @@ app.get('/users/:id', (req: Request, res: Response) => {
   const user = globalStore.getUser(s(req.params.id));
   if (!user) return res.status(404).json({ error: 'User not found' });
   res.json(user);
+});
+
+
+app.post('/users/:id/welcome', (req: Request, res: Response) => {
+  const userId = s(req.params.id);
+  const { interestSubject } = req.body;
+  const user = globalStore.getUser(userId);
+  if (!user) return res.status(404).json({ error: 'User not found' });
+
+  const subject = interestSubject || 'General';
+  globalIdentity.rewardReputation(userId, subject, 5);
+
+  const welcomeProposal: Proposal = {
+    id: `welcome-${userId}-${Date.now()}`,
+    title: `Welcome to LiquidGov, ${user.name}!`,
+    abstract: `This is your personalized onboarding proposal. You can use your voice credits to vote on this initiative to see how Quadratic Voting works in the ${subject} domain.`,
+    detailedSpecs: 'LiquidGov is a voluntary state governed by expertise. By voting on this proposal, you are participating in the cognitive meritocracy.',
+    proposerId: 'system',
+    committeeId: `${subject.replace(/\s+/g, '-')}-Committee`,
+    status: 'ACTIVE_VOTING',
+    milestones: [{ id: 'm0', description: 'Complete Onboarding', targetBudget: 0, isCompleted: false }],
+    totalTargetBudget: 0,
+    currentFunding: 0,
+    tokenSymbol: 'USD',
+    votesFor: 0,
+    votesAgainst: 0,
+    executionPayload: '{}'
+  };
+
+  const existing = globalStore.getCommittee(welcomeProposal.committeeId);
+  if (!existing) {
+     globalStore.addCommittee({
+        id: welcomeProposal.committeeId,
+        subject,
+        members: [userId],
+        thresholdQuorum: 0.05
+     });
+  }
+
+  globalStore.addProposal(welcomeProposal);
+  res.json({ message: 'Welcome package initialized', proposal: welcomeProposal });
 });
 
 app.get('/identity/:id', (req: Request, res: Response) => {
@@ -302,7 +343,8 @@ app.post('/proposals/:id/vote', (req: Request, res: Response) => {
   if (!user) return res.status(404).json({ error: 'User not found' });
 
   const cost = calculateVoteCost(votes);
-  const power = calculateEffectivePower(globalStore, userId, subject || 'General');
+  const powerBreakdown = calculateEffectivePower(globalStore, userId, subject || 'General');
+  const power = powerBreakdown.total;
 
   if (power < cost) {
     return res.status(400).json({ error: `Insufficient power. Required: ${cost}, Available: ${power}` });
@@ -581,6 +623,31 @@ app.get('/governance/cycle', (req: Request, res: Response) => {
 
 app.get('/governance/cycles', (req: Request, res: Response) => {
   res.json(globalStore.getCycles());
+});
+
+
+app.get('/proposals/suggested/:userId', (req: Request, res: Response) => {
+  const userId = s(req.params.userId);
+  const user = globalStore.getUser(userId);
+  if (!user) return res.status(404).json({ error: 'User not found' });
+  const allProposals = globalStore.getProposals();
+  const committees = Array.from(globalStore.committees.values());
+  const suggested = globalTriage.suggestProposalsForUser(user, allProposals, committees);
+  res.json(suggested);
+});
+
+app.get('/treasury/balance', (req: Request, res: Response) => {
+  const pools = crowdfunding.getTreasury().getAllPools();
+  res.json(pools);
+});
+
+app.get('/treasury/transactions', (req: Request, res: Response) => {
+  const userId = req.query.userId as string;
+  let txs = crowdfunding.getTreasury().getTransactions();
+  if (userId) {
+    txs = txs.filter((tx: any) => tx.userId === userId);
+  }
+  res.json(txs);
 });
 
 app.get('/governance/trends', (req: Request, res: Response) => {
