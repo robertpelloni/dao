@@ -6,9 +6,8 @@ import { TreasuryManager } from './treasury';
  * Valid state transitions for a Proposal.
  */
 const VALID_TRANSITIONS: Record<ProposalStatus, ProposalStatus[]> = {
-  'DRAFT': ['SPONSORED', 'EMERGENCY', 'FAST_TRACKED'],
+  'DRAFT': ['SPONSORED', 'EMERGENCY'],
   'EMERGENCY': ['ACTIVE_VOTING', 'REJECTED'],
-  'FAST_TRACKED': ['ACTIVE_VOTING', 'REJECTED'],
   'SPONSORED': ['ACTIVE_VOTING', 'REJECTED'],
   'ACTIVE_VOTING': ['FUNDED', 'REJECTED'],
   'FUNDED': ['IN_PROGRESS', 'REJECTED'], // Can be rejected if found fraudulent before starting

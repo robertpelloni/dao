@@ -52,11 +52,7 @@ export const HealthDashboard: React.FC<HealthDashboardProps> = ({ proposals, com
   const timeLeft = currentCycle ? Math.max(0, currentCycle.endTime - Date.now()) : 0;
   const daysLeft = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
 
-  const balancesList = Array.isArray(treasuryBalances)
-    ? treasuryBalances
-    : Object.entries(treasuryBalances || {}).map(([tokenSymbol, amount]) => ({ tokenSymbol, amount: Number(amount) }));
-
-  const totalUSDMatching = balancesList
+  const totalUSDMatching = treasuryBalances
     .filter(b => b.tokenSymbol === 'USD')
     .reduce((acc, b) => acc + b.amount, 0);
 

@@ -203,12 +203,7 @@ export class RepositoryManager {
     if (!fs.existsSync(versionFile)) return;
 
     const currentVersion = fs.readFileSync(versionFile, 'utf8').trim();
-    const parts = currentVersion.split('.').map(p => {
-      const n = parseInt(p, 10);
-      return isNaN(n) ? 0 : n;
-    });
-    while (parts.length < 3) parts.push(0);
-    if (parts.length > 3) parts.length = 3;
+    const parts = currentVersion.split('.').map(Number);
     if (parts[2] !== undefined) parts[2]++;
     const newVersion = parts.join('.');
 

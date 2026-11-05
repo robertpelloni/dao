@@ -35,7 +35,7 @@ export class AutonomousProposalGenerator {
        );
     }
 
-    const targetSubject = subjects[0] || 'General';
+    const targetSubject = subjects[0];
 
     return this.createProposal(
        `Automated Initiative: ${targetSubject} Expansion`,

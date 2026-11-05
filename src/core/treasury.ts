@@ -133,7 +133,7 @@ export class TreasuryManager {
     return matches;
   }
 
-  getPoolBalance(tokenSymbol: string = 'USD', subject?: string): number {
+  getPoolBalance(tokenSymbol: string = 'USD'): number {
     return this.matchingPools.get(tokenSymbol) || 0;
   }
 
@@ -172,10 +172,5 @@ export class TreasuryManager {
 
   getTransactions(): any[] {
     return this.store.getTreasuryTransactions ? this.store.getTreasuryTransactions() : [];
-  }
-  reallocate(amount: number, tokenSymbol: string, fromSubject?: string, toSubject?: string, description: string = 'Reallocation'): void {
-    const fromBalance = this.getPoolBalance(tokenSymbol);
-    if (fromBalance < amount) throw new Error(`Insufficient funds`);
-    this.setMatchingPool(fromBalance - amount, tokenSymbol);
   }
 }
