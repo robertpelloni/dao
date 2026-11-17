@@ -1,3 +1,12 @@
+## [1.1.113] - 2026-11-17
+### Added
+- **Dashboard section navigation + guidance**: sidebar now jumps to the single-page sections (Overview, Treasury, Identity & Power, Proposals, Committees, Autonomous Tasks) with descriptive tooltips; Committees and Autonomous Tasks headings gained explainer tooltips (including the warning that task Execute runs git sync/merge/push). Treasury deposit form gained an optional **Subject pool** field wiring Voluntary Tax Routing (subject pools from 1.1.109) into the UI.
+- **Treasury router mounted**: `src/api/routes/treasury.ts` (`/treasury/pools|intake|allocate`) is now mounted on the same `TreasuryManager` instance as the inline routes, verified by a shared-state test. The never-mounted duplicate governance router was archived to `src/api/routes/archive/governance.ts`.
+
+### Fixed
+- `phase10` E2E determinism: the test now pins milestone jury quorum when force-assigning the jury (random shuffle in `finalizeFunding` made the release threshold vary), removing the parallel-run flake source.
+- `DEPLOY.md` corrected: real runbook (build, tray daemon, seed, watchdog flag), real endpoint list (no `/auth/refresh`), and the Terraform section marked aspirational. `VISION.md`/`IDEAS.md` gained dated real-vs-aspirational addenda.
+
 ## [1.1.112] - 2026-11-17
 ### Added
 - **Missing dashboard API endpoints**: `GET /proposals/suggested/:userId`, `GET /treasury/balance` (list shape), `GET /treasury/transactions?userId=`, `GET /delegators/:userId/:subject`, `DELETE /delegate/:userId/:subject`, `POST /committees/:id/join`, `POST /users/:id/welcome`. Their absence 404'd the dashboard's single `Promise.all`, emptying the UI. Pinned by new `tests/dashboardApi.test.ts` (4 tests). Deposits now record optional `userId`/`subject` attribution and can fund subject pools.

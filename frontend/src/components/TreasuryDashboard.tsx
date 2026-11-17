@@ -7,6 +7,9 @@ export const TreasuryDashboard: React.FC = () => {
   const [balances, setBalances] = useState<Record<string, number>>({});
   const [depositAmount, setDepositAmount] = useState<number>(0);
   const [depositToken, setDepositToken] = useState('USD');
+  // Optional subject pool (Voluntary Tax Routing): when set, the deposit funds
+  // that subject's matching pool instead of the general token pool.
+  const [depositSubject, setDepositSubject] = useState('');
   const [loading, setLoading] = useState(false);
 
   const fetchBalances = async () => {
@@ -26,7 +29,11 @@ export const TreasuryDashboard: React.FC = () => {
     if (depositAmount <= 0) return;
     setLoading(true);
     try {
-      await api.post('/treasury/deposit', { amount: depositAmount, tokenSymbol: depositToken });
+      await api.post('/treasury/deposit', {
+        amount: depositAmount,
+        tokenSymbol: depositToken,
+        ...(depositSubject.trim() ? { subject: depositSubject.trim() } : {})
+      });
       setDepositAmount(0);
       fetchBalances();
     } catch (err) {
@@ -91,6 +98,14 @@ export const TreasuryDashboard: React.FC = () => {
                  <option value="BTC">BTC</option>
                </select>
              </div>
+             <input
+               type="text"
+               placeholder="Subject pool (optional, e.g. Roads)"
+               title="Voluntary Tax Routing: name a subject to fund only that subject's matching pool. Leave blank for the general pool."
+               className="w-full bg-white border border-emerald-200 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-emerald-500 font-bold"
+               value={depositSubject}
+               onChange={e => setDepositSubject(e.target.value)}
+             />
              <button
                onClick={handleDeposit}
                disabled={loading || depositAmount <= 0}

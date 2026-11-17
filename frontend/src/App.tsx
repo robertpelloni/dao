@@ -101,6 +101,32 @@ function App() {
             <Plus size={18} />
             <span>Create Proposal</span>
           </button>
+
+          {/* Single-page section nav: the dashboard is one consolidated page, so
+              the sidebar jumps to sections instead of switching pages. Order
+              mirrors the page: overview, money, identity/power, proposals,
+              committees, then system tasks last. */}
+          <nav className="mt-6 px-2 space-y-1" aria-label="Dashboard sections">
+            <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">On this page</p>
+            {[
+              ['overview-section', 'System Overview', 'Cycle, health, security, and funding progress'],
+              ['treasury-section', 'Treasury', 'Matching pools and deposits, incl. subject-targeted (voluntary tax) routing'],
+              ['identity-section', 'Identity & Power', 'Verification, reputation, delegations, and your effective voting power'],
+              ['proposals-section', 'Active Proposals', 'Vote, fund, and track live proposals'],
+              ['committees-section', 'Committees', 'Subject committees that review and own proposals'],
+              ['tasks-section', 'Autonomous Tasks', 'Background protocol tasks. Warning: Execute runs git sync/merge/publish on this repo'],
+            ].map(([id, label, tip]) => (
+              <a
+                key={id}
+                href={`#${id}`}
+                title={tip}
+                onClick={() => setIsSidebarOpen(false)}
+                className="block px-3 py-2 rounded-lg text-sm font-bold text-gray-500 hover:bg-gray-50 hover:text-slate-800 transition-colors"
+              >
+                {label}
+              </a>
+            ))}
+          </nav>
         </aside>
 
         {/* Overlay for mobile sidebar */}
@@ -230,15 +256,15 @@ function App() {
                   </div>
                 ) : (
                   <div className="space-y-16">
-                     <section>
+                     <section id="overview-section" className="scroll-mt-24">
                        <HealthDashboard proposals={proposals} committees={committees} allUsers={allUsers} treasuryBalances={treasuryBalances} currentCycle={currentCycle} onAction={refresh} />
                      </section>
 
-                     <section>
+                     <section id="treasury-section" className="scroll-mt-24">
                        <TreasuryDashboard />
                      </section>
 
-                     <section>
+                     <section id="identity-section" className="scroll-mt-24">
                        <div className="flex justify-between items-center mb-6">
                          <h3 className="text-2xl font-black text-slate-800 flex items-center gap-2">
                             My Identity & Power
@@ -262,7 +288,7 @@ function App() {
                        />
                      </section>
 
-                     <section>
+                     <section id="proposals-section" className="scroll-mt-24">
                        <div className="flex justify-between items-center mb-6">
                          <h3 className="text-2xl font-black text-slate-800 flex items-center gap-2">
                             Active Proposals
@@ -277,16 +303,26 @@ function App() {
                        <ProposalList proposals={proposals} onSelect={setSelectedProposalId} />
                      </section>
 
-                     <section>
+                     <section id="committees-section" className="scroll-mt-24">
                        <div className="flex justify-between items-center mb-6">
-                         <h3 className="text-2xl font-black text-slate-800">Committees</h3>
+                         <h3 className="text-2xl font-black text-slate-800 flex items-center gap-2">
+                            Committees
+                            <span title="Subject committees own topics (e.g. Roads, Education), review proposals in their area, and supply milestone juries. Join one from Identity & Power.">
+                              <Info size={16} className="text-slate-300 cursor-help" />
+                            </span>
+                         </h3>
                        </div>
                        <CommitteeList committees={committees} />
                      </section>
 
-                     <section>
+                     <section id="tasks-section" className="scroll-mt-24">
                        <div className="flex justify-between items-center mb-6">
-                         <h3 className="text-2xl font-black text-slate-800">Autonomous Tasks</h3>
+                         <h3 className="text-2xl font-black text-slate-800 flex items-center gap-2">
+                            Autonomous Tasks
+                            <span title="Background Executive Protocol tasks. Warning: executing a task runs git sync, branch reconciliation, version bump, and push against this repository.">
+                              <Info size={16} className="text-slate-300 cursor-help" />
+                            </span>
+                         </h3>
                        </div>
                        <TaskMonitor />
                      </section>

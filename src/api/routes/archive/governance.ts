@@ -1,8 +1,13 @@
+// ARCHIVED 2026-11-17: this router was never mounted. Every route duplicates an
+// inline route in src/api/server.ts except GET /sybil-report (UI uses
+// /security/flagged instead). Kept for reference; do not mount alongside the
+// inline routes without first deleting the duplicates. Import paths fixed for
+// the archive depth so the file still typechecks.
 import { Router, Request, Response } from 'express';
-import { globalGovernance } from '../../core/governanceCycle';
-import { SybilDetector } from '../../core/sybil';
-import { globalStore } from '../../models/Store';
-import { AutonomousProposalGenerator } from '../../core/proposalGenerator';
+import { globalGovernance } from '../../../core/governanceCycle';
+import { SybilDetector } from '../../../core/sybil';
+import { globalStore } from '../../../models/Store';
+import { AutonomousProposalGenerator } from '../../../core/proposalGenerator';
 
 export function createGovernanceRouter(): Router {
   const router = Router();

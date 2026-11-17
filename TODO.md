@@ -5,8 +5,8 @@ Short-term, human-curated. Note: the Executive Protocol's governance sync
 grep — that is why it previously contained only grep noise.
 
 - [ ] Build the frontend where npm registry access works (`cd frontend; npm install; npm run build`), then browser-test the dashboard against a seeded backend (`npm run build:backend; npx ts-node scripts/tray.ts start`).
-- [ ] Decide the unmounted routers: `src/api/routes/governance.ts` and parts of `src/api/routes/treasury.ts` duplicate inline `server.ts` routes — mount, consolidate, or delete.
-- [ ] Make `tests/phase10.integration.test.ts` deterministic under the full parallel run (isolate store state).
+- [x] Decide the unmounted routers: treasury router mounted on the shared instance; governance router archived to `src/api/routes/archive/` (1.1.113).
+- [x] Make `tests/phase10.integration.test.ts` deterministic: pinned jury quorum in the test (1.1.113).
 - [ ] Get a clean local `npm install` at repo root so `npx tsc --noEmit` (including tests) reports zero errors (`@types/supertest`).
 - [ ] Consider a real OS tray icon (systray/Electron) only if the CLI controller in `scripts/tray.ts` proves insufficient — do not add the dependency speculatively.
 - [ ] Confirm whether external muse.ai/Gemini/ChatGPT coordination via Edge CDP 9222 is wanted; no such channel is configured in this workspace.
