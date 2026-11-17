@@ -43,13 +43,23 @@ export class DaemonController {
 
     console.log('[DaemonController] Launching LiquidGov backend daemon...');
     const outStream = fs.openSync(LOG_FILE, 'a');
-    const child = spawn('npx', ['ts-node', 'src/cli/simulate.ts'], {
-      detached: true,
-      stdio: ['ignore', outStream, outStream],
-      cwd: path.resolve(__dirname, '..'),
-    });
+    // Why the API server, not src/cli/simulate.ts (the original target): simulate
+    // is a one-shot simulation that exits; the daemon users actually want in the
+    // tray is the long-lived API server the dashboard talks to (src/api/server.ts
+    // listens when run as main). Prefer the compiled output when present.
+    const root = path.resolve(__dirname, '..');
+    const compiled = path.join(root, 'dist', 'api', 'server.js');
+    const useCompiled = fs.existsSync(compiled);
+    const child = useCompiled
+      ? spawn(process.execPath, [compiled], { detached: true, stdio: ['ignore', outStream, outStream], cwd: root, windowsHide: true })
+      : spawn('npx', ['ts-node', 'src/api/server.ts'], { detached: true, stdio: ['ignore', outStream, outStream], cwd: root, windowsHide: true, shell: true });
 
     if (child.pid) {
+      // BelowNormal priority: a background daemon must never starve the desktop.
+      try {
+        const os = require('os');
+        (os as any).setPriority(child.pid, (os as any).constants.priority.PRIORITY_BELOW_NORMAL);
+      } catch { /* priority is best-effort; the daemon still runs without it */ }
       fs.writeFileSync(PID_FILE, child.pid.toString());
       child.unref();
       console.log(`[DaemonController] Started daemon successfully with PID ${child.pid}`);
@@ -108,7 +118,7 @@ export class DaemonController {
     console.log('3. Restart Daemon');
     console.log('4. Show Status');
     console.log('5. View Recent Logs');
-    console.log('6. Exit');
+    console.log('6. Quit Servers & Exit');
 
     const rl = readline.createInterface({
       input: process.stdin,
@@ -135,6 +145,9 @@ export class DaemonController {
           DaemonController.showLogs(30);
           break;
         case '6':
+          // Quit means quit: stop the servers we started, then exit (the old
+          // menu only exited the controller and silently left the daemon running).
+          DaemonController.stopDaemon();
           console.log('Exiting controller.');
           process.exit(0);
         default:
@@ -152,7 +165,7 @@ if (require.main === module) {
     DaemonController.interactiveMenu();
   } else if (command === 'start') {
     DaemonController.startDaemon();
-  } else if (command === 'stop') {
+  } else if (command === 'stop' || command === 'quit') {
     DaemonController.stopDaemon();
   } else if (command === 'restart') {
     DaemonController.restartDaemon();
@@ -164,6 +177,6 @@ if (require.main === module) {
     DaemonController.showLogs(lines);
   } else {
     console.log(`Unknown command: ${command}`);
-    console.log('Usage: npx ts-node scripts/tray.ts [start|stop|restart|status|logs|menu]');
+    console.log('Usage: npx ts-node scripts/tray.ts [start|stop|quit|restart|status|logs|menu]');
   }
 }

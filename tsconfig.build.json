@@ -1,0 +1,15 @@
+{
+  // Production build config: emits only src/ to dist/ (dist/api/server.js).
+  // The base tsconfig also typechecks tests/ (via ts-jest / editor), which
+  // previously made `npm run build:backend` fail on test-only type errors
+  // (e.g. missing @types/supertest) and emit tests into dist/.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "declaration": false,
+    "declarationMap": false,
+    "sourceMap": false
+  },
+  "include": ["src"]
+}

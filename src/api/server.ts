@@ -8,7 +8,7 @@ import { globalStore } from '../models/Store';
 import { SecurityEngine } from '../core/security';
 import { globalIdentity } from '../core/identity';
 import { calculateVoteCost } from '../core/qv';
-import { delegate, calculateEffectivePower } from '../core/delegation';
+import { delegate, revokeDelegation, calculateEffectivePower } from '../core/delegation';
 import { transitionProposal } from '../core/proposalStateMachine';
 import { CrowdfundingEngine } from '../core/crowdfunding';
 import { calculateImpactScore } from '../core/impactScoring';
@@ -241,6 +241,45 @@ app.get('/power/:userId/:subject', (req: Request, res: Response) => {
   res.json({ userId: req.params.userId, subject: req.params.subject, effectivePower: power });
 });
 
+// Who delegates to this user on a subject (IdentityView delegation panel).
+app.get('/delegators/:userId/:subject', (req: Request, res: Response) => {
+  const power = calculateEffectivePower(globalStore, s(req.params.userId), s(req.params.subject));
+  res.json(power.delegators);
+});
+
+// Revoke a delegation (IdentityView). Core logic: core/delegation.revokeDelegation.
+app.delete('/delegate/:userId/:subject', (req: Request, res: Response) => {
+  revokeDelegation(globalStore, s(req.params.userId), s(req.params.subject));
+  res.json({ message: `Delegation revoked for ${req.params.userId} on ${req.params.subject}` });
+});
+
+// Join a committee (IdentityView). Idempotent; bumps lastActivityAt so the
+// committee-sunset check in governanceCycle sees real activity.
+app.post('/committees/:id/join', (req: Request, res: Response) => {
+  const committee = globalStore.getCommittee(s(req.params.id));
+  if (!committee) return res.status(404).json({ error: 'Committee not found' });
+  const { userId } = req.body;
+  if (!userId) return res.status(400).json({ error: 'userId required' });
+  if (!committee.members.includes(userId)) committee.members.push(userId);
+  committee.lastActivityAt = Date.now();
+  globalStore.addCommittee(committee);
+  res.json(committee);
+});
+
+// PoC onboarding (useDashboard welcome flow): a brand-new user with no reputation
+// gets a small starter reputation in their interest subject so suggestion feeds
+// have something to rank. No-op (still 200) once they have any reputation.
+app.post('/users/:id/welcome', (req: Request, res: Response) => {
+  const user = globalStore.getUser(s(req.params.id));
+  if (!user) return res.status(404).json({ error: 'User not found' });
+  const subject = (req.body && req.body.interestSubject) || 'General';
+  if (Object.keys(user.reputation).length === 0) {
+    user.reputation[subject] = 5;
+    globalStore.addUser(user);
+  }
+  res.json(user);
+});
+
 // --- Proposal Endpoints ---
 
 app.post('/proposals', (req: Request, res: Response) => {
@@ -263,6 +302,16 @@ app.post('/proposals', (req: Request, res: Response) => {
   };
   globalStore.addProposal(proposal);
   res.status(201).json(proposal);
+});
+
+// Dashboard suggestion feed (useDashboard). Registered before /proposals/:id or
+// Express would capture "suggested" as a proposal id. Uses the triage agent's
+// reputation-ranked ACTIVE_VOTING suggestions.
+app.get('/proposals/suggested/:userId', (req: Request, res: Response) => {
+  const user = globalStore.getUser(s(req.params.userId));
+  if (!user) return res.status(404).json({ error: 'User not found' });
+  const suggested = globalTriage.suggestProposalsForUser(user, globalStore.getProposals(), Array.from(globalStore.committees.values()));
+  res.json(suggested);
 });
 
 app.get('/proposals', (req: Request, res: Response) => {
@@ -336,7 +385,7 @@ app.post('/proposals/:id/vote', (req: Request, res: Response) => {
 
 // Treasury API
 app.post('/treasury/deposit', (req: Request, res: Response) => {
-  const { amount, tokenSymbol } = req.body;
+  const { amount, tokenSymbol, userId, subject } = req.body;
   if (!amount || amount <= 0) {
     return res.status(400).json({ error: 'Invalid amount' });
   }
@@ -348,18 +397,40 @@ app.post('/treasury/deposit', (req: Request, res: Response) => {
     tokenSymbol: token,
     amount,
     type: 'DEPOSIT',
+    // Attribution lets /treasury/transactions?userId= (IdentityView) work.
+    ...(userId ? { userId } : {}),
+    ...(subject ? { subject } : {}),
     timestamp: Date.now()
   });
 
-  const currentPool = crowdfunding.getTreasury().getPoolBalance(token);
-  crowdfunding.getTreasury().setMatchingPool(currentPool + amount, token);
+  // With a subject, the deposit funds that subject-specific pool (Voluntary Tax
+  // Routing, 1.1.109); without one it funds the token pool as before.
+  const treasury = crowdfunding.getTreasury();
+  const currentPool = treasury.getPoolBalance(token, subject);
+  treasury.setMatchingPool(currentPool + amount, token, subject);
 
-  res.json({ message: 'Deposit successful', txId, newBalance: crowdfunding.getTreasury().getPoolBalance(token) });
+  res.json({ message: 'Deposit successful', txId, newBalance: treasury.getPoolBalance(token, subject) });
 });
 
 app.get('/treasury/balances', (req: Request, res: Response) => {
   const balances = globalStore.getTreasuryBalances();
   res.json(balances);
+});
+
+// Dashboard shape (useDashboard/HealthDashboard): matching-pool balances as a
+// list of {tokenSymbol, amount}. Distinct from /balances (stored treasury totals).
+app.get('/treasury/balance', (req: Request, res: Response) => {
+  const pools = crowdfunding.getTreasury().getAllPools();
+  res.json(Object.entries(pools).map(([tokenSymbol, amount]) => ({ tokenSymbol, amount })));
+});
+
+// Treasury ledger (IdentityView lifetime contributions). ?userId= filters to
+// transactions attributed to that user; unattributed system deposits are
+// returned only when no userId is given.
+app.get('/treasury/transactions', (req: Request, res: Response) => {
+  const txs = crowdfunding.getTreasury().getTransactions();
+  const userId = typeof req.query.userId === 'string' ? req.query.userId : undefined;
+  res.json(userId ? txs.filter((t: any) => t.userId === userId) : txs);
 });
 
 const storedBalances = globalStore.getTreasuryBalances();
@@ -645,11 +716,30 @@ app.get('/health', (req: Request, res: Response) => {
   res.json({ status: 'OK', version });
 });
 
+// First-run demo seed: the dashboard hardcodes user 'alice' (useDashboard) and
+// the store starts empty, so a fresh server 404'd every dashboard call. Seed
+// demo citizens + a General committee only when the store is completely empty;
+// disable with LIQUIDGOV_NO_SEED=true. Never runs on import (tests seed their own).
+function seedDemoData(): void {
+  if (process.env.LIQUIDGOV_NO_SEED === 'true') return;
+  if (globalStore.getUsers().length > 0) return;
+  const demoUsers: User[] = [
+    { id: 'alice', name: 'Alice', voiceCredits: 100, reputation: { General: 25, Roads: 20 }, delegates: {} },
+    { id: 'bob', name: 'Bob', voiceCredits: 100, reputation: { General: 5 }, delegates: { Roads: 'alice' } },
+    { id: 'charlie', name: 'Charlie', voiceCredits: 100, reputation: { General: 15 }, delegates: {} },
+    { id: 'dave', name: 'Dave', voiceCredits: 100, reputation: {}, delegates: {} }
+  ];
+  demoUsers.forEach(u => globalStore.addUser(u));
+  globalStore.addCommittee({ id: 'General-Committee', subject: 'General', members: ['alice', 'charlie'], thresholdQuorum: 0.05, lastActivityAt: Date.now() });
+  console.log('[Seed] Demo data created (alice/bob/charlie/dave, General-Committee). Set LIQUIDGOV_NO_SEED=true to skip.');
+}
+
 if (require.main === module) {
+  seedDemoData();
   httpServer.listen(port, () => {
     console.log(`LiquidGov API server listening at http://localhost:${port}`);
 
-    // Start the Autonomous Watchdog
+    // Start the Autonomous Watchdog (opt-in; see core/watchdog.ts)
     globalWatchdog.start();
   });
 }

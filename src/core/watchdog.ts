@@ -22,6 +22,15 @@ export class AutonomousWatchdog {
    */
   start(): void {
     if (this.intervalHandle) return;
+    // Opt-in only (LIQUIDGOV_ENABLE_WATCHDOG=true). Why: a tick executes the full
+    // Executive Protocol against the real repo — sync, branch reconciliation,
+    // version bump, commit and PUSH (see TaskManager.executeTask). That fired
+    // automatically on every API-server start and pushed commit d1ad540
+    // (v1.1.111) unprompted on 2026-11-17. Starting a server must not mutate git.
+    if (process.env.LIQUIDGOV_ENABLE_WATCHDOG !== 'true') {
+      console.log('[Watchdog] Disabled (set LIQUIDGOV_ENABLE_WATCHDOG=true to enable autonomous protocol sync).');
+      return;
+    }
     console.log(`[Watchdog] Starting autonomous background loop (Interval: ${this.intervalMs}ms)`);
 
     this.intervalHandle = setInterval(() => this.tick(), this.intervalMs);

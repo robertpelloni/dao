@@ -45,6 +45,13 @@
 - **Code as Law:** The autonomous execution simulation (executeAutonomousPayload) is the precursor to real smart-contract triggers.
 - **Monorepo Audit:** Conducted a deep audit of the repository for nested Git submodules. Confirmed a 100% native monorepo structure. This architecture was chosen to simplify the Autonomous Protocol's merge and sync logic.
 
+## Version 1.1.109-1.1.112: Baseline Repair & Dashboard Wiring (2026-11-17)
+- **Windows shell idioms are a bug class here:** `cmd.exe` keeps quotes in `echo "no"` and has no `true` builtin, so every `|| echo "no"` / `|| true` probe in the Executive Protocol silently lied on Windows (forward merges never ran for months while logs said "already merged"). Probes whose exit code is the answer must use try/catch, never string compares against shell echo.
+- **The watchdog was armed:** API-server startup ran the full commit+push protocol against the real repo (it pushed v1.1.111 unprompted). It is now opt-in (`LIQUIDGOV_ENABLE_WATCHDOG=true`). Dashboard task Execute still runs the protocol explicitly — by design, but treat it as armed.
+- **Frontend↔backend contract drift is the recurring failure mode:** the dashboard's single `Promise.all` meant 4 missing endpoints emptied the whole UI, and a fresh server had no `alice` user at all. `tests/dashboardApi.test.ts` now pins the dashboard contract; add endpoints there first when adding UI calls.
+- **`build:backend` must stay src-only** (`tsconfig.build.json`): plain `tsc` over the repo compiles tests into `dist/` and fails on test-only types.
+- **Subject pools live beside token pools** in `TreasuryManager` (`${token}::${subject}` keys); token-only callers and tests are untouched. Committee sunset and `REALLOCATE_FUNDS` depend on them.
+
 ## Version 1.0.53-1.0.96: The Voluntary State
 - **Fiscal Autonomy:** Targeted Voluntary Taxation ensures that citizens decide exactly where their capital goes. This is implemented via subject-specific matching pools in the treasury.
 - **Economic Power:** Stake-based reputation ($10 USD = 1 Rep) ensures that those who support the system have a material voice in its governance.
