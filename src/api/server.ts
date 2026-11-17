@@ -18,6 +18,7 @@ import { globalTriage } from '../core/triage';
 import { globalWatchdog } from '../core/watchdog';
 import { User, Proposal, Committee } from '../models/types';
 import { signToken, verifyToken } from '../utils/auth';
+import { createTreasuryRouter } from './routes/treasury';
 
 /**
  * LiquidGov REST API Server
@@ -432,6 +433,14 @@ app.get('/treasury/transactions', (req: Request, res: Response) => {
   const userId = typeof req.query.userId === 'string' ? req.query.userId : undefined;
   res.json(userId ? txs.filter((t: any) => t.userId === userId) : txs);
 });
+
+// Modular treasury router (routes/treasury.ts): pools/intake/allocate. Mounted on
+// the SAME TreasuryManager instance the inline routes use — mounting it with a
+// fresh instance (the old archived patch did this in reverse) would split state.
+// The governance router (routes/archive/governance.ts) was NOT mounted: every
+// route it defined duplicates an inline route above except sybil-report, which
+// the UI already covers via /security/flagged.
+app.use('/treasury', createTreasuryRouter(crowdfunding.getTreasury()));
 
 const storedBalances = globalStore.getTreasuryBalances();
 Object.keys(storedBalances).forEach(token => {

@@ -132,10 +132,15 @@ describe('Phase 10: Production Hardening & Live Simulation End-to-End', () => {
     expect(propFunded?.currentFunding).toBeGreaterThan(5000);
 
     // 5. Milestone Voting & Payout
-    // We assume 'charlie' was assigned to the jury during finalizeFunding (since he is verified)
-    // Force assign charlie for predictable testing
+    // finalizeFunding assigns a RANDOM jury (shuffle) with quorum min(jury,2), so
+    // voteOnMilestone's release threshold varied run to run — the source of this
+    // suite's flakiness under parallel load. Pin jury AND quorum when forcing
+    // the assignment so the release rule is deterministic.
     if (propFunded) {
-        if (propFunded.milestones[0]) propFunded.milestones[0].assignedJury = ['charlie'];
+        if (propFunded.milestones[0]) {
+          propFunded.milestones[0].assignedJury = ['charlie'];
+          propFunded.milestones[0].requiredJuryQuorum = 1;
+        }
         store.updateProposal(proposalId, { milestones: propFunded.milestones });
     }
 

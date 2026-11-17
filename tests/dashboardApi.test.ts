@@ -46,6 +46,17 @@ describe('Dashboard API endpoints', () => {
     expect(other.body).toEqual([]);
   });
 
+  test('mounted treasury router shares state with inline treasury routes', async () => {
+    const intake = await request(app).post('/treasury/intake').set(auth()).send({ amount: 700, tokenSymbol: 'USD' });
+    expect(intake.status).toBe(200);
+    const allocate = await request(app).post('/treasury/allocate').set(auth()).send({ amount: 200, tokenSymbol: 'USD' });
+    expect(allocate.status).toBe(200);
+    // The inline /treasury/balance list must see the router-allocated pool:
+    // same TreasuryManager instance, no split-brain state.
+    const balance = await request(app).get('/treasury/balance').set(auth());
+    expect(balance.body.some((b: any) => b.tokenSymbol === 'USD' && b.amount >= 200)).toBe(true);
+  });
+
   test('delegators, revoke, committee join, and welcome flows', async () => {
     const delegators = await request(app).get('/delegators/alice/Roads').set(auth());
     expect(delegators.status).toBe(200);
