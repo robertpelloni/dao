@@ -1,12 +1,12 @@
 {
   "name": "dao",
-  "version": "1.1.110",
+  "version": "1.1.111",
   "description": "Please help me design a distributed voluntary government organization app in which people form committees about subjects and propose actions to be voted on and crowdfunded",
   "main": "index.js",
   "scripts": {
     "test": "jest --testPathIgnorePatterns=frontend",
     "lint": "eslint .",
-    "build:backend": "tsc",
+    "build:backend": "tsc -p tsconfig.build.json",
     "build": "node -e \"const os = require('os'); const { execSync } = require('child_process'); const cmd = os.platform() === 'win32' ? 'scripts\\\\build.bat' : 'bash scripts/build.sh'; execSync(cmd, { stdio: 'inherit' });\"",
     "protocol": "node -e \"const os = require('os'); const { execSync } = require('child_process'); const cmd = os.platform() === 'win32' ? 'scripts\\\\sync-protocol.bat' : 'bash scripts/sync-protocol.sh'; execSync(cmd, { stdio: 'inherit' });\"",
     "test:protocol": "npx jest tests/protocol.integration.test.ts",
