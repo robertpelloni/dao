@@ -1,3 +1,8 @@
+## [1.1.110] - 2026-11-17
+### Fixed
+- **Executive Protocol merge engine (Windows)**: `git merge-base --is-ancestor ... || echo "no"` always reported "already merged" under `cmd.exe` (echo keeps the quotes), so forward merges never ran and both protocol integration suites failed. Replaced all `|| echo`/`|| true` shell idioms in `src/core/repository.ts` and `src/core/protocol/merger.ts` with portable exit-code probes (`tryRun`), and added `--allow-unrelated-histories` to reverse merges. Both suites now pass.
+- **FAST_TRACKED wired up**: `EMERGENCY → FAST_TRACKED → FUNDED|REJECTED` per `docs/production-v1.md` §4 (bypasses QV, weighted-jury resolution), pinned by a new test in `tests/emergencyState.test.ts`. Previously the status was declared but unreachable.
+
 ## [1.1.109] - 2026-11-17
 ### Added
 - **Subject-specific treasury pools**: `TreasuryManager` now supports subject-scoped matching pools (`getPoolBalance`/`setMatchingPool`/`deposit` with optional `subject`) and `reallocate()` to move funds between them, implementing the Voluntary Tax Routing / committee-sunset behavior that `governanceCycle` and `REALLOCATE_FUNDS` proposals already called. Covered by a new test in `tests/treasury.test.ts`.

@@ -44,4 +44,15 @@ describe('Emergency Proposal State Transitions', () => {
     proposal.status = 'EMERGENCY';
     expect(() => transitionProposal(proposal, 'FUNDED')).toThrow();
   });
+
+  test('FAST_TRACKED: EMERGENCY escalates, then jury resolves to FUNDED or REJECTED', () => {
+    proposal.status = 'EMERGENCY';
+    expect(transitionProposal(proposal, 'FAST_TRACKED').status).toBe('FAST_TRACKED');
+    proposal.status = 'FAST_TRACKED';
+    expect(transitionProposal(proposal, 'FUNDED').status).toBe('FUNDED');
+    expect(transitionProposal(proposal, 'REJECTED').status).toBe('REJECTED');
+    // Fast-track bypasses QV: no route back into voting, and DRAFT cannot skip EMERGENCY.
+    expect(canTransition('FAST_TRACKED', 'ACTIVE_VOTING')).toBe(false);
+    expect(canTransition('DRAFT', 'FAST_TRACKED')).toBe(false);
+  });
 });

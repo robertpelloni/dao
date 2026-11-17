@@ -7,10 +7,11 @@ import { TreasuryManager } from './treasury';
  */
 const VALID_TRANSITIONS: Record<ProposalStatus, ProposalStatus[]> = {
   'DRAFT': ['SPONSORED', 'EMERGENCY'],
-  'EMERGENCY': ['ACTIVE_VOTING', 'REJECTED'],
-  // FAST_TRACKED is declared in ProposalStatus (docs/production-v1.md) but no caller
-  // enters it yet; give it EMERGENCY-like exits so the Record stays exhaustive.
-  'FAST_TRACKED': ['ACTIVE_VOTING', 'REJECTED'],
+  'EMERGENCY': ['ACTIVE_VOTING', 'FAST_TRACKED', 'REJECTED'],
+  // Fast-track path (docs/production-v1.md §4): an EMERGENCY proposal escalated by
+  // the watchdog enters FAST_TRACKED, bypasses the QV period, and is resolved by
+  // weighted jury directly to FUNDED (then IN_PROGRESS via the normal path) or REJECTED.
+  'FAST_TRACKED': ['FUNDED', 'REJECTED'],
   'SPONSORED': ['ACTIVE_VOTING', 'REJECTED'],
   'ACTIVE_VOTING': ['FUNDED', 'REJECTED'],
   'FUNDED': ['IN_PROGRESS', 'REJECTED'], // Can be rejected if found fraudulent before starting
