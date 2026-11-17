@@ -16,6 +16,9 @@
 ## ⚠ Watchdog incident (fixed, but know it happened)
 Starting the API server fired `globalWatchdog.start()` → immediate tick → `TaskManager.executeTask` → full Executive Protocol against the **real repo**: reconcile, version bump, `git commit`, `git push`. That is how `d1ad540` (v1.1.111) got pushed during testing, sweeping up the then-staged `scripts/tray.ts` and `package.json`. The watchdog is now opt-in (`LIQUIDGOV_ENABLE_WATCHDOG=true`, default off, logged). **Still true:** clicking Execute on a task in the dashboard TaskMonitor runs the same protocol against the real repo by design — treat that button as armed.
 
+## ⚠ Concurrent protocol process
+An external "Executive Protocol" process on this machine periodically commits dirty working-tree state (`41ed853` "chore: track dirty state (Protocol #328)" at 02:25 swept this session's in-progress edits into history mid-work; earlier #261/#280/#327 commits have the same shape). Nothing was lost — the final tree passes 30/30 suites — but expect interleaved commits while it runs, and do not leave important work uncommitted for long. Owner: consider disabling that loop now that the in-server watchdog is opt-in.
+
 ## Known issues / next steps
 1. Frontend build unverified (registry TLS in this environment, retried 2026-11-17 PM, still `ERR_SSL_TLSV1_ALERT_PROTOCOL_VERSION`) — install + build elsewhere, then exercise the dashboard in a browser. Dashboard changes in 1.1.113 (section nav, tooltips, subject-pool deposit field) are conservative TSX in existing patterns but have NOT been compiled.
 2. `npx tsc --noEmit` (full, incl. tests) still reports 2 missing-`@types/supertest` errors in this environment's shared `node_modules`; Jest transpiles and passes regardless. A clean local `npm install` should resolve it.
