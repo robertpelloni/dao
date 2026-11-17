@@ -1,3 +1,13 @@
+## [1.1.109] - 2026-11-17
+### Added
+- **Subject-specific treasury pools**: `TreasuryManager` now supports subject-scoped matching pools (`getPoolBalance`/`setMatchingPool`/`deposit` with optional `subject`) and `reallocate()` to move funds between them, implementing the Voluntary Tax Routing / committee-sunset behavior that `governanceCycle` and `REALLOCATE_FUNDS` proposals already called. Covered by a new test in `tests/treasury.test.ts`.
+
+### Fixed
+- `POST /proposals/:id/vote` compared an `EffectivePower` object to a number; now compares `power.total` (object return was introduced in 1.1.4).
+- `ProposalStatus` state machine now includes the declared-but-unreachable `FAST_TRACKED` status (EMERGENCY-like exits), restoring exhaustive `Record<ProposalStatus, ...>` typing.
+- `AutonomousProposalGenerator` no longer trips `noUncheckedIndexedAccess` on `subjects[0]`.
+- Repaired the red baseline: `npx tsc --noEmit` is clean for `src/` and Jest went from 8/29 suites passing to 26/29 (82/85 tests). Remaining failures are pre-existing (see HANDOFF.md).
+
 ## [1.0.11] - 2026-06-07
 ### Added
 - Automated Protocol Sync and Branch Reconciliation.

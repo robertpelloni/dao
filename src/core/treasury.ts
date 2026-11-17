@@ -29,6 +29,15 @@ export class TreasuryManager {
   // Map of token symbol to matching pool amount
   private matchingPools: Map<string, number> = new Map();
 
+  // Subject-specific matching pools (Voluntary Tax Routing), keyed `${token}::${subject}`.
+  // Kept separate from token pools so existing token-only callers/tests are unaffected;
+  // governanceCycle sunset and REALLOCATE_FUNDS proposals move funds between these.
+  private subjectPools: Map<string, number> = new Map();
+
+  private subjectKey(tokenSymbol: string, subject: string): string {
+    return `${tokenSymbol}::${subject}`;
+  }
+
   // Total funds available in the treasury mapped by token symbol
   private treasuryBalances: Map<string, number> = new Map();
 
@@ -67,9 +76,38 @@ export class TreasuryManager {
 
   /**
    * Sets the matching pool for a specific token (legacy/override usage).
+   * When `subject` is given, sets that subject-specific pool instead.
    */
-  setMatchingPool(amount: number, tokenSymbol: string = 'USD'): void {
-    this.matchingPools.set(tokenSymbol, amount);
+  setMatchingPool(amount: number, tokenSymbol: string = 'USD', subject?: string): void {
+    if (subject) {
+      this.subjectPools.set(this.subjectKey(tokenSymbol, subject), amount);
+    } else {
+      this.matchingPools.set(tokenSymbol, amount);
+    }
+  }
+
+  /**
+   * Moves funds between subject-specific pools (e.g. inactive-committee sunset
+   * back to General, or a passed REALLOCATE_FUNDS proposal). Moves at most the
+   * available source balance; returns the amount actually moved (0 = no-op).
+   * Side effect: records a REALLOCATION treasury transaction when funds move.
+   */
+  reallocate(amount: number, tokenSymbol: string = 'USD', fromSubject: string = 'General', toSubject?: string, reason: string = 'Reallocation'): number {
+    if (!toSubject || toSubject === fromSubject || amount <= 0) return 0;
+    const available = this.getPoolBalance(tokenSymbol, fromSubject);
+    const moved = Math.min(amount, available);
+    if (moved <= 0) return 0;
+    this.setMatchingPool(available - moved, tokenSymbol, fromSubject);
+    this.setMatchingPool(this.getPoolBalance(tokenSymbol, toSubject) + moved, tokenSymbol, toSubject);
+    this.store.addTreasuryTransaction({
+      id: `realloc-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+      tokenSymbol,
+      amount: moved,
+      type: 'REALLOCATION',
+      description: `${reason}: ${fromSubject} -> ${toSubject}`,
+      timestamp: Date.now()
+    });
+    return moved;
   }
 
   /**
@@ -133,7 +171,9 @@ export class TreasuryManager {
     return matches;
   }
 
-  getPoolBalance(tokenSymbol: string = 'USD'): number {
+  // With `subject`, returns that subject-specific pool; without, the token pool.
+  getPoolBalance(tokenSymbol: string = 'USD', subject?: string): number {
+    if (subject) return this.subjectPools.get(this.subjectKey(tokenSymbol, subject)) || 0;
     return this.matchingPools.get(tokenSymbol) || 0;
   }
 
@@ -156,9 +196,11 @@ export class TreasuryManager {
     });
     return result;
   }
-  deposit(amount: number, tokenSymbol: string = 'USD', description: string = 'Deposit'): void {
-    const current = this.getPoolBalance(tokenSymbol);
-    this.setMatchingPool(current + amount, tokenSymbol);
+  // With `subject`, funds that subject-specific pool (Voluntary Tax Routing entry point);
+  // without, funds the token pool exactly as before.
+  deposit(amount: number, tokenSymbol: string = 'USD', description: string = 'Deposit', subject?: string): void {
+    const current = this.getPoolBalance(tokenSymbol, subject);
+    this.setMatchingPool(current + amount, tokenSymbol, subject);
 
     this.store.addTreasuryTransaction({
       id: `tx-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
@@ -166,6 +208,7 @@ export class TreasuryManager {
       amount,
       type: 'DEPOSIT',
       description,
+      ...(subject ? { subject } : {}),
       timestamp: Date.now()
     });
   }

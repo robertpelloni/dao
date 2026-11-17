@@ -8,6 +8,9 @@ import { TreasuryManager } from './treasury';
 const VALID_TRANSITIONS: Record<ProposalStatus, ProposalStatus[]> = {
   'DRAFT': ['SPONSORED', 'EMERGENCY'],
   'EMERGENCY': ['ACTIVE_VOTING', 'REJECTED'],
+  // FAST_TRACKED is declared in ProposalStatus (docs/production-v1.md) but no caller
+  // enters it yet; give it EMERGENCY-like exits so the Record stays exhaustive.
+  'FAST_TRACKED': ['ACTIVE_VOTING', 'REJECTED'],
   'SPONSORED': ['ACTIVE_VOTING', 'REJECTED'],
   'ACTIVE_VOTING': ['FUNDED', 'REJECTED'],
   'FUNDED': ['IN_PROGRESS', 'REJECTED'], // Can be rejected if found fraudulent before starting

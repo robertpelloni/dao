@@ -304,8 +304,9 @@ app.post('/proposals/:id/vote', (req: Request, res: Response) => {
   const cost = calculateVoteCost(votes);
   const power = calculateEffectivePower(globalStore, userId, subject || 'General');
 
-  if (power < cost) {
-    return res.status(400).json({ error: `Insufficient power. Required: ${cost}, Available: ${power}` });
+  // calculateEffectivePower returns a breakdown object; compare its total (CHANGELOG 1.1.4).
+  if (power.total < cost) {
+    return res.status(400).json({ error: `Insufficient power. Required: ${cost}, Available: ${power.total}` });
   }
 
   // Deduct cost from the user's personal credits.

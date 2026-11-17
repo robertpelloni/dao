@@ -44,6 +44,18 @@ describe('TreasuryManager', () => {
     expect(txs[0].description).toBe('Initial test deposit');
   });
 
+  test('subject pools are separate from token pools and reallocate moves funds', () => {
+    treasury.deposit(200, 'USD', 'Roads tax', 'Roads');
+    expect(treasury.getPoolBalance('USD', 'Roads')).toBe(200);
+    expect(treasury.getPoolBalance('USD')).toBe(0); // token pool untouched
+
+    // Moves at most the available balance and records the move.
+    expect(treasury.reallocate(500, 'USD', 'Roads', 'General', 'Sunset')).toBe(200);
+    expect(treasury.getPoolBalance('USD', 'Roads')).toBe(0);
+    expect(treasury.getPoolBalance('USD', 'General')).toBe(200);
+    expect(treasury.reallocate(10, 'USD', 'Roads', 'General')).toBe(0); // empty source: no-op
+  });
+
   test('should allocate matching funds proportionally if pool is exceeded', () => {
     treasury.setMatchingPool(100, 'USD');
 

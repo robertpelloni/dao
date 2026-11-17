@@ -35,7 +35,8 @@ export class AutonomousProposalGenerator {
        );
     }
 
-    const targetSubject = subjects[0];
+    // noUncheckedIndexedAccess: index access is string|undefined despite the length check above.
+    const targetSubject = subjects[0] ?? 'General';
 
     return this.createProposal(
        `Automated Initiative: ${targetSubject} Expansion`,
