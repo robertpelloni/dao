@@ -18,11 +18,21 @@ export class MergeEngine {
     }
   }
 
+  // Non-throwing probe: exit code is the answer. The `|| echo "no"` idiom is
+  // not portable — cmd.exe keeps the quotes, so compares always failed on Windows.
+  private tryRun(command: string): string | null {
+    try {
+      return execSync(command, { cwd: this.rootDir, encoding: 'utf8' });
+    } catch {
+      return null;
+    }
+  }
+
   /**
    * Identifies all active AI-generated and feature branches.
    */
   getFeatureBranches(): string[] {
-    const output = this.run('git branch -r || echo ""');
+    const output = this.tryRun('git branch -r') ?? '';
     return output
       .split('\n')
       .map(b => b.trim())
@@ -37,30 +47,34 @@ export class MergeEngine {
     console.log(`[APEP] Reconciling branch: ${branch}`);
 
     // Ensure main is ready
-    this.run('git checkout main || git checkout -b main origin/main || true');
+    if (this.tryRun('git checkout main') === null) {
+      this.tryRun('git checkout -b main origin/main');
+    }
 
     // 1. Forward Merge (Feature -> Main)
     try {
-      const isMerged = this.run(`git merge-base --is-ancestor origin/${branch} main || echo "no"`).trim() !== 'no';
+      const isMerged = this.tryRun(`git merge-base --is-ancestor origin/${branch} main`) !== null;
       if (!isMerged) {
         console.log(`Merging ${branch} into main...`);
         this.run(`git merge origin/${branch} --no-edit --allow-unrelated-histories`);
       }
     } catch (err) {
       console.warn(`[!] Forward merge failed for ${branch}. Aborting merge.`);
-      this.run('git merge --abort || true');
+      this.tryRun('git merge --abort');
       return; // Skip reverse merge if forward failed
     }
 
     // 2. Reverse Merge (Main -> Feature)
     try {
-      this.run(`git checkout ${branch} || git checkout -b ${branch} origin/${branch}`);
-      this.run('git merge main --no-edit');
+      if (this.tryRun(`git checkout ${branch}`) === null) {
+        this.run(`git checkout -b ${branch} origin/${branch}`);
+      }
+      this.run('git merge main --no-edit --allow-unrelated-histories');
       // Pushing is handled in the deployment component, but we can do a local validation push if needed.
       this.run('git checkout main');
     } catch (err) {
       console.warn(`[!] Reverse merge failed for ${branch}. Aborting merge.`);
-      this.run('git merge --abort || true');
+      this.tryRun('git merge --abort');
       this.run('git checkout main');
     }
   }
