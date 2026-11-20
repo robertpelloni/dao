@@ -25,20 +25,22 @@ export class ZKPManager {
   async prove(identity: Identity, signal: string, externalNullifier: any): Promise<any> {
     // In an optimized client-side environment (browser), snarkjs uses WebWorkers.
     // Ensure that wasm and zkey files are fetched locally to reduce latency.
+    // Semaphore v4: generateProof(identity, group, message, scope).
+    // The v3 call that used to be here passed a {zkeyFilePath, wasmFilePath}
+    // object where v4 expects a numeric merkleTreeDepth, and pointed at
+    // ./public/semaphore/* files that do not exist in this repo.
+    // With no artifacts argument, v4 downloads the official Semaphore
+    // artifacts for the group's tree depth.
     return await generateProof(
       identity,
       this.group,
-      externalNullifier,
       signal,
-      {
-        zkeyFilePath: "./public/semaphore/semaphore.zkey",
-        wasmFilePath: "./public/semaphore/semaphore.wasm"
-      }
+      externalNullifier
     );
   }
 
   async verify(proof: any): Promise<boolean> {
-    return await verifyProof(proof, 20);
+    return await verifyProof(proof); // v4: tree depth is carried inside the proof
   }
 
   getGroupRoot(): string {

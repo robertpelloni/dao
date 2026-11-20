@@ -6,7 +6,7 @@ import { globalStore } from '../src/models/Store';
 import { CrowdfundingEngine } from '../src/core/crowdfunding';
 import { transitionProposal } from '../src/core/proposalStateMachine';
 import { SecurityEngine } from '../src/core/security';
-import { NetworkInterface, GlobalNetworkManager } from '../src/core/protocol/network';
+import { NetworkInterface, GlobalNetworkManager } from '../src/core/network';
 
 describe('Phase 10: Production Hardening & Live Simulation End-to-End', () => {
   let store: Store;

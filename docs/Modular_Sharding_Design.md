@@ -25,7 +25,7 @@ Each top-level subject node (e.g., `Infrastructure`) becomes an independent SQLi
 *   **Global Treasury:** The main treasury contract remains on the `Global` root shard. The root handles cross-shard matching pool allocations via standard messaging bridges.
 
 ## 4. Cross-Shard Synchronization via NetworkInterface
-The existing `NetworkInterface` (`src/core/protocol/network.ts`) will be extended to support shard routing:
+The existing `NetworkInterface` (`src/core/network.ts`) will be extended to support shard routing:
 1.  When a node boots up, it subscribes only to the shards/committees it is interested in validating.
 2.  `syncProposals(peerUrl, shardId)` fetches deltas strictly for that partition.
 3.  The `Watchdog` and `ProposalStateMachine` run localized instances per shard, significantly reducing CPU load per node.

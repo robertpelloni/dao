@@ -15,7 +15,6 @@ import { calculateImpactScore } from '../core/impactScoring';
 import { globalGovernance } from '../core/governanceCycle';
 import { globalTaskManager } from '../core/tasks';
 import { globalTriage } from '../core/triage';
-import { globalWatchdog } from '../core/watchdog';
 import { User, Proposal, Committee } from '../models/types';
 import { signToken, verifyToken } from '../utils/auth';
 import { createTreasuryRouter } from './routes/treasury';
@@ -748,8 +747,8 @@ if (require.main === module) {
   httpServer.listen(port, () => {
     console.log(`LiquidGov API server listening at http://localhost:${port}`);
 
-    // Start the Autonomous Watchdog (opt-in; see core/watchdog.ts)
-    globalWatchdog.start();
+    // No Autonomous Watchdog: it was archived to archive/protocol-bot/
+    // (2026-11-19). Starting this server must never mutate git.
   });
 }
 

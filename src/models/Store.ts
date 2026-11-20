@@ -114,7 +114,7 @@ export class Store {
         ALTER TABLE users ADD COLUMN lastModified INTEGER;
         ALTER TABLE users ADD COLUMN stateHash TEXT;
       `);
-    } catch (e) {
+    } catch {
       // Column exists, ignore
     }
 
@@ -125,7 +125,7 @@ export class Store {
         ALTER TABLE proposals ADD COLUMN lastModified INTEGER;
         ALTER TABLE proposals ADD COLUMN stateHash TEXT;
       `);
-    } catch (e) {
+    } catch {
       // Column exists, ignore
     }
 
@@ -136,7 +136,7 @@ export class Store {
         ALTER TABLE contributions ADD COLUMN lastModified INTEGER;
         ALTER TABLE contributions ADD COLUMN stateHash TEXT;
       `);
-    } catch (e) {
+    } catch {
       // Column exists, ignore
     }
   }
@@ -460,4 +460,8 @@ export class Store {
   }
 }
 
-export const globalStore = new Store('dao.db');
+// Under Jest (NODE_ENV=test) the global store is in-memory: a shared
+// file-backed dao.db made parallel test workers overwrite each other's
+// users (addUser is INSERT OR REPLACE), which is why dashboardApi and
+// docker.e2e flaked against each other in full-suite runs.
+export const globalStore = new Store(process.env.NODE_ENV === 'test' ? ':memory:' : 'dao.db');

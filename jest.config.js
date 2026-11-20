@@ -2,7 +2,7 @@
 module.exports = {
   preset: 'ts-jest',
   testEnvironment: 'node',
-  testPathIgnorePatterns: ['/node_modules/', '/frontend/', '/dist/'],
+  testPathIgnorePatterns: ['/node_modules/', '/frontend/', '/dist/', '/archive/'],
   moduleNameMapper: {
     '^(\\.{1,2}/.*)\\.js$': '$1',
   },

@@ -1,17 +1,12 @@
 import { Store, globalStore } from '../models/Store';
 import { AutonomousTask } from '../models/types';
-import { RepositoryManager } from './repository';
 
 /**
  * Task Manager
  * Oversees the execution and tracking of autonomous development tasks.
  */
 export class TaskManager {
-  private repoManager: RepositoryManager;
-
-  constructor(private store: Store) {
-    this.repoManager = new RepositoryManager();
-  }
+  constructor(private store: Store) {}
 
   /**
    * Registers a new task in the system.
@@ -38,18 +33,11 @@ export class TaskManager {
     try {
       this.store.updateTask(taskId, { status: 'IN_PROGRESS' });
 
-      // Here we would typically trigger the AI agent or the repository protocol
-      // For now, we integrate it with the RepositoryManager's sync protocol
+      // The Executive Protocol / RepositoryManager that used to run here
+      // (git sync, branch reconciliation, version bumps, pushes) was archived
+      // to archive/protocol-bot/ on 2026-11-19. Executing a task must not
+      // mutate the repository, so a task now simply completes.
       console.log(`Executing task: ${task.title}`);
-
-      this.repoManager.syncUpstream();
-      this.repoManager.reconcileBranches();
-      this.repoManager.syncRoadmap();
-      this.repoManager.syncSubmoduleMap();
-      this.repoManager.finalizeWorkspace();
-      this.repoManager.executeBuild();
-      this.repoManager.generateHandoff();
-      this.repoManager.verifyStandards();
 
       this.store.updateTask(taskId, { status: 'COMPLETED' });
     } catch (error) {

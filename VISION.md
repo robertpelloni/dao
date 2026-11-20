@@ -1,5 +1,14 @@
 # VISION: LiquidGov - The Voluntary Distributed State
 
+> **Read this first — ground truth over aspiration.** The document below
+> describes a destination. The addendum immediately following this note
+> describes what actually exists today (a local proof-of-concept).
+> Do not cite the aspirational sections as shipped.
+
+## Addendum 2026-11-17 (v1.1.112): What is real now vs aspirational
+- Real and tested (Jest suites — 27/27, 86/86 tests as verified 2026-11-19; the Executive Protocol bot suites were archived with the bot): proposal lifecycle incl. EMERGENCY`?FAST_TRACKED fast-track, quadratic voting/funding, liquid delegation with EffectivePower breakdown, subject-specific treasury pools (Voluntary Tax Routing), milestone juries, Sybil clustering, governance cycles with reputation decay, Semaphore ZKP identity (PoC grade), single-page dashboard wired to the API.
+- Aspirational/design-only (docs, mocks, or Phase 10): cross-chain treasury (mocks in src/chains + src/bridge), on-chain execution hooks (simulated payload execution), VRF jury selection, production ZKP circuits, external oracles, native mobile. The vision above describes the destination; HANDOFF.md describes the ground truth. Do not cite the aspirational list as shipped.
+
 ## 1. The Core Objective
 LiquidGov (dao) aims to pioneer a new form of social organization: a **Distributed Voluntary Government**. It is designed to replace coercive, location-bound bureaucracies with a fluid, expertise-driven, and merit-based ecosystem where public infrastructure and social services are managed via decentralized autonomous protocols.
 
@@ -42,8 +51,4 @@ The end-user experience should feel like a hybrid between a high-end financial d
 - **Phase 1-8:** Core engine, Quadratic Funding, Advanced Identity Analytics, AI Automation, and Web Prototype (Completed).
 - **Phase 4:** On-chain transition, ZKP Identity, and Oracle Network.
 - **Phase 5:** Global deployment as a recognized alternative to traditional municipal management.
-
-## Addendum 2026-11-17 (v1.1.112): What is real now vs aspirational
-- Real and tested (30/30 Jest suites): proposal lifecycle incl. EMERGENCY`?FAST_TRACKED fast-track, quadratic voting/funding, liquid delegation with EffectivePower breakdown, subject-specific treasury pools (Voluntary Tax Routing), milestone juries, Sybil clustering, governance cycles with reputation decay, Semaphore ZKP identity (PoC grade), single-page dashboard wired to the API.
-- Aspirational/design-only (docs, mocks, or Phase 10): cross-chain treasury (mocks in src/chains + src/bridge), on-chain execution hooks (simulated payload execution), VRF jury selection, production ZKP circuits, external oracles, native mobile. The vision above describes the destination; HANDOFF.md describes the ground truth. Do not cite the aspirational list as shipped.
 

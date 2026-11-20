@@ -1,5 +1,5 @@
 import { Proposal, Contribution } from '../models/types';
-import { globalNetworkManager } from '../core/protocol/network';
+import { globalNetworkManager } from '../core/network';
 
 /**
  * Phase 9: Cross-Chain Interoperability Bridge (Specification)

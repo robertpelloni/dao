@@ -32,3 +32,8 @@ deploy-artifacts/
 .vite/
 playwright-report/
 test-results/
+
+# Agent session transcripts and generated test reports (added 2026-11-19)
+.jules/
+frontend/playwright-report/
+!frontend/src/vite-env.d.ts
